@@ -28,13 +28,14 @@ export function HeatMap({ points }: HeatMapProps) {
     mapCtx.lineWidth = 2
 
     const majorStreets = [
-      [{ x: 0.1, y: 0.3 }, { x: 0.9, y: 0.3 }],
-      [{ x: 0.1, y: 0.5 }, { x: 0.9, y: 0.5 }],
-      [{ x: 0.1, y: 0.7 }, { x: 0.9, y: 0.7 }],
-      [{ x: 0.2, y: 0.1 }, { x: 0.2, y: 0.9 }],
-      [{ x: 0.4, y: 0.1 }, { x: 0.4, y: 0.9 }],
-      [{ x: 0.6, y: 0.1 }, { x: 0.6, y: 0.9 }],
-      [{ x: 0.8, y: 0.1 }, { x: 0.8, y: 0.9 }]
+      [{ x: 0.05, y: 0.35 }, { x: 0.95, y: 0.35 }],
+      [{ x: 0.05, y: 0.5 }, { x: 0.95, y: 0.5 }],
+      [{ x: 0.05, y: 0.65 }, { x: 0.95, y: 0.65 }],
+      [{ x: 0.15, y: 0.05 }, { x: 0.15, y: 0.95 }],
+      [{ x: 0.3, y: 0.05 }, { x: 0.3, y: 0.95 }],
+      [{ x: 0.5, y: 0.05 }, { x: 0.5, y: 0.95 }],
+      [{ x: 0.7, y: 0.05 }, { x: 0.7, y: 0.95 }],
+      [{ x: 0.85, y: 0.05 }, { x: 0.85, y: 0.95 }]
     ]
 
     majorStreets.forEach(street => {
@@ -153,7 +154,7 @@ export function HeatMap({ points }: HeatMapProps) {
       </div>
       <div className="absolute top-4 left-4 px-3 py-1.5 bg-card/80 backdrop-blur-sm rounded-lg border border-border/50">
         <span className="text-xs font-medium text-muted-foreground">
-          Highlands, Louisville KY
+          40205 - Highlands, Louisville KY
         </span>
       </div>
     </div>
