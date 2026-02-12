@@ -20,11 +20,11 @@ This is a focused MVP with core features: heat map visualization, user profiles,
 - **Success criteria**: Heat map renders with realistic density patterns, no exact user locations visible, smooth interaction
 
 ### User Profile Management
-- **Functionality**: Create and edit profile with name, age, gender, and sexual orientation fields
-- **Purpose**: Allows users to present themselves and sets context for connections
+- **Functionality**: Create and edit profile with name, age, gender, sexual orientation, and real-time location sharing toggle
+- **Purpose**: Allows users to present themselves, control their privacy, and manage location visibility
 - **Trigger**: Profile button in navigation or automatic prompt for first-time users
-- **Progression**: Click profile → View/edit form → Enter details → Save → Profile stored persistently
-- **Success criteria**: Profile persists across sessions, all fields editable, data validates appropriately
+- **Progression**: Click profile → View/edit form → Enter details → Toggle location sharing on/off → Save → Profile stored persistently
+- **Success criteria**: Profile persists across sessions, all fields editable, data validates appropriately, location sharing toggle controls visibility in discovery and heat map
 
 ### Proximity Search
 - **Functionality**: Browse list of nearby active users with distance estimates and configurable search radius
@@ -43,6 +43,7 @@ This is a focused MVP with core features: heat map visualization, user profiles,
 ## Edge Case Handling
 - **Empty states**: When no users nearby, show encouraging empty state with illustration
 - **Profile incomplete**: Prompt user to complete profile before accessing discovery features
+- **Location sharing disabled**: Show informative message in discovery tab when user has disabled location sharing, with quick access to enable it
 - **Pending requests**: Show clear status for outgoing/incoming chat requests with appropriate actions
 - **Blocked or unavailable users**: Gracefully handle when selected user is no longer active
 - **Location simulation**: Use randomized demo coordinates around a central point for MVP testing
@@ -88,12 +89,13 @@ Animations should enhance spatial awareness and create delight during discovery 
   - Card (user profiles in discovery, message threads)
   - Button (primary actions, chat requests)
   - Avatar (user profile pictures - will use initials fallback)
-  - Badge (online status, distance indicators, notification counts)
+  - Badge (online status, distance indicators, notification counts, location sharing status)
   - Dialog (profile editing, chat request confirmations)
   - Tabs (navigation between heat map, discovery, messages, profile)
   - Input/Textarea (profile fields, message composition)
   - ScrollArea (message threads, user lists)
   - Slider (radius selection for proximity search)
+  - Switch (location sharing toggle in profile settings)
   
 - **Customizations**: 
   - Custom heat map component using canvas or SVG with gradient overlays
@@ -110,6 +112,7 @@ Animations should enhance spatial awareness and create delight during discovery 
   - MagnifyingGlass (discovery/search)
   - ChatCircle (messages)
   - User (profile)
+  - MapPin (location sharing status)
   - PaperPlaneTilt (send message)
   - Check/X (accept/decline requests)
   

@@ -26,7 +26,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       orientation: ORIENTATIONS[Math.floor(Math.random() * ORIENTATIONS.length)],
       location: { lat, lng },
       isActive: Math.random() > 0.3,
-      lastActive: Date.now() - Math.floor(Math.random() * 3600000)
+      lastActive: Date.now() - Math.floor(Math.random() * 3600000),
+      locationSharingEnabled: Math.random() > 0.2
     })
   }
   
@@ -69,7 +70,7 @@ export function generateHeatMapData(users: UserProfile[]): HeatMapPoint[] {
   const heatPoints: HeatMapPoint[] = []
   
   users.forEach(user => {
-    if (user.isActive) {
+    if (user.isActive && user.locationSharingEnabled) {
       const fuzzed = fuzzLocation(user.location.lat, user.location.lng, 1)
       heatPoints.push({
         lat: fuzzed.lat,

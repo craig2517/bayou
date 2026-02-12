@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Toaster } from '@/components/ui/sonner'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -40,7 +40,7 @@ function App() {
     if (!myProfile) return []
     
     return demoUsers
-      .filter(user => user.id !== myProfile.id && user.isActive)
+      .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
       .map(user => ({
         user,
         distance: calculateDistance(
@@ -68,7 +68,12 @@ function App() {
     }
     setMyProfile(newProfile)
     setShowProfileDialog(false)
-    toast.success('Profile saved!')
+    
+    if (profileData.locationSharingEnabled) {
+      toast.success('Profile saved! Location sharing enabled.')
+    } else {
+      toast.success('Profile saved! Location sharing disabled.')
+    }
   }
 
   const handleSendChatRequest = (toUser: UserProfile) => {
@@ -191,6 +196,12 @@ function App() {
                   {pendingIncomingRequests.length}
                 </Badge>
               )}
+              {myProfile && !myProfile.locationSharingEnabled && (
+                <Badge variant="outline" className="flex items-center gap-1.5">
+                  <MapPin size={14} />
+                  Location Off
+                </Badge>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -250,6 +261,19 @@ function App() {
                 <p className="text-muted-foreground">Please complete your profile to discover nearby users.</p>
                 <Button onClick={() => setShowProfileDialog(true)} className="mt-4 bg-primary">
                   Create Profile
+                </Button>
+              </div>
+            ) : !myProfile.locationSharingEnabled ? (
+              <div className="text-center py-12 space-y-4">
+                <MapPin className="mx-auto text-muted-foreground" size={48} />
+                <div className="space-y-2">
+                  <p className="text-lg font-semibold">Location Sharing Disabled</p>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Enable location sharing in your profile settings to discover nearby users and be discovered by others.
+                  </p>
+                </div>
+                <Button onClick={() => setShowProfileDialog(true)} className="mt-4 bg-primary">
+                  Enable in Settings
                 </Button>
               </div>
             ) : (
