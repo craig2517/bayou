@@ -13,6 +13,7 @@ export interface UserProfile {
   isActive: boolean
   lastActive: number
   locationSharingEnabled: boolean
+  requireApproval: boolean
 }
 
 export interface ChatRequest {

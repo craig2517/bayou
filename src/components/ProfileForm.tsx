@@ -29,6 +29,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
     profile?.ageRangeMax || 50
   ])
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(profile?.locationSharingEnabled ?? true)
+  const [requireApproval, setRequireApproval] = useState(profile?.requireApproval ?? true)
 
   const handleGenderCheckbox = (genderOption: string, checked: boolean) => {
     if (checked) {
@@ -52,7 +53,8 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
       receiveMessagesFrom,
       ageRangeMin: ageRange[0],
       ageRangeMax: ageRange[1],
-      locationSharingEnabled
+      locationSharingEnabled,
+      requireApproval
     })
   }
 
@@ -162,6 +164,24 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
               With location sharing disabled, you won't appear in discovery searches and won't be visible on the heat map.
             </p>
           )}
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-border">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <Label htmlFor="require-approval" className="cursor-pointer font-semibold">
+                Require Approval for Messages
+              </Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                When enabled, you'll review and approve chat requests before receiving messages. When disabled, matching users can message you directly.
+              </p>
+            </div>
+            <Switch
+              id="require-approval"
+              checked={requireApproval}
+              onCheckedChange={setRequireApproval}
+            />
+          </div>
         </div>
 
         <Button

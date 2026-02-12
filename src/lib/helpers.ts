@@ -36,7 +36,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       location: { lat, lng },
       isActive: Math.random() > 0.3,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
-      locationSharingEnabled: Math.random() > 0.2
+      locationSharingEnabled: Math.random() > 0.2,
+      requireApproval: Math.random() > 0.3
     })
   }
   

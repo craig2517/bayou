@@ -102,6 +102,32 @@ function App() {
       return
     }
 
+    const conversationId = [myProfile.id, toUser.id].sort().join('-')
+    
+    if (!toUser.requireApproval) {
+      const autoAcceptedRequest: ChatRequest = {
+        id: `req-${Date.now()}`,
+        fromUserId: myProfile.id,
+        toUserId: toUser.id,
+        status: 'accepted',
+        timestamp: Date.now()
+      }
+
+      setChatRequests(current => [...(current || []), autoAcceptedRequest])
+
+      const newConversation: Conversation = {
+        id: conversationId,
+        participants: [myProfile.id, toUser.id] as [string, string],
+        unreadCount: 0
+      }
+      setConversations(current => [...(current || []), newConversation])
+
+      setSelectedConversation(conversationId)
+      setSelectedTab('messages')
+      toast.success(`You can now message ${toUser.name}!`)
+      return
+    }
+
     const newRequest: ChatRequest = {
       id: `req-${Date.now()}`,
       fromUserId: myProfile.id,
