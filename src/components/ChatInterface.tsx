@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { PaperPlaneTilt } from '@phosphor-icons/react'
+import { PaperPlaneTilt, ArrowLeft } from '@phosphor-icons/react'
 import type { Message, UserProfile } from '@/lib/types'
 
 interface ChatInterfaceProps {
@@ -12,9 +12,11 @@ interface ChatInterfaceProps {
   currentUserId: string
   otherUser: UserProfile
   onSendMessage: (text: string) => void
+  onBack?: () => void
+  onViewProfile?: () => void
 }
 
-export function ChatInterface({ messages, currentUserId, otherUser, onSendMessage }: ChatInterfaceProps) {
+export function ChatInterface({ messages, currentUserId, otherUser, onSendMessage, onBack, onViewProfile }: ChatInterfaceProps) {
   const [messageText, setMessageText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -41,12 +43,28 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
   return (
     <Card className="flex flex-col h-full">
       <div className="p-4 border-b border-border flex items-center gap-3">
-        <Avatar className="w-10 h-10 border-2 border-primary/20">
+        {onBack && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="hover:bg-muted"
+          >
+            <ArrowLeft size={20} />
+          </Button>
+        )}
+        <Avatar 
+          className="w-10 h-10 border-2 border-primary/20 cursor-pointer hover:scale-105 transition-transform"
+          onClick={onViewProfile}
+        >
           <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
             {otherUserInitials}
           </AvatarFallback>
         </Avatar>
-        <div>
+        <div 
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={onViewProfile}
+        >
           <h3 className="font-semibold text-foreground">{otherUser.name}</h3>
           <p className="text-sm text-muted-foreground">{otherUser.age} • {otherUser.gender}</p>
         </div>

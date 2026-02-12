@@ -9,9 +9,10 @@ interface UserCardProps {
   user: UserProfile
   distance: string
   onMessage: () => void
+  onViewProfile?: () => void
 }
 
-export function UserCard({ user, distance, onMessage }: UserCardProps) {
+export function UserCard({ user, distance, onMessage, onViewProfile }: UserCardProps) {
   const initials = user.name
     .split(' ')
     .map(n => n[0])
@@ -19,9 +20,12 @@ export function UserCard({ user, distance, onMessage }: UserCardProps) {
     .toUpperCase()
 
   return (
-    <Card className="p-4 hover:shadow-lg hover:border-accent/50 transition-all duration-200 hover:scale-[1.02] cursor-pointer">
+    <Card className="p-4 hover:shadow-lg hover:border-accent/50 transition-all duration-200">
       <div className="flex items-start gap-4">
-        <Avatar className="w-16 h-16 border-2 border-primary/20">
+        <Avatar 
+          className="w-16 h-16 border-2 border-primary/20 cursor-pointer hover:scale-105 transition-transform"
+          onClick={onViewProfile}
+        >
           <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-lg">
             {initials}
           </AvatarFallback>
@@ -30,7 +34,12 @@ export function UserCard({ user, distance, onMessage }: UserCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="font-semibold text-lg text-foreground">{user.name}</h3>
+              <h3 
+                className="font-semibold text-lg text-foreground cursor-pointer hover:text-primary transition-colors"
+                onClick={onViewProfile}
+              >
+                {user.name}
+              </h3>
               <p className="text-sm text-muted-foreground">{user.age} • {user.gender}</p>
             </div>
             {user.isActive && (

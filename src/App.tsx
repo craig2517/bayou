@@ -12,6 +12,7 @@ import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
 import { ChatInterface } from '@/components/ChatInterface'
+import { UserProfileView } from '@/components/UserProfileView'
 import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
@@ -27,6 +28,8 @@ function App() {
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [pendingRequestUser, setPendingRequestUser] = useState<UserProfile | null>(null)
+  const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
+  const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     if (!myProfile) {
@@ -137,6 +140,11 @@ function App() {
       (current || []).map(req => (req.id === request.id ? { ...req, status: 'declined' as const } : req))
     )
     toast.info('Request declined')
+  }
+
+  const handleViewUserProfile = (user: UserProfile, distance?: number) => {
+    setViewingUser(user)
+    setViewingUserDistance(distance !== undefined ? formatDistance(distance) : undefined)
   }
 
   const handleSendMessage = (conversationId: string, text: string) => {
@@ -304,6 +312,7 @@ function App() {
                         user={user}
                         distance={formatDistance(distance)}
                         onMessage={() => handleSendChatRequest(user)}
+                        onViewProfile={() => handleViewUserProfile(user, distance)}
                       />
                     ))}
                   </div>
@@ -332,6 +341,8 @@ function App() {
                   currentUserId={myProfile.id}
                   otherUser={currentConversation.otherUser!}
                   onSendMessage={(text) => handleSendMessage(selectedConversation, text)}
+                  onBack={() => setSelectedConversation(null)}
+                  onViewProfile={() => handleViewUserProfile(currentConversation.otherUser!)}
                 />
               </div>
             ) : (
@@ -343,11 +354,25 @@ function App() {
                     className="p-4 bg-card rounded-lg border border-border hover:border-accent/50 cursor-pointer transition-all hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold">
+                      <div 
+                        className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold cursor-pointer hover:scale-105 transition-transform"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleViewUserProfile(conv.otherUser!)
+                        }}
+                      >
                         {conv.otherUser!.name[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold">{conv.otherUser!.name}</h3>
+                        <h3 
+                          className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleViewUserProfile(conv.otherUser!)
+                          }}
+                        >
+                          {conv.otherUser!.name}
+                        </h3>
                         {conv.lastMessage && (
                           <p className="text-sm text-muted-foreground truncate">
                             {conv.lastMessage.text}
@@ -387,11 +412,19 @@ function App() {
                       className="p-4 bg-card rounded-lg border border-border flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold">
+                        <div 
+                          className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold cursor-pointer hover:scale-105 transition-transform"
+                          onClick={() => handleViewUserProfile(fromUser)}
+                        >
                           {fromUser.name[0]}
                         </div>
                         <div>
-                          <h3 className="font-semibold">{fromUser.name}</h3>
+                          <h3 
+                            className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => handleViewUserProfile(fromUser)}
+                          >
+                            {fromUser.name}
+                          </h3>
                           <p className="text-sm text-muted-foreground">
                             {fromUser.age} • {fromUser.gender}
                           </p>
@@ -445,6 +478,17 @@ function App() {
           <Button onClick={() => setPendingRequestUser(null)} className="bg-primary">
             Got it
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewingUser} onOpenChange={() => setViewingUser(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>User Profile</DialogTitle>
+          </DialogHeader>
+          {viewingUser && (
+            <UserProfileView user={viewingUser} distance={viewingUserDistance} />
+          )}
         </DialogContent>
       </Dialog>
     </div>
