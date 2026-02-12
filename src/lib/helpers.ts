@@ -1,7 +1,7 @@
 import type { UserProfile, HeatMapPoint } from './types'
 
-const CENTER_LAT = 40.7580
-const CENTER_LNG = -73.9855
+const CENTER_LAT = 38.2545
+const CENTER_LNG = -85.7145
 
 const FIRST_NAMES = [
   'Alex', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Avery', 'Quinn',
@@ -78,16 +78,33 @@ export function fuzzLocation(lat: number, lng: number, radiusKm: number = 0.5): 
 
 export function generateHeatMapData(users: UserProfile[]): HeatMapPoint[] {
   const heatPoints: HeatMapPoint[] = []
+  const activeUsers = users.filter(u => u.isActive && u.locationSharingEnabled)
   
-  users.forEach(user => {
-    if (user.isActive && user.locationSharingEnabled) {
-      const fuzzed = fuzzLocation(user.location.lat, user.location.lng, 1)
-      heatPoints.push({
-        lat: fuzzed.lat,
-        lng: fuzzed.lng,
-        intensity: Math.random() * 0.5 + 0.5
-      })
+  const locationClusters: Map<string, { lat: number; lng: number; count: number }> = new Map()
+  
+  activeUsers.forEach(user => {
+    const fuzzed = fuzzLocation(user.location.lat, user.location.lng, 0.3)
+    const clusterKey = `${Math.round(fuzzed.lat * 1000)},${Math.round(fuzzed.lng * 1000)}`
+    
+    const existing = locationClusters.get(clusterKey)
+    if (existing) {
+      existing.count++
+      existing.lat = (existing.lat * (existing.count - 1) + fuzzed.lat) / existing.count
+      existing.lng = (existing.lng * (existing.count - 1) + fuzzed.lng) / existing.count
+    } else {
+      locationClusters.set(clusterKey, { lat: fuzzed.lat, lng: fuzzed.lng, count: 1 })
     }
+  })
+  
+  const maxCount = Math.max(...Array.from(locationClusters.values()).map(c => c.count))
+  
+  locationClusters.forEach(cluster => {
+    const normalizedIntensity = cluster.count / maxCount
+    heatPoints.push({
+      lat: cluster.lat,
+      lng: cluster.lng,
+      intensity: Math.min(normalizedIntensity * 1.2 + 0.3, 1)
+    })
   })
   
   return heatPoints
