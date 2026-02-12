@@ -83,8 +83,18 @@ export function UserProfileView({ user, distance }: UserProfileViewProps) {
               <Heart className="text-accent" size={20} />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Orientation</p>
-              <p className="font-semibold text-foreground">{user.orientation}</p>
+              <p className="text-xs text-muted-foreground">Looking For</p>
+              <p className="font-semibold text-foreground">{user.receiveMessagesFrom.join(', ')}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Calendar className="text-primary" size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Age Preference</p>
+              <p className="font-semibold text-foreground">{user.ageRangeMin} - {user.ageRangeMax} years</p>
             </div>
           </div>
         </div>

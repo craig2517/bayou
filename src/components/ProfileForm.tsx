@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Slider } from '@/components/ui/slider'
 import { MapPin } from '@phosphor-icons/react'
 import type { UserProfile } from '@/lib/types'
 
@@ -14,19 +16,32 @@ interface ProfileFormProps {
 }
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
-const ORIENTATIONS = ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Pansexual', 'Queer', 'Asexual', 'Other']
 
 export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
   const [age, setAge] = useState(profile?.age?.toString() || '')
   const [gender, setGender] = useState(profile?.gender || '')
-  const [orientation, setOrientation] = useState(profile?.orientation || '')
+  const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
+    profile?.receiveMessagesFrom || ['Male', 'Female', 'Non-binary', 'Other']
+  )
+  const [ageRange, setAgeRange] = useState([
+    profile?.ageRangeMin || 18,
+    profile?.ageRangeMax || 50
+  ])
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(profile?.locationSharingEnabled ?? true)
+
+  const handleGenderCheckbox = (genderOption: string, checked: boolean) => {
+    if (checked) {
+      setReceiveMessagesFrom(prev => [...prev, genderOption])
+    } else {
+      setReceiveMessagesFrom(prev => prev.filter(g => g !== genderOption))
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name || !age || !gender || !orientation) {
+    if (!name || !age || !gender || receiveMessagesFrom.length === 0) {
       return
     }
 
@@ -34,12 +49,14 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
       name,
       age: parseInt(age),
       gender,
-      orientation,
+      receiveMessagesFrom,
+      ageRangeMin: ageRange[0],
+      ageRangeMax: ageRange[1],
       locationSharingEnabled
     })
   }
 
-  const isValid = name && age && gender && orientation && parseInt(age) >= 18 && parseInt(age) <= 100
+  const isValid = name && age && gender && receiveMessagesFrom.length > 0 && parseInt(age) >= 18 && parseInt(age) <= 100
 
   return (
     <Card className="p-6">
@@ -85,20 +102,40 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="orientation">Sexual Orientation</Label>
-          <Select value={orientation} onValueChange={setOrientation}>
-            <SelectTrigger id="orientation">
-              <SelectValue placeholder="Select orientation" />
-            </SelectTrigger>
-            <SelectContent>
-              {ORIENTATIONS.map(o => (
-                <SelectItem key={o} value={o}>
-                  {o}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="space-y-3">
+          <Label>Receive Messages From</Label>
+          <div className="grid grid-cols-2 gap-3">
+            {GENDERS.filter(g => g !== 'Prefer not to say').map(genderOption => (
+              <div key={genderOption} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`receive-${genderOption}`}
+                  checked={receiveMessagesFrom.includes(genderOption)}
+                  onCheckedChange={(checked) => handleGenderCheckbox(genderOption, checked as boolean)}
+                />
+                <Label
+                  htmlFor={`receive-${genderOption}`}
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  {genderOption}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <Label>Age Range to Receive Messages From: {ageRange[0]} - {ageRange[1]}</Label>
+          <Slider
+            value={ageRange}
+            onValueChange={setAgeRange}
+            min={18}
+            max={80}
+            step={1}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground">
+            You'll receive messages from users aged {ageRange[0]} to {ageRange[1]}
+          </p>
         </div>
 
         <div className="space-y-4 pt-4 border-t border-border">

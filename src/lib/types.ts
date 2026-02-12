@@ -3,7 +3,9 @@ export interface UserProfile {
   name: string
   age: number
   gender: string
-  orientation: string
+  receiveMessagesFrom: string[]
+  ageRangeMin: number
+  ageRangeMax: number
   location: {
     lat: number
     lng: number

@@ -9,7 +9,13 @@ const FIRST_NAMES = [
 ]
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
-const ORIENTATIONS = ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Pansexual', 'Queer', 'Asexual']
+
+function getRandomGenderPreferences(): string[] {
+  const preferences: string[] = []
+  const count = Math.floor(Math.random() * 4) + 1
+  const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, count)
+}
 
 export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
@@ -17,13 +23,16 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   for (let i = 0; i < count; i++) {
     const lat = CENTER_LAT + (Math.random() - 0.5) * 0.05
     const lng = CENTER_LNG + (Math.random() - 0.5) * 0.05
+    const age = Math.floor(Math.random() * 30) + 20
     
     users.push({
       id: `user-${i + 1}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
-      age: Math.floor(Math.random() * 30) + 20,
+      age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
-      orientation: ORIENTATIONS[Math.floor(Math.random() * ORIENTATIONS.length)],
+      receiveMessagesFrom: getRandomGenderPreferences(),
+      ageRangeMin: Math.max(18, age - 15),
+      ageRangeMax: Math.min(80, age + 15),
       location: { lat, lng },
       isActive: Math.random() > 0.3,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),

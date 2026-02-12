@@ -53,8 +53,6 @@ export function UserCard({ user, distance, onMessage, onViewProfile }: UserCardP
             <Badge variant="outline" className="text-xs">
               {distance}
             </Badge>
-            <span className="text-xs text-muted-foreground">•</span>
-            <span className="text-xs text-muted-foreground">{user.orientation}</span>
           </div>
           
           <Button
