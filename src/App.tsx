@@ -7,8 +7,9 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { Toaster } from '@/components/ui/sonner'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Trash } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -41,30 +42,50 @@ function App() {
     if (!myProfile) {
       setShowProfileDialog(true)
     } else {
-      const hasExistingData = (conversations && conversations.length > 0) || (chatRequests && chatRequests.length > 0)
+      const acceptedRequests = (chatRequests || []).filter(req => req.status === 'accepted')
+      const hasConversations = (conversations && conversations.length > 0)
+      const hasAcceptedRequests = acceptedRequests.length > 0
+      const hasPendingRequests = (chatRequests || []).some(req => req.status === 'pending')
+      
+      const hasExistingData = hasConversations || hasAcceptedRequests || hasPendingRequests
       
       if (!hasExistingData) {
         console.log('🎬 Generating initial demo data...')
         
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 3)
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 5)
         
-        setConversations(current => [...(current || []), ...demoData.conversations])
-        setChatRequests(current => [...(current || []), ...demoData.chatRequests])
-        setMessages(current => ({ ...(current || {}), ...demoData.messages }))
-        
-        const existingUserIds = demoData.conversations.flatMap(c => c.participants)
-        const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 4)
-        
-        if (additionalRequests.length > 0) {
-          setChatRequests(current => [...(current || []), ...additionalRequests])
-          toast.success(`You have ${additionalRequests.length} new message requests!`, {
-            description: 'Check the Requests tab to connect',
-            duration: 4000
+        if (demoData.conversations.length > 0) {
+          setConversations(demoData.conversations)
+          setChatRequests(demoData.chatRequests)
+          setMessages(demoData.messages)
+          
+          const existingUserIds = demoData.conversations.flatMap(c => c.participants)
+          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 6)
+          
+          if (additionalRequests.length > 0) {
+            setChatRequests(current => [...(current || []), ...additionalRequests])
+            toast.success(`You have ${additionalRequests.length} new message requests!`, {
+              description: 'Check the Requests tab to connect',
+              duration: 4000
+            })
+          }
+          
+          toast.success(`${demoData.conversations.length} demo conversations created!`, {
+            description: 'Switch to Messages tab to view them',
+            duration: 3000
           })
+        } else {
+          console.log('⚠️ No eligible users found for demo data generation')
         }
+      } else {
+        console.log('📊 Existing data found:', {
+          conversations: conversations?.length || 0,
+          acceptedRequests: acceptedRequests.length,
+          pendingRequests: (chatRequests || []).filter(req => req.status === 'pending').length
+        })
       }
     }
-  }, [myProfile])
+  }, [myProfile, demoUsers])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -335,6 +356,16 @@ function App() {
     }, 500)
   }
 
+  const handleClearAllData = () => {
+    setConversations([])
+    setChatRequests([])
+    setMessages({})
+    toast.success('All conversations and requests cleared!', {
+      description: 'New demo data will be generated automatically',
+      duration: 3000
+    })
+  }
+
   const handleGenerateMoreDemoData = () => {
     if (!myProfile) return
     
@@ -344,7 +375,9 @@ function App() {
       ...(chatRequests || []).map(r => r.toUserId)
     ].filter(id => id !== myProfile.id)
     
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 2)
+    const uniqueExistingUserIds = [...new Set(existingUserIds)]
+    
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 3)
     
     if (demoData.conversations.length > 0) {
       setConversations(current => [...(current || []), ...demoData.conversations])
@@ -354,7 +387,8 @@ function App() {
       toast.success(`Added ${demoData.conversations.length} new conversations!`)
     }
     
-    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 3)
+    const newExistingIds = [...uniqueExistingUserIds, ...demoData.conversations.flatMap(c => c.participants)]
+    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, newExistingIds, 4)
     
     if (additionalRequests.length > 0) {
       setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -362,7 +396,9 @@ function App() {
     }
     
     if (demoData.conversations.length === 0 && additionalRequests.length === 0) {
-      toast.info('No more eligible users to generate demo data')
+      toast.info('No more eligible users available for demo data', {
+        description: 'Try refreshing users or adjusting your profile preferences'
+      })
     }
   }
 
@@ -426,18 +462,31 @@ function App() {
                 <span className="text-red-600 drop-shadow-sm">Here</span>
                 <span className="text-yellow-500 drop-shadow-sm">o</span>
               </h1>
-              <Badge 
-                variant="secondary" 
-                className="hidden sm:flex items-center gap-1.5 bg-accent/10 text-accent-foreground border-accent/20 text-xs px-2 py-0.5 cursor-pointer hover:bg-accent/20 transition-colors"
-                onClick={handleGenerateMoreDemoData}
-                title="Click to generate more demo conversations and requests"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-                </span>
-                Demo Mode
-              </Badge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Badge 
+                    variant="secondary" 
+                    className="hidden sm:flex items-center gap-1.5 bg-accent/10 text-accent-foreground border-accent/20 text-xs px-2 py-0.5 cursor-pointer hover:bg-accent/20 transition-colors"
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                    </span>
+                    Demo Mode
+                  </Badge>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem onClick={handleGenerateMoreDemoData} className="cursor-pointer">
+                    <ChatCircle size={16} className="mr-2" />
+                    Generate More Data
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleClearAllData} className="cursor-pointer text-destructive focus:text-destructive">
+                    <Trash size={16} className="mr-2" />
+                    Clear All Data
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="flex items-center gap-2.5">
               {pendingIncomingRequests.length > 0 && (
