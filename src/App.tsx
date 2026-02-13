@@ -380,13 +380,29 @@ function App() {
                   />
                 </div>
 
+                <div className="bg-card border border-border rounded-xl p-4 mb-6 shadow-sm">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex gap-6">
+                      <span className="text-muted-foreground">
+                        Total Users: <span className="font-semibold text-foreground">{demoUsers.length}</span>
+                      </span>
+                      <span className="text-muted-foreground">
+                        Active: <span className="font-semibold text-foreground">{demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length}</span>
+                      </span>
+                      <span className="text-muted-foreground">
+                        In Range: <span className="font-semibold text-foreground">{nearbyUsers.length}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {nearbyUsers.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto">
                       <MagnifyingGlass className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
                       <p className="text-lg font-medium text-foreground mb-2">No Users Found</p>
-                      <p className="text-muted-foreground">No users within {searchRadius[0]} km</p>
-                      <p className="text-sm text-muted-foreground mt-2">Try increasing the search radius</p>
+                      <p className="text-muted-foreground">No users within {searchRadius[0]} km match your preferences</p>
+                      <p className="text-sm text-muted-foreground mt-2">Try increasing the search radius or adjusting your profile preferences</p>
                     </div>
                   </div>
                 ) : (

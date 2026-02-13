@@ -21,10 +21,10 @@ const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
   const rand = Math.random()
-  if (rand < 0.98) {
+  if (rand < 0.85) {
     return [...GENDERS]
   } else {
-    const count = Math.floor(Math.random() * 2) + 2
+    const count = Math.floor(Math.random() * 3) + 2
     const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
     return shuffled.slice(0, count)
   }
@@ -38,12 +38,14 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const rand = Math.random()
     let radiusKm: number
     
-    if (rand < 0.90) {
-      radiusKm = Math.random() * 0.5
-    } else if (rand < 0.97) {
-      radiusKm = 0.5 + Math.random() * 0.3
+    if (rand < 0.75) {
+      radiusKm = Math.random() * 0.4
+    } else if (rand < 0.90) {
+      radiusKm = 0.4 + Math.random() * 0.3
+    } else if (rand < 0.96) {
+      radiusKm = 0.7 + Math.random() * 0.2
     } else {
-      radiusKm = 0.8 + Math.random() * 0.2
+      radiusKm = 0.9 + Math.random() * 0.1
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -53,7 +55,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const lng = CENTER_LNG + lngOffset
     const age = Math.floor(Math.random() * 43) + 18
     
-    const ageVariance = Math.floor(Math.random() * 20) + 10
+    const ageVariance = Math.floor(Math.random() * 20) + 20
     const minAge = Math.max(18, age - ageVariance)
     const maxAge = Math.min(80, age + ageVariance + Math.floor(Math.random() * 20))
     
@@ -66,9 +68,9 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       ageRangeMin: minAge,
       ageRangeMax: maxAge,
       location: { lat, lng },
-      isActive: Math.random() > 0.01,
+      isActive: Math.random() > 0.02,
       lastActive: Date.now() - Math.floor(Math.random() * 7200000),
-      locationSharingEnabled: Math.random() > 0.03,
+      locationSharingEnabled: Math.random() > 0.05,
       requireApproval: Math.random() > 0.5
     })
   }

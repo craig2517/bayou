@@ -15,7 +15,7 @@ interface ProfileFormProps {
   onSave: (profile: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => void
 }
 
-const GENDERS = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
+const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
@@ -26,7 +26,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   )
   const [ageRange, setAgeRange] = useState([
     profile?.ageRangeMin || 18,
-    profile?.ageRangeMax || 50
+    profile?.ageRangeMax || 60
   ])
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(profile?.locationSharingEnabled ?? true)
   const [requireApproval, setRequireApproval] = useState(profile?.requireApproval ?? true)
@@ -109,7 +109,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
         <div className="space-y-3 pt-2">
           <Label className="text-sm font-semibold">Receive Messages From</Label>
           <div className="grid grid-cols-2 gap-3">
-            {GENDERS.filter(g => g !== 'Prefer not to say').map(genderOption => (
+            {GENDERS.map(genderOption => (
               <div key={genderOption} className="flex items-center space-x-2.5 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
                 <Checkbox
                   id={`receive-${genderOption}`}
