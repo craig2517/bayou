@@ -31,12 +31,10 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const rand = Math.random()
     let radiusKm: number
     
-    if (rand < 0.6) {
+    if (rand < 0.85) {
       radiusKm = Math.random() * 0.5
-    } else if (rand < 0.85) {
-      radiusKm = 0.5 + Math.random() * 0.3
     } else {
-      radiusKm = 0.8 + Math.random() * 0.2
+      radiusKm = 0.5 + Math.random() * 0.5
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -46,28 +44,14 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const lng = CENTER_LNG + lngOffset
     const age = 18 + Math.floor(Math.random() * 42)
     
-    const ageRangeVariation = Math.random()
-    let ageMin: number, ageMax: number
-    
-    if (ageRangeVariation < 0.3) {
-      ageMin = Math.max(18, age - 5)
-      ageMax = Math.min(80, age + 5)
-    } else if (ageRangeVariation < 0.6) {
-      ageMin = 18
-      ageMax = Math.max(age + 10, 50)
-    } else {
-      ageMin = 18
-      ageMax = 80
-    }
-    
     users.push({
       id: `user-${i + 1}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
       receiveMessagesFrom: [...GENDERS],
-      ageRangeMin: ageMin,
-      ageRangeMax: ageMax,
+      ageRangeMin: 18,
+      ageRangeMax: 80,
       location: { lat, lng },
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),

@@ -19,7 +19,7 @@ import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/type
 
 function App() {
   const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile', null)
-  const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(1200))
+  const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(2000))
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages', {})
@@ -245,7 +245,7 @@ function App() {
   }
 
   const handleRefreshUsers = () => {
-    setDemoUsers(generateDemoUsers(1200))
+    setDemoUsers(generateDemoUsers(2000))
     toast.success('Nearby users refreshed!')
   }
 
