@@ -146,10 +146,10 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
               <MapPin className="text-primary mt-1 flex-shrink-0" size={20} weight="fill" />
               <div className="space-y-1">
                 <Label htmlFor="location-sharing" className="cursor-pointer font-semibold">
-                  Real-Time Location Sharing
+                  Appear in Discover
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Allow others to see your approximate location and discover you nearby. You can disable this at any time.
+                  Allow others to discover you in nearby searches. You can disable this at any time.
                 </p>
               </div>
             </div>
@@ -161,7 +161,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
           </div>
           {!locationSharingEnabled && (
             <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-              With location sharing disabled, you won't appear in discovery searches and won't be visible on the heat map.
+              With this disabled, you won't appear in Discover searches, but your anonymized location will still contribute to the heat map.
             </p>
           )}
         </div>

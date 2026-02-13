@@ -88,12 +88,12 @@ function App() {
         setChatRequests(current => [...(current || []), ...initialRequests])
         toast.success(`Profile saved! You have ${initialRequests.length} new message requests.`)
       } else {
-        toast.success('Profile saved! Location sharing enabled.')
+        toast.success('Profile saved! You are now discoverable nearby.')
       }
     } else if (profileData.locationSharingEnabled) {
-      toast.success('Profile saved! Location sharing enabled.')
+      toast.success('Profile saved! You are now discoverable nearby.')
     } else {
-      toast.success('Profile saved! Location sharing disabled.')
+      toast.success('Profile saved! You are hidden from Discover.')
     }
   }
 
@@ -270,7 +270,7 @@ function App() {
               {myProfile && !myProfile.locationSharingEnabled && (
                 <Badge variant="outline" className="flex items-center gap-1.5">
                   <MapPin size={14} />
-                  Location Off
+                  Discover Off
                 </Badge>
               )}
               <Button
@@ -338,9 +338,9 @@ function App() {
               <div className="text-center py-12 space-y-4">
                 <MapPin className="mx-auto text-muted-foreground" size={48} />
                 <div className="space-y-2">
-                  <p className="text-lg font-semibold">Location Sharing Disabled</p>
+                  <p className="text-lg font-semibold">Not Discoverable</p>
                   <p className="text-muted-foreground max-w-md mx-auto">
-                    Enable location sharing in your profile settings to discover nearby users and be discovered by others.
+                    You've hidden yourself from Discover. Enable discovery in your profile settings to appear in nearby searches and be discovered by others.
                   </p>
                 </div>
                 <Button onClick={() => setShowProfileDialog(true)} className="mt-4 bg-primary">
