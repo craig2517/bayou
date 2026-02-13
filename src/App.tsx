@@ -45,7 +45,7 @@ function App() {
       const acceptedRequests = (chatRequests || []).filter(req => req.status === 'accepted')
       const hasConversations = (conversations && conversations.length > 0)
       const hasAcceptedRequests = acceptedRequests.length > 0
-      const hasPendingRequests = (chatRequests || []).some(req => req.status === 'pending')
+      const hasPendingRequests = (chatRequests || []).some(req => req.status === 'pending' && req.toUserId === myProfile.id)
       
       const hasExistingData = hasConversations || hasAcceptedRequests || hasPendingRequests
       
@@ -54,7 +54,7 @@ function App() {
         console.log('Current profile:', myProfile)
         console.log('Total demo users:', demoUsers.length)
         
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 8)
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 5)
         
         if (demoData.conversations.length > 0) {
           setConversations(demoData.conversations)
@@ -62,7 +62,7 @@ function App() {
           setMessages(demoData.messages)
           
           const existingUserIds = demoData.conversations.flatMap(c => c.participants)
-          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 8)
+          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 10)
           
           if (additionalRequests.length > 0) {
             setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -70,6 +70,16 @@ function App() {
               description: 'Check the Requests tab to connect',
               duration: 4000
             })
+          } else {
+            console.log('⚠️ No additional requests generated - trying to force create some')
+            const forcedRequests = generateAdditionalChatRequests(myProfile, demoUsers, [], 10)
+            if (forcedRequests.length > 0) {
+              setChatRequests(current => [...(current || []), ...forcedRequests])
+              toast.success(`You have ${forcedRequests.length} new message requests!`, {
+                description: 'Check the Requests tab to connect',
+                duration: 4000
+              })
+            }
           }
           
           toast.success(`${demoData.conversations.length} demo conversations created!`, {
@@ -89,8 +99,22 @@ function App() {
         console.log('📊 Existing data found:', {
           conversations: conversations?.length || 0,
           acceptedRequests: acceptedRequests.length,
-          pendingRequests: (chatRequests || []).filter(req => req.status === 'pending').length
+          pendingRequests: (chatRequests || []).filter(req => req.status === 'pending' && req.toUserId === myProfile.id).length
         })
+        
+        if (!hasPendingRequests && hasConversations) {
+          console.log('⚠️ No pending requests found but conversations exist - generating some requests')
+          const existingUserIds = (conversations || []).flatMap(c => c.participants).concat((chatRequests || []).map(r => r.fromUserId))
+          const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 8)
+          
+          if (newRequests.length > 0) {
+            setChatRequests(current => [...(current || []), ...newRequests])
+            toast.success(`You have ${newRequests.length} new message requests!`, {
+              description: 'Check the Requests tab to connect',
+              duration: 4000
+            })
+          }
+        }
       }
     }
   }, [myProfile])
@@ -186,7 +210,22 @@ function App() {
 
   const pendingIncomingRequests = useMemo(() => {
     if (!myProfile || !chatRequests) return []
-    return chatRequests.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
+    const filtered = chatRequests.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
+    console.log('🔍 PENDING REQUESTS DEBUG:', {
+      myProfileId: myProfile.id,
+      totalChatRequests: chatRequests.length,
+      allRequests: chatRequests.map(r => ({
+        id: r.id,
+        from: r.fromUserId,
+        to: r.toUserId,
+        status: r.status,
+        isToMe: r.toUserId === myProfile.id,
+        isPending: r.status === 'pending'
+      })),
+      filteredCount: filtered.length,
+      filtered: filtered.map(r => ({ id: r.id, from: r.fromUserId, status: r.status }))
+    })
+    return filtered
   }, [chatRequests, myProfile])
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
@@ -410,6 +449,32 @@ function App() {
     }
   }
 
+  const handleGeneratePendingRequests = () => {
+    if (!myProfile) return
+    
+    const existingUserIds = [
+      ...(conversations || []).flatMap(c => c.participants),
+      ...(chatRequests || []).map(r => r.fromUserId),
+      ...(chatRequests || []).map(r => r.toUserId)
+    ].filter(id => id !== myProfile.id)
+    
+    const uniqueExistingUserIds = [...new Set(existingUserIds)]
+    
+    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 8)
+    
+    if (newRequests.length > 0) {
+      setChatRequests(current => [...(current || []), ...newRequests])
+      toast.success(`Generated ${newRequests.length} new pending requests!`, {
+        description: 'Check the Requests tab',
+        duration: 3000
+      })
+    } else {
+      toast.info('No eligible users available for requests', {
+        description: 'Try refreshing users or adjusting your profile preferences'
+      })
+    }
+  }
+
   const handleSendMessage = (conversationId: string, text: string) => {
     if (!myProfile) return
 
@@ -487,6 +552,10 @@ function App() {
                   <DropdownMenuItem onClick={handleGenerateMoreDemoData} className="cursor-pointer">
                     <ChatCircle size={16} className="mr-2" />
                     Generate More Data
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleGeneratePendingRequests} className="cursor-pointer">
+                    <User size={16} className="mr-2" />
+                    Generate Pending Requests
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleClearAllData} className="cursor-pointer text-destructive focus:text-destructive">
