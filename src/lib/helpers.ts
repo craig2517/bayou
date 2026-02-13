@@ -25,63 +25,28 @@ function getRandomGenderPreferences(): string[] {
 
 export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
+  const timestamp = Date.now()
   
-  const ultraCloseCount = Math.min(1500, Math.floor(count * 0.75))
-  for (let i = 0; i < ultraCloseCount; i++) {
+  for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.75
+    const radiusKm = Math.random() * 0.4
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
     
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
-    const age = 18 + Math.floor(Math.random() * 47)
+    const age = 20 + Math.floor(Math.random() * 40)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
-    const ageRangeMin = 18
-    const ageRangeMax = 80
-    
     users.push({
-      id: `user-demo-ultra-${i + 1}-${Date.now()}`,
+      id: `user-demo-${i + 1}-${timestamp}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender,
-      receiveMessagesFrom: getRandomGenderPreferences(),
-      ageRangeMin,
-      ageRangeMax,
-      location: { lat, lng },
-      isActive: true,
-      lastActive: Date.now() - Math.floor(Math.random() * 3600000),
-      locationSharingEnabled: true,
-      requireApproval: Math.random() > 0.3
-    })
-  }
-  
-  const remainingCount = count - ultraCloseCount
-  for (let i = 0; i < remainingCount; i++) {
-    const angle = Math.random() * 2 * Math.PI
-    const radiusKm = 0.75 + Math.random() * 0.25
-    
-    const latOffset = (radiusKm / 111) * Math.cos(angle)
-    const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
-    
-    const lat = CENTER_LAT + latOffset
-    const lng = CENTER_LNG + lngOffset
-    const age = 18 + Math.floor(Math.random() * 47)
-    const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
-    
-    const ageRangeMin = 18
-    const ageRangeMax = 80
-    
-    users.push({
-      id: `user-demo-far-${i + 1}-${Date.now()}`,
-      name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
-      age,
-      gender,
-      receiveMessagesFrom: getRandomGenderPreferences(),
-      ageRangeMin,
-      ageRangeMax,
+      receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
+      ageRangeMin: 18,
+      ageRangeMax: 80,
       location: { lat, lng },
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
