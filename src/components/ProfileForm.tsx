@@ -157,7 +157,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
                 {profilePicture && !isExpired ? 'Retake Photo' : 'Take Photo'}
               </Button>
               <p className="text-xs text-muted-foreground">
-                Live camera capture only • Photos expire after 24h
+                Live camera capture only • Photo expires after 24h
               </p>
             </div>
           </div>
