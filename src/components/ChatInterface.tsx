@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PaperPlaneTilt, ArrowLeft, ChatCircle } from '@phosphor-icons/react'
 import type { Message, UserProfile } from '@/lib/types'
 
@@ -40,6 +40,15 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
     .join('')
     .toUpperCase()
 
+  const isPhotoValid = () => {
+    if (!otherUser.profilePicture) return false
+    const now = Date.now()
+    const hoursSinceCapture = (now - otherUser.profilePicture.capturedAt) / (1000 * 60 * 60)
+    return hoursSinceCapture < 24
+  }
+
+  const photoValid = isPhotoValid()
+
   return (
     <Card className="flex flex-col h-full border-2 shadow-lg">
       <div className="p-5 border-b-2 border-border flex items-center gap-3 bg-muted/20">
@@ -57,6 +66,9 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
           className="w-11 h-11 border-2 border-primary/20 cursor-pointer hover:scale-105 transition-transform shadow-sm"
           onClick={onViewProfile}
         >
+          {photoValid && otherUser.profilePicture && (
+            <AvatarImage src={otherUser.profilePicture.dataUrl} alt={otherUser.name} />
+          )}
           <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
             {otherUserInitials}
           </AvatarFallback>

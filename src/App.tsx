@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Toaster } from '@/components/ui/sonner'
 import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise } from '@phosphor-icons/react'
@@ -31,6 +32,13 @@ function App() {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const isPhotoValid = (user: UserProfile | null) => {
+    if (!user?.profilePicture) return false
+    const now = Date.now()
+    const hoursSinceCapture = (now - user.profilePicture.capturedAt) / (1000 * 60 * 60)
+    return hoursSinceCapture < 24
+  }
 
   useEffect(() => {
     if (!myProfile) {
@@ -374,9 +382,18 @@ function App() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowProfileDialog(true)}
-                className="shadow-sm hover:shadow-md transition-all"
+                className="shadow-sm hover:shadow-md transition-all flex items-center gap-2"
               >
-                <User className="mr-1.5" size={18} />
+                {myProfile && isPhotoValid(myProfile) && myProfile.profilePicture ? (
+                  <Avatar className="w-6 h-6 border border-border">
+                    <AvatarImage src={myProfile.profilePicture.dataUrl} alt={myProfile.name} />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-xs">
+                      {myProfile.name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <User size={18} />
+                )}
                 <span className="hidden sm:inline">{myProfile ? myProfile.name : 'Profile'}</span>
               </Button>
             </div>
@@ -574,46 +591,54 @@ function App() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
-                {activeConversations.map(conv => (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv.id)}
-                    className="p-5 bg-card rounded-xl border border-border hover:border-primary/30 hover:shadow-md cursor-pointer transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div 
-                        className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold cursor-pointer hover:scale-105 transition-transform text-lg shadow-sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleViewUserProfile(conv.otherUser!)
-                        }}
-                      >
-                        {conv.otherUser!.name[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 
-                          className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors"
+                {activeConversations.map(conv => {
+                  const otherUserPhotoValid = isPhotoValid(conv.otherUser!)
+                  return (
+                    <div
+                      key={conv.id}
+                      onClick={() => setSelectedConversation(conv.id)}
+                      className="p-5 bg-card rounded-xl border border-border hover:border-primary/30 hover:shadow-md cursor-pointer transition-all duration-200"
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar
+                          className="w-14 h-14 cursor-pointer hover:scale-105 transition-transform shadow-sm border-2 border-primary/20"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleViewUserProfile(conv.otherUser!)
                           }}
                         >
-                          {conv.otherUser!.name}
-                        </h3>
+                          {otherUserPhotoValid && conv.otherUser!.profilePicture && (
+                            <AvatarImage src={conv.otherUser!.profilePicture.dataUrl} alt={conv.otherUser!.name} />
+                          )}
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-lg">
+                            {conv.otherUser!.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <h3 
+                            className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleViewUserProfile(conv.otherUser!)
+                            }}
+                          >
+                            {conv.otherUser!.name}
+                          </h3>
+                          {conv.lastMessage && (
+                            <p className="text-sm text-muted-foreground truncate mt-1">
+                              {conv.lastMessage.text}
+                            </p>
+                          )}
+                        </div>
                         {conv.lastMessage && (
-                          <p className="text-sm text-muted-foreground truncate mt-1">
-                            {conv.lastMessage.text}
-                          </p>
+                          <span className="text-xs text-muted-foreground font-medium">
+                            {new Date(conv.lastMessage.timestamp).toLocaleDateString()}
+                          </span>
                         )}
                       </div>
-                      {conv.lastMessage && (
-                        <span className="text-xs text-muted-foreground font-medium">
-                          {new Date(conv.lastMessage.timestamp).toLocaleDateString()}
-                        </span>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </TabsContent>
@@ -640,6 +665,7 @@ function App() {
                 {pendingIncomingRequests.map(request => {
                   const fromUser = demoUsers.find(u => u.id === request.fromUserId)
                   if (!fromUser) return null
+                  const fromUserPhotoValid = isPhotoValid(fromUser)
                   return (
                     <div
                       key={request.id}
@@ -647,12 +673,17 @@ function App() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div 
-                            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold cursor-pointer hover:scale-105 transition-transform text-lg shadow-sm"
+                          <Avatar
+                            className="w-14 h-14 cursor-pointer hover:scale-105 transition-transform shadow-sm border-2 border-primary/20"
                             onClick={() => handleViewUserProfile(fromUser)}
                           >
-                            {fromUser.name[0]}
-                          </div>
+                            {fromUserPhotoValid && fromUser.profilePicture && (
+                              <AvatarImage src={fromUser.profilePicture.dataUrl} alt={fromUser.name} />
+                            )}
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-lg">
+                              {fromUser.name[0]}
+                            </AvatarFallback>
+                          </Avatar>
                           <div>
                             <h3 
                               className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors"

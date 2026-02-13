@@ -14,6 +14,10 @@ export interface UserProfile {
   lastActive: number
   locationSharingEnabled: boolean
   requireApproval: boolean
+  profilePicture?: {
+    dataUrl: string
+    capturedAt: number
+  }
 }
 
 export interface ChatRequest {

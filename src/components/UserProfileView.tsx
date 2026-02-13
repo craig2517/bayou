@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MapPin, User as UserIcon, Heart, Calendar } from '@phosphor-icons/react'
@@ -16,6 +16,15 @@ export function UserProfileView({ user, distance }: UserProfileViewProps) {
     .map(n => n[0])
     .join('')
     .toUpperCase()
+
+  const isPhotoValid = () => {
+    if (!user.profilePicture) return false
+    const now = Date.now()
+    const hoursSinceCapture = (now - user.profilePicture.capturedAt) / (1000 * 60 * 60)
+    return hoursSinceCapture < 24
+  }
+
+  const photoValid = isPhotoValid()
 
   const lastActiveText = () => {
     const now = Date.now()
@@ -34,6 +43,9 @@ export function UserProfileView({ user, distance }: UserProfileViewProps) {
     <Card className="p-6 border-0 shadow-none">
       <div className="flex flex-col items-center text-center space-y-6">
         <Avatar className="w-28 h-28 border-4 border-primary/20 shadow-lg">
+          {photoValid && user.profilePicture && (
+            <AvatarImage src={user.profilePicture.dataUrl} alt={user.name} />
+          )}
           <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-bold text-4xl">
             {initials}
           </AvatarFallback>

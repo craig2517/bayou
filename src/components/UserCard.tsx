@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChatCircle } from '@phosphor-icons/react'
@@ -20,6 +20,15 @@ export function UserCard({ user, distance, canMessage = true, onMessage, onViewP
     .join('')
     .toUpperCase()
 
+  const isPhotoValid = () => {
+    if (!user.profilePicture) return false
+    const now = Date.now()
+    const hoursSinceCapture = (now - user.profilePicture.capturedAt) / (1000 * 60 * 60)
+    return hoursSinceCapture < 24
+  }
+
+  const photoValid = isPhotoValid()
+
   return (
     <Card className="p-5 hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 group">
       <div className="flex items-start gap-4">
@@ -27,6 +36,9 @@ export function UserCard({ user, distance, canMessage = true, onMessage, onViewP
           className="w-16 h-16 border-2 border-primary/20 cursor-pointer group-hover:scale-110 group-hover:border-primary/40 transition-all duration-300 shadow-sm"
           onClick={onViewProfile}
         >
+          {photoValid && user.profilePicture && (
+            <AvatarImage src={user.profilePicture.dataUrl} alt={user.name} />
+          )}
           <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-lg">
             {initials}
           </AvatarFallback>
