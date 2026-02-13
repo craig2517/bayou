@@ -21,10 +21,10 @@ const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
   const rand = Math.random()
-  if (rand < 0.95) {
+  if (rand < 0.9) {
     return [...GENDERS]
   } else {
-    const count = 3 + Math.floor(Math.random() * 2)
+    const count = 1 + Math.floor(Math.random() * 3)
     const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
     return shuffled.slice(0, count)
   }
@@ -38,12 +38,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const rand = Math.random()
     let radiusKm: number
     
-    if (rand < 0.85) {
-      radiusKm = Math.random() * 0.5
-    } else if (rand < 0.95) {
-      radiusKm = 0.5 + Math.random() * 0.3
+    if (rand < 0.7) {
+      radiusKm = Math.random() * 0.3
+    } else if (rand < 0.9) {
+      radiusKm = 0.3 + Math.random() * 0.4
     } else {
-      radiusKm = 0.8 + Math.random() * 0.2
+      radiusKm = 0.7 + Math.random() * 0.3
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -53,9 +53,10 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const lng = CENTER_LNG + lngOffset
     const age = Math.floor(Math.random() * 43) + 18
     
-    const ageVariance = Math.floor(Math.random() * 20) + 25
-    const minAge = Math.max(18, age - ageVariance)
-    const maxAge = Math.min(80, age + ageVariance + Math.floor(Math.random() * 20))
+    const ageRangeSize = 15 + Math.floor(Math.random() * 25)
+    const rangeStart = Math.max(18, age - Math.floor(ageRangeSize / 2))
+    const minAge = rangeStart
+    const maxAge = Math.min(80, rangeStart + ageRangeSize)
     
     users.push({
       id: `user-${i + 1}`,
@@ -66,9 +67,9 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       ageRangeMin: minAge,
       ageRangeMax: maxAge,
       location: { lat, lng },
-      isActive: Math.random() > 0.01,
+      isActive: Math.random() > 0.05,
       lastActive: Date.now() - Math.floor(Math.random() * 7200000),
-      locationSharingEnabled: Math.random() > 0.01,
+      locationSharingEnabled: Math.random() > 0.05,
       requireApproval: Math.random() > 0.5
     })
   }
