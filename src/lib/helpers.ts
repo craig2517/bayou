@@ -105,7 +105,7 @@ export function fuzzLocation(lat: number, lng: number, radiusKm: number = 0.5): 
 
 export function generateHeatMapData(users: UserProfile[]): HeatMapPoint[] {
   const heatPoints: HeatMapPoint[] = []
-  const activeUsers = users.filter(u => u.isActive && u.locationSharingEnabled)
+  const activeUsers = users.filter(u => u.isActive)
   
   const locationClusters: Map<string, { lat: number; lng: number; count: number }> = new Map()
   
