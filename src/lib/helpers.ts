@@ -36,7 +36,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
-    const age = 18 + Math.floor(Math.random() * 52)
+    const age = 18 + Math.floor(Math.random() * 83)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
     users.push({
@@ -46,7 +46,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       gender,
       receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
       ageRangeMin: 18,
-      ageRangeMax: 70,
+      ageRangeMax: 100,
       location: { lat, lng },
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
