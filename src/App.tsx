@@ -45,6 +45,7 @@ function App() {
       return []
     }
     
+    console.log('==================== NEARBY USERS CALCULATION ====================')
     console.log('👤 MY PROFILE:', {
       id: myProfile.id,
       location: myProfile.location,
@@ -91,11 +92,12 @@ function App() {
     
     console.log('🔍 DISCOVER DEBUG:', {
       searchRadius: searchRadius[0] + 'km',
-      usersInRadius: inRadiusUsers.length,
-      matchingUsers: inRadiusUsers.filter(f => f.canMessage).length,
-      closest20Users: sortedByDistance.slice(0, 20).map(item => ({
+      totalWithDistance: allUsersWithDistance.length,
+      inRadiusCount: inRadiusUsers.length,
+      matchingCount: inRadiusUsers.filter(f => f.canMessage).length,
+      closest10: sortedByDistance.slice(0, 10).map(item => ({
         name: item.user.name,
-        distance: item.distance.toFixed(3) + 'km',
+        distance: item.distance.toFixed(4) + 'km',
         inRadius: item.distance <= searchRadius[0],
         gender: item.user.gender,
         age: item.user.age,
@@ -110,6 +112,7 @@ function App() {
         }
       }))
     })
+    console.log('==================================================================')
     
     return inRadiusUsers
   }, [myProfile, demoUsers, searchRadius])

@@ -26,17 +26,10 @@ function getRandomGenderPreferences(): string[] {
 export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   
-  for (let i = 0; i < count; i++) {
+  const veryCloseCount = Math.min(300, Math.floor(count * 0.3))
+  for (let i = 0; i < veryCloseCount; i++) {
     const angle = Math.random() * 2 * Math.PI
-    let radiusKm: number
-    
-    if (i < count * 0.6) {
-      radiusKm = Math.random() * 0.4
-    } else if (i < count * 0.85) {
-      radiusKm = 0.4 + Math.random() * 0.5
-    } else {
-      radiusKm = 0.9 + Math.random() * 0.1
-    }
+    const radiusKm = Math.random() * 0.5
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -44,13 +37,14 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
     const age = 18 + Math.floor(Math.random() * 47)
+    const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
     users.push({
-      id: `user-demo-${i + 1}-${Date.now()}`,
+      id: `user-demo-close-${i + 1}-${Date.now()}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
-      gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
-      receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
+      gender,
+      receiveMessagesFrom: GENDERS,
       ageRangeMin: 18,
       ageRangeMax: 80,
       location: { lat, lng },
@@ -61,10 +55,10 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     })
   }
   
-  const veryCloseCount = Math.min(50, Math.floor(count * 0.1))
-  for (let i = 0; i < veryCloseCount; i++) {
+  const remainingCount = count - veryCloseCount
+  for (let i = 0; i < remainingCount; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.15
+    const radiusKm = 0.5 + Math.random() * 0.5
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -72,13 +66,14 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
     const age = 18 + Math.floor(Math.random() * 47)
+    const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
     users.push({
-      id: `user-demo-close-${i + 1}-${Date.now()}`,
+      id: `user-demo-${i + 1}-${Date.now()}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
-      gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
-      receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
+      gender,
+      receiveMessagesFrom: GENDERS,
       ageRangeMin: 18,
       ageRangeMax: 80,
       location: { lat, lng },
@@ -94,19 +89,26 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     return { name: u.name, distance: dist }
   })
   
-  console.log('🎲 Generated demo users:', {
+  console.log('🎲 GENERATED DEMO USERS:', {
     count: users.length,
+    center: { lat: CENTER_LAT, lng: CENTER_LNG },
+    within100m: distancesFromCenter.filter(d => d.distance <= 0.1).length,
+    within300m: distancesFromCenter.filter(d => d.distance <= 0.3).length,
     within500m: distancesFromCenter.filter(d => d.distance <= 0.5).length,
+    within800m: distancesFromCenter.filter(d => d.distance <= 0.8).length,
     within1km: distancesFromCenter.filter(d => d.distance <= 1).length,
     closestUsers: distancesFromCenter.sort((a, b) => a.distance - b.distance).slice(0, 10),
-    sample: users.slice(0, 3).map(u => ({
+    sampleUsers: users.slice(0, 3).map(u => ({
       id: u.id,
       name: u.name,
       age: u.age,
       gender: u.gender,
       location: u.location,
+      distance: calculateDistance(CENTER_LAT, CENTER_LNG, u.location.lat, u.location.lng).toFixed(4) + 'km',
       receiveFrom: u.receiveMessagesFrom,
-      ageRange: [u.ageRangeMin, u.ageRangeMax]
+      ageRange: [u.ageRangeMin, u.ageRangeMax],
+      isActive: u.isActive,
+      locationSharingEnabled: u.locationSharingEnabled
     }))
   })
   
