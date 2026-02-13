@@ -17,10 +17,16 @@ const FIRST_NAMES = [
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
-  const count = Math.floor(Math.random() * 4) + 1
-  const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
-  const result = shuffled.slice(0, count)
-  return result.length > 0 ? result : [GENDERS[0]]
+  const rand = Math.random()
+  if (rand < 0.5) {
+    return [...GENDERS]
+  } else if (rand < 0.7) {
+    const count = Math.floor(Math.random() * 3) + 2
+    const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
+    return shuffled.slice(0, count)
+  } else {
+    return [GENDERS[Math.floor(Math.random() * GENDERS.length)]]
+  }
 }
 
 export function generateDemoUsers(count: number = 50): UserProfile[] {
@@ -29,7 +35,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   for (let i = 0; i < count; i++) {
     const lat = CENTER_LAT + (Math.random() - 0.5) * 0.018
     const lng = CENTER_LNG + (Math.random() - 0.5) * 0.018
-    const age = Math.floor(Math.random() * 30) + 20
+    const age = Math.floor(Math.random() * 32) + 21
     
     users.push({
       id: `user-${i + 1}`,
@@ -37,13 +43,13 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
       receiveMessagesFrom: getRandomGenderPreferences(),
-      ageRangeMin: Math.max(18, age - 15),
-      ageRangeMax: Math.min(80, age + 15),
+      ageRangeMin: Math.max(18, age - 20),
+      ageRangeMax: Math.min(80, age + 20),
       location: { lat, lng },
-      isActive: Math.random() > 0.05,
+      isActive: Math.random() > 0.02,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
-      locationSharingEnabled: Math.random() > 0.05,
-      requireApproval: Math.random() > 0.3
+      locationSharingEnabled: Math.random() > 0.02,
+      requireApproval: Math.random() > 0.4
     })
   }
   
@@ -132,4 +138,45 @@ export function getApproximateDistance(km: number): string {
   if (km < 5) return 'Within 5km'
   if (km < 10) return 'Within 10km'
   return 'Far away'
+}
+
+export function generateInitialChatRequests(
+  myProfile: UserProfile,
+  demoUsers: UserProfile[],
+  count: number = 5
+) {
+  const eligibleUsers = demoUsers.filter(user => {
+    if (!user.isActive || !user.locationSharingEnabled) return false
+    
+    const distance = calculateDistance(
+      myProfile.location.lat,
+      myProfile.location.lng,
+      user.location.lat,
+      user.location.lng
+    )
+    
+    if (distance > 1) return false
+    
+    const canMessage = 
+      user.receiveMessagesFrom?.includes(myProfile.gender) &&
+      user.ageRangeMin <= myProfile.age &&
+      user.ageRangeMax >= myProfile.age &&
+      myProfile.receiveMessagesFrom?.includes(user.gender) &&
+      myProfile.ageRangeMin <= user.age &&
+      myProfile.ageRangeMax >= user.age
+    
+    return canMessage
+  })
+  
+  const selectedUsers = eligibleUsers
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.min(count, eligibleUsers.length))
+  
+  return selectedUsers.map((user, index) => ({
+    id: `initial-req-${index}`,
+    fromUserId: user.id,
+    toUserId: myProfile.id,
+    status: 'pending' as const,
+    timestamp: Date.now() - Math.floor(Math.random() * 3600000)
+  }))
 }

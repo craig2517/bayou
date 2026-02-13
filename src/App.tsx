@@ -13,7 +13,7 @@ import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
 import { ChatInterface } from '@/components/ChatInterface'
 import { UserProfileView } from '@/components/UserProfileView'
-import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance } from '@/lib/helpers'
+import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
@@ -71,6 +71,7 @@ function App() {
   }, [chatRequests, myProfile])
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
+    const isNewProfile = !myProfile
     const newProfile: UserProfile = {
       ...profileData,
       id: myProfile?.id || `user-current`,
@@ -81,7 +82,15 @@ function App() {
     setMyProfile(newProfile)
     setShowProfileDialog(false)
     
-    if (profileData.locationSharingEnabled) {
+    if (isNewProfile && profileData.locationSharingEnabled) {
+      const initialRequests = generateInitialChatRequests(newProfile, demoUsers, 3)
+      if (initialRequests.length > 0) {
+        setChatRequests(current => [...(current || []), ...initialRequests])
+        toast.success(`Profile saved! You have ${initialRequests.length} new message requests.`)
+      } else {
+        toast.success('Profile saved! Location sharing enabled.')
+      }
+    } else if (profileData.locationSharingEnabled) {
       toast.success('Profile saved! Location sharing enabled.')
     } else {
       toast.success('Profile saved! Location sharing disabled.')
