@@ -76,23 +76,24 @@ function App() {
         user.location.lng
       )
       
-      const userAcceptsMe = user.receiveMessagesFrom?.includes(myProfile.gender)
-      const userAgeMatchesMe = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
-      const iAcceptUser = myProfile.receiveMessagesFrom?.includes(user.gender)
-      const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+      const userAcceptsMe = user.receiveMessagesFrom?.includes(myProfile.gender) ?? false
+      const userAgeMatchesMe = (user.ageRangeMin ?? 18) <= myProfile.age && (user.ageRangeMax ?? 80) >= myProfile.age
+      const iAcceptUser = myProfile.receiveMessagesFrom?.includes(user.gender) ?? false
+      const myAgeMatchesUser = (myProfile.ageRangeMin ?? 18) <= user.age && (myProfile.ageRangeMax ?? 80) >= user.age
       
       const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser
       
       return { user, distance, canMessage, userAcceptsMe, userAgeMatchesMe, iAcceptUser, myAgeMatchesUser }
     })
     
-    const inRadiusUsers = allUsersWithDistance.filter(item => item.distance <= searchRadius[0])
+    const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
+    const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0])
     
     console.log('🔍 DISCOVER DEBUG:', {
       searchRadius: searchRadius[0] + 'km',
       usersInRadius: inRadiusUsers.length,
       matchingUsers: inRadiusUsers.filter(f => f.canMessage).length,
-      closestUsers: allUsersWithDistance.slice(0, 10).map(item => ({
+      closest20Users: sortedByDistance.slice(0, 20).map(item => ({
         name: item.user.name,
         distance: item.distance.toFixed(3) + 'km',
         inRadius: item.distance <= searchRadius[0],
@@ -110,7 +111,7 @@ function App() {
       }))
     })
     
-    return inRadiusUsers.sort((a, b) => a.distance - b.distance)
+    return inRadiusUsers
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
@@ -119,10 +120,13 @@ function App() {
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
     const isNewProfile = !myProfile
+    const CENTER_LAT = 38.2545
+    const CENTER_LNG = -85.7145
+    
     const newProfile: UserProfile = {
       ...profileData,
       id: myProfile?.id || `user-current`,
-      location: myProfile?.location || { lat: 38.2545, lng: -85.7145 },
+      location: myProfile?.location || { lat: CENTER_LAT, lng: CENTER_LNG },
       isActive: true,
       lastActive: Date.now()
     }
@@ -130,7 +134,10 @@ function App() {
     console.log('💾 SAVED PROFILE:', {
       profile: newProfile,
       isNewProfile,
-      totalDemoUsers: demoUsers.length
+      totalDemoUsers: demoUsers.length,
+      location: newProfile.location,
+      receiveMessagesFrom: newProfile.receiveMessagesFrom,
+      ageRange: [newProfile.ageRangeMin, newProfile.ageRangeMax]
     })
     
     setMyProfile(newProfile)
@@ -138,6 +145,7 @@ function App() {
     
     if (isNewProfile && profileData.locationSharingEnabled) {
       const initialRequests = generateInitialChatRequests(newProfile, demoUsers, 3)
+      console.log('🔔 Initial requests generated:', initialRequests.length)
       if (initialRequests.length > 0) {
         setChatRequests(current => [...(current || []), ...initialRequests])
         toast.success(`Profile saved! You have ${initialRequests.length} new message requests.`)
@@ -445,6 +453,9 @@ function App() {
                       </span>
                       <span className="text-muted-foreground">
                         In Range: <span className="font-semibold text-foreground">{nearbyUsers.length}</span>
+                      </span>
+                      <span className="text-muted-foreground">
+                        Matching: <span className="font-semibold text-foreground">{nearbyUsers.filter(u => u.canMessage).length}</span>
                       </span>
                     </div>
                   </div>

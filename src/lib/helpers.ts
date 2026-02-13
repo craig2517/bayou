@@ -30,10 +30,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const angle = Math.random() * 2 * Math.PI
     let radiusKm: number
     
-    if (i < count * 0.9) {
-      radiusKm = Math.random() * 0.2
+    if (i < count * 0.7) {
+      radiusKm = Math.random() * 0.3
+    } else if (i < count * 0.9) {
+      radiusKm = 0.3 + Math.random() * 0.3
     } else {
-      radiusKm = 0.2 + Math.random() * 0.3
+      radiusKm = 0.6 + Math.random() * 0.4
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -59,8 +61,16 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     })
   }
   
+  const distancesFromCenter = users.map(u => {
+    const dist = calculateDistance(CENTER_LAT, CENTER_LNG, u.location.lat, u.location.lng)
+    return { name: u.name, distance: dist }
+  })
+  
   console.log('🎲 Generated demo users:', {
     count: users.length,
+    within500m: distancesFromCenter.filter(d => d.distance <= 0.5).length,
+    within1km: distancesFromCenter.filter(d => d.distance <= 1).length,
+    closestUsers: distancesFromCenter.sort((a, b) => a.distance - b.distance).slice(0, 10),
     sample: users.slice(0, 3).map(u => ({
       id: u.id,
       name: u.name,
