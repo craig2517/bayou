@@ -18,10 +18,45 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
 
   useEffect(() => {
     let mounted = true
+    let currentStream: MediaStream | null = null
     
     const initCamera = async () => {
-      if (mounted) {
-        await startCamera()
+      try {
+        setIsLoading(true)
+        setError(null)
+        
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        })
+        
+        if (!mounted) {
+          mediaStream.getTracks().forEach(track => track.stop())
+          return
+        }
+        
+        currentStream = mediaStream
+        setStream(mediaStream)
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream
+          await videoRef.current.play()
+        }
+        
+        if (mounted) {
+          setIsLoading(false)
+        }
+      } catch (err) {
+        console.error('Camera access error:', err)
+        if (mounted) {
+          setError('Unable to access camera. Please grant camera permissions.')
+          setIsLoading(false)
+          toast.error('Camera access denied')
+        }
       }
     }
     
@@ -29,7 +64,9 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
     
     return () => {
       mounted = false
-      stopCamera()
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop())
+      }
     }
   }, [])
 

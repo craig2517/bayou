@@ -263,6 +263,8 @@ function App() {
   }
 
   const handleAcceptRequest = (request: ChatRequest) => {
+    if (!myProfile) return
+    
     setChatRequests(current =>
       (current || []).map(req => (req.id === request.id ? { ...req, status: 'accepted' as const } : req))
     )
@@ -301,7 +303,21 @@ function App() {
   const handleRefreshUsers = () => {
     setIsRefreshing(true)
     setTimeout(() => {
-      setDemoUsers(generateDemoUsers(2000))
+      const existingRequestIds = (chatRequests || []).map(req => [req.fromUserId, req.toUserId])
+      const existingConvIds = (conversations || []).flatMap(conv => conv.participants)
+      const protectedUserIds = [...new Set([...existingConvIds, ...existingRequestIds.flat()])]
+      
+      const newUsers = generateDemoUsers(2000)
+      
+      const refreshedUsers = newUsers.map(user => {
+        if (protectedUserIds.includes(user.id)) {
+          const existingUser = demoUsers.find(u => u.id === user.id)
+          return existingUser || user
+        }
+        return user
+      })
+      
+      setDemoUsers(refreshedUsers)
       setIsRefreshing(false)
       toast.success('Nearby users refreshed!')
     }, 500)
@@ -337,9 +353,9 @@ function App() {
       .map(conv => {
         const otherUserId = conv.participants.find(id => id !== myProfile.id)
         const otherUser = demoUsers.find(u => u.id === otherUserId)
-        return { ...conv, otherUser }
+        return { ...conv, otherUser: otherUser || null }
       })
-      .filter(conv => conv.otherUser)
+      .filter(conv => conv.otherUser !== null)
       .sort((a, b) => {
         const aTime = a.lastMessage?.timestamp || 0
         const bTime = b.lastMessage?.timestamp || 0
@@ -349,6 +365,12 @@ function App() {
 
   const currentConversation = activeConversations.find(c => c.id === selectedConversation)
   const currentMessages = selectedConversation && messages ? messages[selectedConversation] || [] : []
+  
+  useEffect(() => {
+    if (selectedConversation && !currentConversation) {
+      setSelectedConversation(null)
+    }
+  }, [selectedConversation, currentConversation])
 
   return (
     <div className="min-h-screen bg-background">
@@ -581,12 +603,12 @@ function App() {
                   </p>
                 </div>
               </div>
-            ) : selectedConversation && currentConversation ? (
+            ) : selectedConversation && currentConversation && currentConversation.otherUser ? (
               <div className="h-[600px] rounded-xl overflow-hidden shadow-lg">
                 <ChatInterface
                   messages={currentMessages}
                   currentUserId={myProfile.id}
-                  otherUser={currentConversation.otherUser!}
+                  otherUser={currentConversation.otherUser}
                   onSendMessage={(text) => handleSendMessage(selectedConversation, text)}
                   onBack={() => setSelectedConversation(null)}
                   onViewProfile={() => handleViewUserProfile(currentConversation.otherUser!)}
@@ -595,7 +617,8 @@ function App() {
             ) : (
               <div className="grid grid-cols-1 gap-4">
                 {activeConversations.map(conv => {
-                  const otherUserPhotoValid = conv.otherUser?.profilePicture ? isPhotoValid(conv.otherUser.profilePicture) : false
+                  if (!conv.otherUser) return null
+                  const otherUserPhotoValid = conv.otherUser.profilePicture ? isPhotoValid(conv.otherUser.profilePicture) : false
                   return (
                     <div
                       key={conv.id}
@@ -610,11 +633,11 @@ function App() {
                             handleViewUserProfile(conv.otherUser!)
                           }}
                         >
-                          {otherUserPhotoValid && conv.otherUser!.profilePicture && (
-                            <AvatarImage src={conv.otherUser!.profilePicture.dataUrl} alt={conv.otherUser!.name} />
+                          {otherUserPhotoValid && conv.otherUser.profilePicture && (
+                            <AvatarImage src={conv.otherUser.profilePicture.dataUrl} alt={conv.otherUser.name} />
                           )}
                           <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-lg">
-                            {conv.otherUser!.name[0]}
+                            {conv.otherUser.name[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -625,7 +648,7 @@ function App() {
                               handleViewUserProfile(conv.otherUser!)
                             }}
                           >
-                            {conv.otherUser!.name}
+                            {conv.otherUser.name}
                           </h3>
                           {conv.lastMessage && (
                             <p className="text-sm text-muted-foreground truncate mt-1">

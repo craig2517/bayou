@@ -32,7 +32,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   ])
 
   const handleAgeRangeChange = (values: number[]) => {
-    if (values[0] <= values[1]) {
+    if (values.length === 2 && values[0] <= values[1]) {
       setAgeRange(values)
     }
   }
@@ -45,12 +45,27 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const [isExpired, setIsExpired] = useState(false)
 
   useEffect(() => {
+    let mounted = true
+    
     if (profilePicture) {
-      const now = Date.now()
-      const hoursSinceCapture = (now - profilePicture.capturedAt) / (1000 * 60 * 60)
-      if (hoursSinceCapture >= 24) {
-        setIsExpired(true)
-        setProfilePicture(undefined)
+      const checkExpiration = () => {
+        if (!mounted) return
+        
+        const now = Date.now()
+        const hoursSinceCapture = (now - profilePicture.capturedAt) / (1000 * 60 * 60)
+        if (hoursSinceCapture >= 24) {
+          setIsExpired(true)
+          setProfilePicture(undefined)
+        }
+      }
+      
+      checkExpiration()
+      
+      const interval = setInterval(checkExpiration, 60000)
+      
+      return () => {
+        mounted = false
+        clearInterval(interval)
       }
     }
   }, [profilePicture])
@@ -79,13 +94,14 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name || !age || !gender || receiveMessagesFrom.length === 0) {
+    const parsedAge = parseInt(age)
+    if (!name || !age || !gender || receiveMessagesFrom.length === 0 || isNaN(parsedAge) || parsedAge < 18 || parsedAge > 100) {
       return
     }
 
     onSave({
       name,
-      age: parseInt(age),
+      age: parsedAge,
       gender,
       receiveMessagesFrom,
       ageRangeMin: ageRange[0],
@@ -96,7 +112,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
     })
   }
 
-  const isValid = name && age && gender && receiveMessagesFrom.length > 0 && parseInt(age) >= 18 && parseInt(age) <= 100
+  const isValid = name && age && gender && receiveMessagesFrom.length > 0 && !isNaN(parseInt(age)) && parseInt(age) >= 18 && parseInt(age) <= 100
 
   const getPhotoTimeRemaining = () => {
     if (!profilePicture) return null

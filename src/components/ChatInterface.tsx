@@ -20,10 +20,12 @@ interface ChatInterfaceProps {
 export function ChatInterface({ messages, currentUserId, otherUser, onSendMessage, onBack, onViewProfile }: ChatInterfaceProps) {
   const [messageText, setMessageText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]')
+    if (scrollContainer) {
+      scrollContainer.scrollTop = scrollContainer.scrollHeight
     }
   }, [messages])
 
@@ -76,7 +78,7 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-5" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-5" ref={scrollAreaRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-12">
