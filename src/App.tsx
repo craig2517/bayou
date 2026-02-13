@@ -23,7 +23,7 @@ function App() {
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages', {})
-  const [searchRadius, setSearchRadius] = useState([1])
+  const [searchRadius, setSearchRadius] = useState([0.1])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
@@ -373,7 +373,7 @@ function App() {
                   <Slider
                     value={searchRadius}
                     onValueChange={setSearchRadius}
-                    min={0.5}
+                    min={0.1}
                     max={1}
                     step={0.1}
                     className="w-full"
