@@ -18,9 +18,9 @@ const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
   const rand = Math.random()
-  if (rand < 0.65) {
+  if (rand < 0.85) {
     return [...GENDERS]
-  } else if (rand < 0.85) {
+  } else if (rand < 0.95) {
     const count = Math.floor(Math.random() * 2) + 2
     const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
     return shuffled.slice(0, count)
@@ -37,12 +37,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const rand = Math.random()
     let radiusKm: number
     
-    if (rand < 0.7) {
-      radiusKm = Math.sqrt(Math.random()) * 0.8
-    } else if (rand < 0.85) {
-      radiusKm = Math.random() * 1.2
+    if (rand < 0.85) {
+      radiusKm = Math.sqrt(Math.random()) * 0.9
+    } else if (rand < 0.95) {
+      radiusKm = Math.random() * 1.5
     } else {
-      radiusKm = Math.random() * 2
+      radiusKm = Math.random() * 2.5
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -50,7 +50,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
-    const age = Math.floor(Math.random() * 35) + 21
+    const age = Math.floor(Math.random() * 40) + 20
     
     users.push({
       id: `user-${i + 1}`,
@@ -58,12 +58,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
       receiveMessagesFrom: getRandomGenderPreferences(),
-      ageRangeMin: Math.max(18, age - 15),
-      ageRangeMax: Math.min(80, age + 15),
+      ageRangeMin: Math.max(18, age - 20),
+      ageRangeMax: Math.min(80, age + 20),
       location: { lat, lng },
-      isActive: Math.random() > 0.01,
+      isActive: Math.random() > 0.05,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
-      locationSharingEnabled: Math.random() > 0.01,
+      locationSharingEnabled: Math.random() > 0.05,
       requireApproval: Math.random() > 0.5
     })
   }
