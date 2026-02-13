@@ -14,7 +14,7 @@ import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
 import { ChatInterface } from '@/components/ChatInterface'
 import { UserProfileView } from '@/components/UserProfileView'
-import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests, getRandomLocationNearCenter, isPhotoValid, CENTER_LAT, CENTER_LNG } from '@/lib/helpers'
+import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests, getRandomLocationNearCenter, isPhotoValid, CENTER_LAT, CENTER_LNG, generateDemoConversationsAndMessages, generateAdditionalChatRequests } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
@@ -40,6 +40,29 @@ function App() {
   useEffect(() => {
     if (!myProfile) {
       setShowProfileDialog(true)
+    } else {
+      const hasExistingData = (conversations && conversations.length > 0) || (chatRequests && chatRequests.length > 0)
+      
+      if (!hasExistingData) {
+        console.log('🎬 Generating initial demo data...')
+        
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 3)
+        
+        setConversations(current => [...(current || []), ...demoData.conversations])
+        setChatRequests(current => [...(current || []), ...demoData.chatRequests])
+        setMessages(current => ({ ...(current || {}), ...demoData.messages }))
+        
+        const existingUserIds = demoData.conversations.flatMap(c => c.participants)
+        const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 4)
+        
+        if (additionalRequests.length > 0) {
+          setChatRequests(current => [...(current || []), ...additionalRequests])
+          toast.success(`You have ${additionalRequests.length} new message requests!`, {
+            description: 'Check the Requests tab to connect',
+            duration: 4000
+          })
+        }
+      }
     }
   }, [myProfile])
 
@@ -161,22 +184,11 @@ function App() {
     setShowProfileDialog(false)
     
     if (isNewProfile && profileData.locationSharingEnabled) {
-      const initialRequests = generateInitialChatRequests(newProfile, demoUsers, 3)
-      console.log('🔔 Initial requests generated:', initialRequests.length)
-      if (initialRequests.length > 0) {
-        setChatRequests(current => [...(current || []), ...initialRequests])
-        toast.success(`Welcome to Hereo! You have ${initialRequests.length} new message requests.`, {
-          description: 'Check the Requests tab to connect with nearby users',
-          duration: 5000
-        })
-        setTimeout(() => setSelectedTab('requests'), 1000)
-      } else {
-        toast.success('Profile saved! You are now discoverable nearby.', {
-          description: 'Explore the Discover tab to find nearby users',
-          duration: 4000
-        })
-        setTimeout(() => setSelectedTab('discover'), 1000)
-      }
+      toast.success('Profile saved! You are now discoverable nearby.', {
+        description: 'Demo conversations and requests have been added',
+        duration: 4000
+      })
+      setTimeout(() => setSelectedTab('messages'), 1000)
     } else if (profileData.locationSharingEnabled) {
       toast.success('Profile saved! You are now discoverable nearby.')
     } else {
@@ -323,6 +335,37 @@ function App() {
     }, 500)
   }
 
+  const handleGenerateMoreDemoData = () => {
+    if (!myProfile) return
+    
+    const existingUserIds = [
+      ...(conversations || []).flatMap(c => c.participants),
+      ...(chatRequests || []).map(r => r.fromUserId),
+      ...(chatRequests || []).map(r => r.toUserId)
+    ].filter(id => id !== myProfile.id)
+    
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 2)
+    
+    if (demoData.conversations.length > 0) {
+      setConversations(current => [...(current || []), ...demoData.conversations])
+      setChatRequests(current => [...(current || []), ...demoData.chatRequests])
+      setMessages(current => ({ ...(current || {}), ...demoData.messages }))
+      
+      toast.success(`Added ${demoData.conversations.length} new conversations!`)
+    }
+    
+    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 3)
+    
+    if (additionalRequests.length > 0) {
+      setChatRequests(current => [...(current || []), ...additionalRequests])
+      toast.success(`${additionalRequests.length} new message requests!`)
+    }
+    
+    if (demoData.conversations.length === 0 && additionalRequests.length === 0) {
+      toast.info('No more eligible users to generate demo data')
+    }
+  }
+
   const handleSendMessage = (conversationId: string, text: string) => {
     if (!myProfile) return
 
@@ -383,7 +426,12 @@ function App() {
                 <span className="text-red-600 drop-shadow-sm">Here</span>
                 <span className="text-yellow-500 drop-shadow-sm">o</span>
               </h1>
-              <Badge variant="secondary" className="hidden sm:flex items-center gap-1.5 bg-accent/10 text-accent-foreground border-accent/20 text-xs px-2 py-0.5">
+              <Badge 
+                variant="secondary" 
+                className="hidden sm:flex items-center gap-1.5 bg-accent/10 text-accent-foreground border-accent/20 text-xs px-2 py-0.5 cursor-pointer hover:bg-accent/20 transition-colors"
+                onClick={handleGenerateMoreDemoData}
+                title="Click to generate more demo conversations and requests"
+              >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>

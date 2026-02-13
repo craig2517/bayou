@@ -288,3 +288,241 @@ export function isPhotoValid(profilePicture?: { capturedAt: number }): boolean {
   const hoursSinceCapture = (Date.now() - profilePicture.capturedAt) / (1000 * 60 * 60)
   return hoursSinceCapture < 24
 }
+
+const CONVERSATION_STARTERS = [
+  "Hey! I noticed we're really close by 👋",
+  "Hi there! Love this area, do you come here often?",
+  "Hey! What brings you around here?",
+  "Hi! Beautiful day isn't it?",
+  "Hello! Nice to connect with someone nearby 😊",
+  "Hey! Are you from around here?",
+  "Hi! Cool to see someone so close on the map",
+  "Hey there! How's your day going?",
+  "Hi! This neighborhood is great right?",
+  "Hello! Random question - best coffee spot around here?"
+]
+
+const CASUAL_RESPONSES = [
+  "Yeah, I live nearby! Been here a few years",
+  "Just moved here actually, still exploring",
+  "I'm here pretty often, love this area",
+  "Been around here for a while now",
+  "Yes! Born and raised in this neighborhood",
+  "Fairly new to the area but really like it",
+  "I work nearby so I'm around a lot",
+  "Yeah it's a great spot, lots to do",
+  "I'm here most weekends, great vibes",
+  "Not originally from here but it's grown on me"
+]
+
+const FOLLOW_UP_MESSAGES = [
+  "That's awesome! Any recommendations for things to do?",
+  "Nice! Have you checked out the local spots?",
+  "Cool! We should grab coffee sometime",
+  "That's great! Always nice to meet neighbors",
+  "Oh nice! What do you like most about it?",
+  "Interesting! What brought you here?",
+  "Sweet! Maybe we can explore together sometime",
+  "That's cool! I'm always looking for new places",
+  "Awesome! Know any good restaurants nearby?",
+  "Nice to meet you! This area has such good energy"
+]
+
+const ENTHUSIASTIC_REPLIES = [
+  "Definitely! I know some great places",
+  "For sure! There's this amazing spot on the corner",
+  "Yeah! I'd be down to meet up",
+  "Absolutely! I'm free this weekend",
+  "Love that idea! When works for you?",
+  "I'd like that! Want to exchange plans?",
+  "Sure thing! Let me know what you're into",
+  "That sounds fun! I'm usually free after 6",
+  "Sounds good! I'm around pretty often",
+  "Yeah let's do it! This weekend maybe?"
+]
+
+const SMALL_TALK = [
+  "Have you been to that new place that opened up?",
+  "The weather has been perfect lately",
+  "Do you know if there are any events coming up?",
+  "I love walking around here in the evening",
+  "Have you tried any of the local cafes?",
+  "The sunset views from here are incredible",
+  "Is it usually this busy around here?",
+  "I've been meaning to explore more of the neighborhood",
+  "Have you met many people through this app?",
+  "This is such a cool way to connect with locals"
+]
+
+export function generateDemoMessages(
+  conversationId: string,
+  user1Id: string,
+  user2Id: string,
+  messageCount: number = 8
+) {
+  const messages: any[] = []
+  const now = Date.now()
+  const oneDayMs = 24 * 60 * 60 * 1000
+  const baseTime = now - Math.random() * oneDayMs * 3
+  
+  let currentSender = Math.random() > 0.5 ? user1Id : user2Id
+  let timeOffset = 0
+  
+  for (let i = 0; i < messageCount; i++) {
+    let messageText = ''
+    
+    if (i === 0) {
+      messageText = CONVERSATION_STARTERS[Math.floor(Math.random() * CONVERSATION_STARTERS.length)]
+    } else if (i === 1) {
+      messageText = CASUAL_RESPONSES[Math.floor(Math.random() * CASUAL_RESPONSES.length)]
+    } else if (i === 2) {
+      messageText = FOLLOW_UP_MESSAGES[Math.floor(Math.random() * FOLLOW_UP_MESSAGES.length)]
+    } else if (i === 3) {
+      messageText = ENTHUSIASTIC_REPLIES[Math.floor(Math.random() * ENTHUSIASTIC_REPLIES.length)]
+    } else {
+      messageText = SMALL_TALK[Math.floor(Math.random() * SMALL_TALK.length)]
+    }
+    
+    timeOffset += Math.floor(Math.random() * 15 * 60 * 1000) + 30000
+    
+    messages.push({
+      id: `msg-demo-${conversationId}-${i}`,
+      conversationId,
+      senderId: currentSender,
+      text: messageText,
+      timestamp: baseTime + timeOffset
+    })
+    
+    currentSender = currentSender === user1Id ? user2Id : user1Id
+  }
+  
+  return messages
+}
+
+export function generateDemoConversationsAndMessages(
+  myProfile: UserProfile,
+  demoUsers: UserProfile[],
+  conversationCount: number = 5
+) {
+  const eligibleUsers = demoUsers.filter(user => {
+    if (!user.isActive || !user.locationSharingEnabled) return false
+    
+    const distance = calculateDistance(
+      myProfile.location.lat,
+      myProfile.location.lng,
+      user.location.lat,
+      user.location.lng
+    )
+    
+    if (distance > 1) return false
+    
+    const userReceivesList = user.receiveMessagesFrom || []
+    const myReceivesList = myProfile.receiveMessagesFrom || []
+    
+    const canMessage = 
+      userReceivesList.includes(myProfile.gender) &&
+      user.ageRangeMin <= myProfile.age &&
+      user.ageRangeMax >= myProfile.age &&
+      myReceivesList.includes(user.gender) &&
+      myProfile.ageRangeMin <= user.age &&
+      myProfile.ageRangeMax >= user.age
+    
+    return canMessage
+  })
+  
+  const selectedUsers = eligibleUsers
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.min(conversationCount, eligibleUsers.length))
+  
+  const conversations: any[] = []
+  const chatRequests: any[] = []
+  const allMessages: Record<string, any[]> = {}
+  
+  selectedUsers.forEach((user, index) => {
+    const conversationId = [myProfile.id, user.id].sort().join('-')
+    
+    const messageCount = Math.floor(Math.random() * 8) + 4
+    const messages = generateDemoMessages(conversationId, myProfile.id, user.id, messageCount)
+    
+    allMessages[conversationId] = messages
+    
+    const lastMessage = messages[messages.length - 1]
+    
+    conversations.push({
+      id: conversationId,
+      participants: [myProfile.id, user.id] as [string, string],
+      lastMessage,
+      unreadCount: 0
+    })
+    
+    chatRequests.push({
+      id: `demo-req-${conversationId}`,
+      fromUserId: Math.random() > 0.5 ? myProfile.id : user.id,
+      toUserId: Math.random() > 0.5 ? user.id : myProfile.id,
+      status: 'accepted' as const,
+      timestamp: messages[0].timestamp - 60000
+    })
+  })
+  
+  console.log('💬 GENERATED DEMO CONVERSATIONS:', {
+    conversationCount: conversations.length,
+    totalMessages: Object.values(allMessages).flat().length,
+    eligibleUsers: eligibleUsers.length
+  })
+  
+  return { conversations, chatRequests, messages: allMessages }
+}
+
+export function generateAdditionalChatRequests(
+  myProfile: UserProfile,
+  demoUsers: UserProfile[],
+  existingRequestUserIds: string[],
+  count: number = 5
+) {
+  const eligibleUsers = demoUsers.filter(user => {
+    if (existingRequestUserIds.includes(user.id)) return false
+    if (!user.isActive || !user.locationSharingEnabled) return false
+    
+    const distance = calculateDistance(
+      myProfile.location.lat,
+      myProfile.location.lng,
+      user.location.lat,
+      user.location.lng
+    )
+    
+    if (distance > 1) return false
+    
+    const userReceivesList = user.receiveMessagesFrom || []
+    const myReceivesList = myProfile.receiveMessagesFrom || []
+    
+    const canMessage = 
+      userReceivesList.includes(myProfile.gender) &&
+      user.ageRangeMin <= myProfile.age &&
+      user.ageRangeMax >= myProfile.age &&
+      myReceivesList.includes(user.gender) &&
+      myProfile.ageRangeMin <= user.age &&
+      myProfile.ageRangeMax >= user.age
+    
+    return canMessage
+  })
+  
+  const selectedUsers = eligibleUsers
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.min(count, eligibleUsers.length))
+  
+  const requests = selectedUsers.map((user, index) => ({
+    id: `additional-req-${Date.now()}-${index}`,
+    fromUserId: user.id,
+    toUserId: myProfile.id,
+    status: 'pending' as const,
+    timestamp: Date.now() - Math.floor(Math.random() * 7200000)
+  }))
+  
+  console.log('🔔 GENERATED ADDITIONAL REQUESTS:', {
+    requestCount: requests.length,
+    eligibleUsers: eligibleUsers.length,
+    existingRequests: existingRequestUserIds.length
+  })
+  
+  return requests
+}
