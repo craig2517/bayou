@@ -24,83 +24,101 @@ export function HeatMap({ points }: HeatMapProps) {
     mapCtx.fillStyle = '#1a1a1a'
     mapCtx.fillRect(0, 0, rect.width, rect.height)
 
-    mapCtx.strokeStyle = '#333333'
-    mapCtx.lineWidth = 2
-
     const majorStreets = [
-      { coords: [{ x: 0.05, y: 0.25 }, { x: 0.95, y: 0.25 }], name: 'Eastern Pkwy', horizontal: true },
-      { coords: [{ x: 0.05, y: 0.4 }, { x: 0.95, y: 0.4 }], name: 'Bardstown Rd', horizontal: true },
-      { coords: [{ x: 0.05, y: 0.55 }, { x: 0.95, y: 0.55 }], name: 'Cherokee Rd', horizontal: true },
-      { coords: [{ x: 0.05, y: 0.7 }, { x: 0.95, y: 0.7 }], name: 'Grinstead Dr', horizontal: true },
-      { coords: [{ x: 0.2, y: 0.05 }, { x: 0.2, y: 0.95 }], name: 'Baxter Ave', horizontal: false },
-      { coords: [{ x: 0.35, y: 0.05 }, { x: 0.35, y: 0.95 }], name: 'Highland Ave', horizontal: false },
-      { coords: [{ x: 0.5, y: 0.05 }, { x: 0.5, y: 0.95 }], name: 'Cherokee Pkwy', horizontal: false },
-      { coords: [{ x: 0.65, y: 0.05 }, { x: 0.65, y: 0.95 }], name: 'Lexington Rd', horizontal: false },
-      { coords: [{ x: 0.8, y: 0.05 }, { x: 0.8, y: 0.95 }], name: 'Frankfort Ave', horizontal: false }
+      { coords: [{ x: 0.05, y: 0.15 }, { x: 0.95, y: 0.15 }], name: 'Eastern Pkwy', width: 3 },
+      { coords: [{ x: 0.05, y: 0.35 }, { x: 0.95, y: 0.38 }], name: 'Cherokee Rd', width: 2 },
+      { coords: [{ x: 0.05, y: 0.48 }, { x: 0.95, y: 0.50 }], name: 'Grinstead Dr', width: 2 },
+      { coords: [{ x: 0.05, y: 0.65 }, { x: 0.95, y: 0.67 }], name: 'Broadway', width: 3 },
+      { coords: [{ x: 0.05, y: 0.78 }, { x: 0.95, y: 0.78 }], name: 'Lexington Rd', width: 2 },
+      { coords: [{ x: 0.15, y: 0.08 }, { x: 0.15, y: 0.92 }], name: 'Bardstown Rd', width: 3 },
+      { coords: [{ x: 0.28, y: 0.05 }, { x: 0.28, y: 0.95 }], name: 'Baxter Ave', width: 2 },
+      { coords: [{ x: 0.42, y: 0.05 }, { x: 0.42, y: 0.95 }], name: 'Highland Ave', width: 2 },
+      { coords: [{ x: 0.58, y: 0.10 }, { x: 0.60, y: 0.88 }], name: 'Cherokee Pkwy', width: 2 },
+      { coords: [{ x: 0.72, y: 0.05 }, { x: 0.72, y: 0.95 }], name: 'Longest Ave', width: 2 },
+      { coords: [{ x: 0.85, y: 0.08 }, { x: 0.85, y: 0.92 }], name: 'Frankfort Ave', width: 2 }
     ]
 
-    majorStreets.forEach(street => {
+    const minorStreets = [
+      { coords: [{ x: 0.05, y: 0.22 }, { x: 0.95, y: 0.23 }] },
+      { coords: [{ x: 0.05, y: 0.28 }, { x: 0.95, y: 0.29 }] },
+      { coords: [{ x: 0.05, y: 0.42 }, { x: 0.95, y: 0.43 }] },
+      { coords: [{ x: 0.05, y: 0.55 }, { x: 0.95, y: 0.56 }] },
+      { coords: [{ x: 0.05, y: 0.60 }, { x: 0.95, y: 0.61 }] },
+      { coords: [{ x: 0.05, y: 0.72 }, { x: 0.95, y: 0.73 }] },
+      { coords: [{ x: 0.05, y: 0.84 }, { x: 0.95, y: 0.85 }] },
+      { coords: [{ x: 0.22, y: 0.05 }, { x: 0.22, y: 0.95 }] },
+      { coords: [{ x: 0.35, y: 0.05 }, { x: 0.35, y: 0.95 }] },
+      { coords: [{ x: 0.50, y: 0.05 }, { x: 0.50, y: 0.95 }] },
+      { coords: [{ x: 0.65, y: 0.05 }, { x: 0.65, y: 0.95 }] },
+      { coords: [{ x: 0.78, y: 0.05 }, { x: 0.78, y: 0.95 }] }
+    ]
+
+    mapCtx.strokeStyle = '#2a2a2a'
+    mapCtx.lineWidth = 1
+    minorStreets.forEach(street => {
       mapCtx.beginPath()
       mapCtx.moveTo(street.coords[0].x * rect.width, street.coords[0].y * rect.height)
       mapCtx.lineTo(street.coords[1].x * rect.width, street.coords[1].y * rect.height)
       mapCtx.stroke()
     })
 
-    mapCtx.fillStyle = '#666666'
-    mapCtx.font = '11px Inter, sans-serif'
+    majorStreets.forEach(street => {
+      mapCtx.strokeStyle = '#404040'
+      mapCtx.lineWidth = street.width
+      mapCtx.beginPath()
+      mapCtx.moveTo(street.coords[0].x * rect.width, street.coords[0].y * rect.height)
+      mapCtx.lineTo(street.coords[1].x * rect.width, street.coords[1].y * rect.height)
+      mapCtx.stroke()
+    })
+
+    mapCtx.fillStyle = '#888888'
+    mapCtx.font = 'bold 12px Inter, sans-serif'
     mapCtx.textBaseline = 'middle'
 
-    majorStreets.forEach(street => {
-      if (street.horizontal) {
-        const x = rect.width * 0.02
-        const y = street.coords[0].y * rect.height
-        mapCtx.textAlign = 'left'
-        mapCtx.fillText(street.name, x, y - 8)
-      } else {
-        const x = street.coords[0].x * rect.width
-        const y = rect.height * 0.02
+    const labeledStreets = [
+      { name: 'Bardstown Rd', x: 0.15, y: 0.04, vertical: true },
+      { name: 'Eastern Pkwy', x: 0.48, y: 0.15, vertical: false },
+      { name: 'Baxter Ave', x: 0.28, y: 0.04, vertical: true },
+      { name: 'Highland Ave', x: 0.42, y: 0.04, vertical: true },
+      { name: 'Cherokee Pkwy', x: 0.59, y: 0.96, vertical: true },
+      { name: 'Cherokee Rd', x: 0.48, y: 0.365, vertical: false },
+      { name: 'Broadway', x: 0.48, y: 0.66, vertical: false },
+      { name: 'Frankfort Ave', x: 0.85, y: 0.04, vertical: true }
+    ]
+
+    labeledStreets.forEach(street => {
+      if (street.vertical) {
+        const x = street.x * rect.width
+        const y = street.y * rect.height
         mapCtx.save()
         mapCtx.translate(x, y)
         mapCtx.rotate(-Math.PI / 2)
         mapCtx.textAlign = 'left'
-        mapCtx.fillText(street.name, 5, 0)
+        mapCtx.fillText(street.name, 5, -5)
         mapCtx.restore()
+      } else {
+        const x = street.x * rect.width
+        const y = street.y * rect.height
+        mapCtx.textAlign = 'center'
+        mapCtx.fillText(street.name, x, y - 8)
       }
     })
 
-    mapCtx.strokeStyle = '#2a2a2a'
-    mapCtx.lineWidth = 1
+    const parks = [
+      { x: 0.30, y: 0.20, width: 0.08, height: 0.06 },
+      { x: 0.62, y: 0.32, width: 0.12, height: 0.10 },
+      { x: 0.18, y: 0.52, width: 0.06, height: 0.05 }
+    ]
 
-    for (let i = 0; i < 15; i++) {
-      const isHorizontal = Math.random() > 0.5
-      if (isHorizontal) {
-        const y = Math.random()
-        mapCtx.beginPath()
-        mapCtx.moveTo(0.1 * rect.width, y * rect.height)
-        mapCtx.lineTo(0.9 * rect.width, y * rect.height)
-        mapCtx.stroke()
-      } else {
-        const x = Math.random()
-        mapCtx.beginPath()
-        mapCtx.moveTo(x * rect.width, 0.1 * rect.height)
-        mapCtx.lineTo(x * rect.width, 0.9 * rect.height)
-        mapCtx.stroke()
-      }
-    }
-
-    for (let i = 0; i < 8; i++) {
-      const x = 0.15 + Math.random() * 0.7
-      const y = 0.15 + Math.random() * 0.7
-      const size = 3 + Math.random() * 4
-      
-      mapCtx.fillStyle = '#2a4a2a'
+    parks.forEach(park => {
+      mapCtx.fillStyle = '#1a3a1a'
       mapCtx.fillRect(
-        x * rect.width - size / 2,
-        y * rect.height - size / 2,
-        size,
-        size
+        park.x * rect.width,
+        park.y * rect.height,
+        park.width * rect.width,
+        park.height * rect.height
       )
-    }
+    })
 
   }, [])
 
