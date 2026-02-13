@@ -39,11 +39,11 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     let radiusKm: number
     
     if (rand < 0.85) {
-      radiusKm = Math.random() * 0.35
+      radiusKm = Math.random() * 0.5
     } else if (rand < 0.95) {
-      radiusKm = 0.35 + Math.random() * 0.25
+      radiusKm = 0.5 + Math.random() * 0.3
     } else {
-      radiusKm = 0.6 + Math.random() * 0.4
+      radiusKm = 0.8 + Math.random() * 0.2
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -53,9 +53,9 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const lng = CENTER_LNG + lngOffset
     const age = Math.floor(Math.random() * 43) + 18
     
-    const ageVariance = Math.floor(Math.random() * 8) + 12
+    const ageVariance = Math.floor(Math.random() * 20) + 25
     const minAge = Math.max(18, age - ageVariance)
-    const maxAge = Math.min(80, age + ageVariance + Math.floor(Math.random() * 12))
+    const maxAge = Math.min(80, age + ageVariance + Math.floor(Math.random() * 20))
     
     users.push({
       id: `user-${i + 1}`,
@@ -68,7 +68,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       location: { lat, lng },
       isActive: Math.random() > 0.01,
       lastActive: Date.now() - Math.floor(Math.random() * 7200000),
-      locationSharingEnabled: Math.random() > 0.02,
+      locationSharingEnabled: Math.random() > 0.01,
       requireApproval: Math.random() > 0.5
     })
   }

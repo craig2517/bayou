@@ -42,7 +42,7 @@ function App() {
   const nearbyUsers = useMemo(() => {
     if (!myProfile) return []
     
-    return demoUsers
+    const filtered = demoUsers
       .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
       .map(user => {
         const distance = calculateDistance(
@@ -52,18 +52,35 @@ function App() {
           user.location.lng
         )
         
-        const canMessage = 
-          user.receiveMessagesFrom?.includes(myProfile.gender) &&
-          user.ageRangeMin <= myProfile.age &&
-          user.ageRangeMax >= myProfile.age &&
-          myProfile.receiveMessagesFrom?.includes(user.gender) &&
-          myProfile.ageRangeMin <= user.age &&
-          myProfile.ageRangeMax >= user.age
+        const userAcceptsMe = user.receiveMessagesFrom?.includes(myProfile.gender)
+        const userAgeMatchesMe = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
+        const iAcceptUser = myProfile.receiveMessagesFrom?.includes(user.gender)
+        const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+        
+        const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser
         
         return { user, distance, canMessage }
       })
       .filter(item => item.distance <= searchRadius[0])
       .sort((a, b) => a.distance - b.distance)
+    
+    console.log('nearbyUsers debug:', {
+      myProfile: {
+        gender: myProfile.gender,
+        age: myProfile.age,
+        receiveFrom: myProfile.receiveMessagesFrom,
+        ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
+        location: myProfile.location
+      },
+      searchRadius: searchRadius[0],
+      totalDemoUsers: demoUsers.length,
+      activeUsers: demoUsers.filter(u => u.isActive).length,
+      locationSharingUsers: demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length,
+      usersInRadius: filtered.length,
+      canMessageCount: filtered.filter(f => f.canMessage).length
+    })
+    
+    return filtered
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
