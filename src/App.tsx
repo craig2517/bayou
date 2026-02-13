@@ -42,7 +42,7 @@ function App() {
   const nearbyUsers = useMemo(() => {
     if (!myProfile) return []
     
-    const filtered = demoUsers
+    const allUsersWithDistance = demoUsers
       .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
       .map(user => {
         const distance = calculateDistance(
@@ -59,12 +59,26 @@ function App() {
         
         const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser
         
-        return { user, distance, canMessage }
+        return { user, distance, canMessage, userAcceptsMe, userAgeMatchesMe, iAcceptUser, myAgeMatchesUser }
       })
-      .filter(item => item.distance <= searchRadius[0])
-      .sort((a, b) => a.distance - b.distance)
     
-    console.log('nearbyUsers debug:', {
+    const inRadiusUsers = allUsersWithDistance.filter(item => item.distance <= searchRadius[0])
+    
+    const sampleFailures = allUsersWithDistance.slice(0, 5).map(item => ({
+      name: item.user.name,
+      distance: item.distance.toFixed(3),
+      userAcceptsMe: item.userAcceptsMe,
+      userAgeMatchesMe: item.userAgeMatchesMe,
+      iAcceptUser: item.iAcceptUser,
+      myAgeMatchesUser: item.myAgeMatchesUser,
+      canMessage: item.canMessage,
+      userAge: item.user.age,
+      userAgeRange: [item.user.ageRangeMin, item.user.ageRangeMax],
+      userGender: item.user.gender,
+      userReceives: item.user.receiveMessagesFrom
+    }))
+    
+    console.log('🔍 DETAILED USER DEBUG:', {
       myProfile: {
         gender: myProfile.gender,
         age: myProfile.age,
@@ -76,9 +90,12 @@ function App() {
       totalDemoUsers: demoUsers.length,
       activeUsers: demoUsers.filter(u => u.isActive).length,
       locationSharingUsers: demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length,
-      usersInRadius: filtered.length,
-      canMessageCount: filtered.filter(f => f.canMessage).length
+      usersInRadius: inRadiusUsers.length,
+      canMessageCount: inRadiusUsers.filter(f => f.canMessage).length,
+      sampleUsers: sampleFailures
     })
+    
+    const filtered = inRadiusUsers.sort((a, b) => a.distance - b.distance)
     
     return filtered
   }, [myProfile, demoUsers, searchRadius])
