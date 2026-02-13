@@ -19,6 +19,51 @@ const FIRST_NAMES = [
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
+export function generateDemoAvatar(name: string, gender: string, age: number, seed: number): string {
+  const canvas = document.createElement('canvas')
+  canvas.width = 200
+  canvas.height = 200
+  const ctx = canvas.getContext('2d')
+  
+  if (!ctx) return ''
+  
+  const hue = (seed * 137.508) % 360
+  const saturation = 60 + (seed % 20)
+  const lightness = 45 + (seed % 15)
+  
+  const gradient = ctx.createLinearGradient(0, 0, 200, 200)
+  gradient.addColorStop(0, `hsl(${hue}, ${saturation}%, ${lightness}%)`)
+  gradient.addColorStop(1, `hsl(${(hue + 30) % 360}, ${saturation}%, ${lightness - 10}%)`)
+  
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 200, 200)
+  
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+  ctx.font = 'bold 80px Space Grotesk, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(name[0].toUpperCase(), 100, 100)
+  
+  const ageGroup = age < 30 ? 'young' : age < 50 ? 'middle' : 'senior'
+  const shapeVariant = (seed % 3)
+  
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'
+  ctx.beginPath()
+  
+  if (shapeVariant === 0) {
+    ctx.arc(50, 50, 25, 0, Math.PI * 2)
+  } else if (shapeVariant === 1) {
+    ctx.arc(150, 150, 30, 0, Math.PI * 2)
+  } else {
+    ctx.arc(150, 50, 20, 0, Math.PI * 2)
+    ctx.arc(50, 150, 20, 0, Math.PI * 2)
+  }
+  
+  ctx.fill()
+  
+  return canvas.toDataURL('image/png')
+}
+
 export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   const timestamp = Date.now()
@@ -34,10 +79,13 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const lng = CENTER_LNG + lngOffset
     const age = 18 + Math.floor(Math.random() * 83)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
+    const name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
+    
+    const capturedAt = Date.now() - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
     
     users.push({
       id: `user-demo-${i + 1}-${timestamp}`,
-      name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
+      name,
       age,
       gender,
       receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
@@ -47,7 +95,11 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
       locationSharingEnabled: true,
-      requireApproval: Math.random() > 0.3
+      requireApproval: Math.random() > 0.3,
+      profilePicture: {
+        dataUrl: generateDemoAvatar(name, gender, age, i),
+        capturedAt
+      }
     })
   }
   
