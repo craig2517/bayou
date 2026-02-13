@@ -19,7 +19,7 @@ import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/type
 
 function App() {
   const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile', null)
-  const [demoUsers] = useState(() => generateDemoUsers(200))
+  const [demoUsers] = useState(() => generateDemoUsers(500))
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages', {})
@@ -44,15 +44,24 @@ function App() {
     
     return demoUsers
       .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
-      .map(user => ({
-        user,
-        distance: calculateDistance(
+      .map(user => {
+        const distance = calculateDistance(
           myProfile.location.lat,
           myProfile.location.lng,
           user.location.lat,
           user.location.lng
         )
-      }))
+        
+        const canMessage = 
+          user.receiveMessagesFrom.includes(myProfile.gender) &&
+          user.ageRangeMin <= myProfile.age &&
+          user.ageRangeMax >= myProfile.age &&
+          myProfile.receiveMessagesFrom.includes(user.gender) &&
+          myProfile.ageRangeMin <= user.age &&
+          myProfile.ageRangeMax >= user.age
+        
+        return { user, distance, canMessage }
+      })
       .filter(item => item.distance <= searchRadius[0])
       .sort((a, b) => a.distance - b.distance)
   }, [myProfile, demoUsers, searchRadius])
@@ -82,6 +91,19 @@ function App() {
   const handleSendChatRequest = (toUser: UserProfile) => {
     if (!myProfile) {
       toast.error('Please complete your profile first')
+      return
+    }
+
+    const canMessage = 
+      toUser.receiveMessagesFrom.includes(myProfile.gender) &&
+      toUser.ageRangeMin <= myProfile.age &&
+      toUser.ageRangeMax >= myProfile.age &&
+      myProfile.receiveMessagesFrom.includes(toUser.gender) &&
+      myProfile.ageRangeMin <= toUser.age &&
+      myProfile.ageRangeMax >= toUser.age
+
+    if (!canMessage) {
+      toast.error('Your preferences do not match with this user')
       return
     }
 
@@ -333,11 +355,12 @@ function App() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {nearbyUsers.map(({ user, distance }) => (
+                    {nearbyUsers.map(({ user, distance, canMessage }) => (
                       <UserCard
                         key={user.id}
                         user={user}
                         distance={formatDistance(distance)}
+                        canMessage={canMessage}
                         onMessage={() => handleSendChatRequest(user)}
                         onViewProfile={() => handleViewUserProfile(user, distance)}
                       />

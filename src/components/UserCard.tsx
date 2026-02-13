@@ -8,11 +8,12 @@ import type { UserProfile } from '@/lib/types'
 interface UserCardProps {
   user: UserProfile
   distance: string
+  canMessage?: boolean
   onMessage: () => void
   onViewProfile?: () => void
 }
 
-export function UserCard({ user, distance, onMessage, onViewProfile }: UserCardProps) {
+export function UserCard({ user, distance, canMessage = true, onMessage, onViewProfile }: UserCardProps) {
   const initials = user.name
     .split(' ')
     .map(n => n[0])
@@ -49,19 +50,25 @@ export function UserCard({ user, distance, onMessage, onViewProfile }: UserCardP
             )}
           </div>
           
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
             <Badge variant="outline" className="text-xs">
               {distance}
             </Badge>
+            {!canMessage && (
+              <Badge variant="secondary" className="text-xs bg-muted">
+                Not a match
+              </Badge>
+            )}
           </div>
           
           <Button
             onClick={onMessage}
             className="mt-3 w-full bg-primary hover:bg-primary/90"
             size="sm"
+            disabled={!canMessage}
           >
             <ChatCircle className="mr-2" />
-            Send Message
+            {canMessage ? 'Send Message' : 'Preferences Mismatch'}
           </Button>
         </div>
       </div>
