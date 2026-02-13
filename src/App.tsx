@@ -19,7 +19,7 @@ import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/type
 
 function App() {
   const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile', null)
-  const [demoUsers] = useState(() => generateDemoUsers(500))
+  const [demoUsers] = useState(() => generateDemoUsers(800))
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages', {})
@@ -74,7 +74,7 @@ function App() {
     const newProfile: UserProfile = {
       ...profileData,
       id: myProfile?.id || `user-current`,
-      location: myProfile?.location || { lat: 40.7580, lng: -73.9855 },
+      location: myProfile?.location || { lat: 38.2545, lng: -85.7145 },
       isActive: true,
       lastActive: Date.now()
     }

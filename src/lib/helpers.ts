@@ -27,8 +27,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   
   for (let i = 0; i < count; i++) {
-    const lat = CENTER_LAT + (Math.random() - 0.5) * 0.05
-    const lng = CENTER_LNG + (Math.random() - 0.5) * 0.05
+    const lat = CENTER_LAT + (Math.random() - 0.5) * 0.018
+    const lng = CENTER_LNG + (Math.random() - 0.5) * 0.018
     const age = Math.floor(Math.random() * 30) + 20
     
     users.push({
@@ -40,9 +40,9 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       ageRangeMin: Math.max(18, age - 15),
       ageRangeMax: Math.min(80, age + 15),
       location: { lat, lng },
-      isActive: Math.random() > 0.15,
+      isActive: Math.random() > 0.05,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
-      locationSharingEnabled: Math.random() > 0.1,
+      locationSharingEnabled: Math.random() > 0.05,
       requireApproval: Math.random() > 0.3
     })
   }
