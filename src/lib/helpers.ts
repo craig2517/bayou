@@ -21,10 +21,8 @@ const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
   const rand = Math.random()
-  if (rand < 0.7) {
+  if (rand < 0.85) {
     return [...GENDERS]
-  } else if (rand < 0.85) {
-    return [GENDERS[Math.floor(Math.random() * GENDERS.length)]]
   } else {
     const count = 2 + Math.floor(Math.random() * 2)
     const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
@@ -48,8 +46,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const age = 18 + Math.floor(Math.random() * 47)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
-    const ageRangeMin = 18 + Math.floor(Math.random() * 20)
-    const ageRangeMax = Math.max(ageRangeMin + 10, 50 + Math.floor(Math.random() * 30))
+    const ageRangeMin = 18
+    const ageRangeMax = 80
     
     users.push({
       id: `user-demo-close-${i + 1}-${Date.now()}`,
@@ -80,8 +78,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const age = 18 + Math.floor(Math.random() * 47)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
-    const ageRangeMin = 18 + Math.floor(Math.random() * 20)
-    const ageRangeMax = Math.max(ageRangeMin + 10, 50 + Math.floor(Math.random() * 30))
+    const ageRangeMin = 18
+    const ageRangeMax = 80
     
     users.push({
       id: `user-demo-${i + 1}-${Date.now()}`,
@@ -231,11 +229,14 @@ export function generateInitialChatRequests(
     
     if (distance > 1) return false
     
+    const userReceivesList = user.receiveMessagesFrom || []
+    const myReceivesList = myProfile.receiveMessagesFrom || []
+    
     const canMessage = 
-      user.receiveMessagesFrom?.includes(myProfile.gender) &&
+      userReceivesList.includes(myProfile.gender) &&
       user.ageRangeMin <= myProfile.age &&
       user.ageRangeMax >= myProfile.age &&
-      myProfile.receiveMessagesFrom?.includes(user.gender) &&
+      myReceivesList.includes(user.gender) &&
       myProfile.ageRangeMin <= user.age &&
       myProfile.ageRangeMax >= user.age
     

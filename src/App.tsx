@@ -77,10 +77,13 @@ function App() {
         user.location.lng
       )
       
-      const userAcceptsMe = user.receiveMessagesFrom?.includes(myProfile.gender) ?? false
-      const userAgeMatchesMe = (user.ageRangeMin ?? 18) <= myProfile.age && (user.ageRangeMax ?? 80) >= myProfile.age
-      const iAcceptUser = myProfile.receiveMessagesFrom?.includes(user.gender) ?? false
-      const myAgeMatchesUser = (myProfile.ageRangeMin ?? 18) <= user.age && (myProfile.ageRangeMax ?? 80) >= user.age
+      const userReceivesList = user.receiveMessagesFrom || []
+      const myReceivesList = myProfile.receiveMessagesFrom || []
+      
+      const userAcceptsMe = userReceivesList.includes(myProfile.gender)
+      const userAgeMatchesMe = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
+      const iAcceptUser = myReceivesList.includes(user.gender)
+      const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
       
       const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser
       
@@ -168,11 +171,14 @@ function App() {
       return
     }
 
+    const userReceivesList = toUser.receiveMessagesFrom || []
+    const myReceivesList = myProfile.receiveMessagesFrom || []
+
     const canMessage = 
-      toUser.receiveMessagesFrom?.includes(myProfile.gender) &&
+      userReceivesList.includes(myProfile.gender) &&
       toUser.ageRangeMin <= myProfile.age &&
       toUser.ageRangeMax >= myProfile.age &&
-      myProfile.receiveMessagesFrom?.includes(toUser.gender) &&
+      myReceivesList.includes(toUser.gender) &&
       myProfile.ageRangeMin <= toUser.age &&
       myProfile.ageRangeMax >= toUser.age
 
