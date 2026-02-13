@@ -43,7 +43,7 @@ function App() {
     if (!myProfile) return []
     
     return demoUsers
-      .filter(user => user.id !== myProfile.id && user.isActive)
+      .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
       .map(user => {
         const distance = calculateDistance(
           myProfile.location.lat,

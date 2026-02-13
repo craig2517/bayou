@@ -55,9 +55,9 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const lng = CENTER_LNG + lngOffset
     const age = Math.floor(Math.random() * 43) + 18
     
-    const ageVariance = Math.floor(Math.random() * 15) + 5
+    const ageVariance = Math.floor(Math.random() * 20) + 10
     const minAge = Math.max(18, age - ageVariance)
-    const maxAge = Math.min(80, age + ageVariance + Math.floor(Math.random() * 10))
+    const maxAge = Math.min(80, age + ageVariance + Math.floor(Math.random() * 20))
     
     users.push({
       id: `user-${i + 1}`,
@@ -168,7 +168,7 @@ export function generateInitialChatRequests(
   count: number = 8
 ) {
   const eligibleUsers = demoUsers.filter(user => {
-    if (!user.isActive) return false
+    if (!user.isActive || !user.locationSharingEnabled) return false
     
     const distance = calculateDistance(
       myProfile.location.lat,
