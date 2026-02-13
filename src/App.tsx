@@ -54,7 +54,7 @@ function App() {
         console.log('Current profile:', myProfile)
         console.log('Total demo users:', demoUsers.length)
         
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 6)
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 8)
         
         if (demoData.conversations.length > 0) {
           setConversations(demoData.conversations)
@@ -67,7 +67,7 @@ function App() {
             ...demoData.chatRequests.map(r => r.toUserId)
           ].filter(id => id !== myProfile.id)
           const uniqueExistingUserIds = [...new Set(existingUserIds)]
-          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 12)
+          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 15)
           
           if (additionalRequests.length > 0) {
             setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -77,7 +77,7 @@ function App() {
             })
           } else {
             console.log('⚠️ No additional requests generated - trying to force create some')
-            const forcedRequests = generateAdditionalChatRequests(myProfile, demoUsers, [], 12)
+            const forcedRequests = generateAdditionalChatRequests(myProfile, demoUsers, [], 15)
             if (forcedRequests.length > 0) {
               setChatRequests(current => [...(current || []), ...forcedRequests])
               toast.success(`You have ${forcedRequests.length} new message requests!`, {
@@ -115,7 +115,7 @@ function App() {
             ...(chatRequests || []).map(r => r.toUserId)
           ].filter(id => id !== myProfile.id)
           const uniqueExistingUserIds = [...new Set(existingUserIds)]
-          const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 10)
+          const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 12)
           
           if (newRequests.length > 0) {
             setChatRequests(current => [...(current || []), ...newRequests])
@@ -414,13 +414,44 @@ function App() {
   }
 
   const handleClearAllData = () => {
+    if (!myProfile) return
+    
     setConversations([])
     setChatRequests([])
     setMessages({})
-    toast.success('All conversations and requests cleared!', {
-      description: 'New demo data will be generated automatically',
-      duration: 3000
-    })
+    
+    setTimeout(() => {
+      console.log('🔄 Force regenerating demo data after clear...')
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 8)
+      
+      if (demoData.conversations.length > 0) {
+        setConversations(demoData.conversations)
+        setChatRequests(demoData.chatRequests)
+        setMessages(demoData.messages)
+        
+        const existingUserIds = [
+          ...demoData.conversations.flatMap(c => c.participants),
+          ...demoData.chatRequests.map(r => r.fromUserId),
+          ...demoData.chatRequests.map(r => r.toUserId)
+        ].filter(id => id !== myProfile.id)
+        const uniqueExistingUserIds = [...new Set(existingUserIds)]
+        const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 15)
+        
+        if (additionalRequests.length > 0) {
+          setChatRequests(current => [...(current || []), ...additionalRequests])
+        }
+        
+        toast.success('Demo data regenerated!', {
+          description: `${demoData.conversations.length} conversations and ${additionalRequests.length} requests created`,
+          duration: 4000
+        })
+      } else {
+        toast.error('Failed to generate demo data', {
+          description: 'Try refreshing users first',
+          duration: 3000
+        })
+      }
+    }, 100)
   }
 
   const handleGenerateMoreDemoData = () => {
@@ -434,7 +465,7 @@ function App() {
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
     
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 4)
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 5)
     
     if (demoData.conversations.length > 0) {
       setConversations(current => [...(current || []), ...demoData.conversations])
@@ -451,7 +482,7 @@ function App() {
       ...demoData.chatRequests.map(r => r.toUserId)
     ].filter(id => id !== myProfile.id)
     const finalUniqueIds = [...new Set(newExistingIds)]
-    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 6)
+    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 10)
     
     if (additionalRequests.length > 0) {
       setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -476,7 +507,7 @@ function App() {
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
     
-    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 10)
+    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 15)
     
     if (newRequests.length > 0) {
       setChatRequests(current => [...(current || []), ...newRequests])
@@ -574,7 +605,22 @@ function App() {
                     Generate Pending Requests
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleClearAllData} className="cursor-pointer text-destructive focus:text-destructive">
+                  <DropdownMenuItem onClick={handleClearAllData} className="cursor-pointer">
+                    <ArrowsClockwise size={16} className="mr-2" />
+                    Clear & Regenerate All
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      setConversations([])
+                      setChatRequests([])
+                      setMessages({})
+                      toast.success('All data cleared!', {
+                        description: 'Use other options to regenerate',
+                        duration: 2000
+                      })
+                    }} 
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
                     <Trash size={16} className="mr-2" />
                     Clear All Data
                   </DropdownMenuItem>
