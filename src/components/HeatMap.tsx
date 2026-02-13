@@ -25,17 +25,29 @@ export function HeatMap({ points }: HeatMapProps) {
     mapCtx.fillRect(0, 0, rect.width, rect.height)
 
     const majorStreets = [
-      { coords: [{ x: 0.05, y: 0.15 }, { x: 0.95, y: 0.15 }], name: 'Eastern Pkwy', width: 3 },
-      { coords: [{ x: 0.05, y: 0.35 }, { x: 0.95, y: 0.38 }], name: 'Cherokee Rd', width: 2 },
-      { coords: [{ x: 0.05, y: 0.48 }, { x: 0.95, y: 0.50 }], name: 'Grinstead Dr', width: 2 },
-      { coords: [{ x: 0.05, y: 0.65 }, { x: 0.95, y: 0.67 }], name: 'Broadway', width: 3 },
-      { coords: [{ x: 0.05, y: 0.78 }, { x: 0.95, y: 0.78 }], name: 'Lexington Rd', width: 2 },
-      { coords: [{ x: 0.15, y: 0.08 }, { x: 0.15, y: 0.92 }], name: 'Bardstown Rd', width: 3 },
-      { coords: [{ x: 0.28, y: 0.05 }, { x: 0.28, y: 0.95 }], name: 'Baxter Ave', width: 2 },
-      { coords: [{ x: 0.42, y: 0.05 }, { x: 0.42, y: 0.95 }], name: 'Highland Ave', width: 2 },
-      { coords: [{ x: 0.58, y: 0.10 }, { x: 0.60, y: 0.88 }], name: 'Cherokee Pkwy', width: 2 },
-      { coords: [{ x: 0.72, y: 0.05 }, { x: 0.72, y: 0.95 }], name: 'Longest Ave', width: 2 },
-      { coords: [{ x: 0.85, y: 0.08 }, { x: 0.85, y: 0.92 }], name: 'Frankfort Ave', width: 2 }
+      { coords: [{ x: 0.05, y: 0.15 }, { x: 0.95, y: 0.15 }], name: 'Eastern Pkwy', width: 3, curved: false },
+      { coords: [{ x: 0.05, y: 0.35 }, { x: 0.95, y: 0.38 }], name: 'Cherokee Rd', width: 2, curved: false },
+      { coords: [{ x: 0.05, y: 0.48 }, { x: 0.95, y: 0.50 }], name: 'Grinstead Dr', width: 2, curved: false },
+      { coords: [{ x: 0.05, y: 0.65 }, { x: 0.95, y: 0.67 }], name: 'Broadway', width: 3, curved: false },
+      { coords: [{ x: 0.05, y: 0.78 }, { x: 0.95, y: 0.78 }], name: 'Lexington Rd', width: 2, curved: false },
+      { coords: [{ x: 0.15, y: 0.08 }, { x: 0.15, y: 0.92 }], name: 'Bardstown Rd', width: 3, curved: false },
+      { coords: [{ x: 0.28, y: 0.05 }, { x: 0.28, y: 0.95 }], name: 'Baxter Ave', width: 2, curved: false },
+      { coords: [{ x: 0.42, y: 0.05 }, { x: 0.42, y: 0.95 }], name: 'Highland Ave', width: 2, curved: false },
+      { 
+        coords: [
+          { x: 0.58, y: 0.10 }, 
+          { x: 0.59, y: 0.35 }, 
+          { x: 0.60, y: 0.60 }, 
+          { x: 0.60, y: 0.88 }
+        ], 
+        name: 'Cherokee Pkwy', 
+        width: 2, 
+        curved: true 
+      },
+      { coords: [{ x: 0.72, y: 0.05 }, { x: 0.72, y: 0.95 }], name: 'Longest Ave', width: 2, curved: false },
+      { coords: [{ x: 0.85, y: 0.08 }, { x: 0.85, y: 0.92 }], name: 'Frankfort Ave', width: 2, curved: false },
+      { coords: [{ x: 0.12, y: 0.18 }, { x: 0.68, y: 0.72 }], name: 'Willow Ave', width: 1.5, curved: false },
+      { coords: [{ x: 0.25, y: 0.12 }, { x: 0.82, y: 0.58 }], name: 'Spring St', width: 1.5, curved: false }
     ]
 
     const minorStreets = [
@@ -50,7 +62,46 @@ export function HeatMap({ points }: HeatMapProps) {
       { coords: [{ x: 0.35, y: 0.05 }, { x: 0.35, y: 0.95 }] },
       { coords: [{ x: 0.50, y: 0.05 }, { x: 0.50, y: 0.95 }] },
       { coords: [{ x: 0.65, y: 0.05 }, { x: 0.65, y: 0.95 }] },
-      { coords: [{ x: 0.78, y: 0.05 }, { x: 0.78, y: 0.95 }] }
+      { coords: [{ x: 0.78, y: 0.05 }, { x: 0.78, y: 0.95 }] },
+      { coords: [{ x: 0.18, y: 0.25 }, { x: 0.55, y: 0.68 }] },
+      { coords: [{ x: 0.32, y: 0.15 }, { x: 0.72, y: 0.48 }] },
+      { coords: [{ x: 0.45, y: 0.32 }, { x: 0.88, y: 0.80 }] },
+      { coords: [{ x: 0.08, y: 0.45 }, { x: 0.38, y: 0.15 }] },
+      { coords: [{ x: 0.62, y: 0.22 }, { x: 0.92, y: 0.65 }] }
+    ]
+
+    const curvedStreets = [
+      {
+        coords: [
+          { x: 0.05, y: 0.90 },
+          { x: 0.20, y: 0.88 },
+          { x: 0.40, y: 0.92 },
+          { x: 0.60, y: 0.90 },
+          { x: 0.80, y: 0.88 },
+          { x: 0.95, y: 0.90 }
+        ],
+        width: 1
+      },
+      {
+        coords: [
+          { x: 0.90, y: 0.10 },
+          { x: 0.88, y: 0.30 },
+          { x: 0.92, y: 0.50 },
+          { x: 0.90, y: 0.70 },
+          { x: 0.88, y: 0.90 }
+        ],
+        width: 1
+      },
+      {
+        coords: [
+          { x: 0.10, y: 0.32 },
+          { x: 0.25, y: 0.38 },
+          { x: 0.40, y: 0.36 },
+          { x: 0.55, y: 0.40 },
+          { x: 0.70, y: 0.38 }
+        ],
+        width: 1
+      }
     ]
 
     mapCtx.strokeStyle = '#2a2a2a'
@@ -62,12 +113,65 @@ export function HeatMap({ points }: HeatMapProps) {
       mapCtx.stroke()
     })
 
+    curvedStreets.forEach(street => {
+      mapCtx.strokeStyle = '#2a2a2a'
+      mapCtx.lineWidth = street.width
+      mapCtx.beginPath()
+      mapCtx.moveTo(street.coords[0].x * rect.width, street.coords[0].y * rect.height)
+      
+      for (let i = 1; i < street.coords.length - 2; i++) {
+        const xc = (street.coords[i].x + street.coords[i + 1].x) / 2
+        const yc = (street.coords[i].y + street.coords[i + 1].y) / 2
+        mapCtx.quadraticCurveTo(
+          street.coords[i].x * rect.width,
+          street.coords[i].y * rect.height,
+          xc * rect.width,
+          yc * rect.height
+        )
+      }
+      
+      if (street.coords.length > 2) {
+        mapCtx.quadraticCurveTo(
+          street.coords[street.coords.length - 2].x * rect.width,
+          street.coords[street.coords.length - 2].y * rect.height,
+          street.coords[street.coords.length - 1].x * rect.width,
+          street.coords[street.coords.length - 1].y * rect.height
+        )
+      }
+      
+      mapCtx.stroke()
+    })
+
     majorStreets.forEach(street => {
       mapCtx.strokeStyle = '#404040'
       mapCtx.lineWidth = street.width
       mapCtx.beginPath()
-      mapCtx.moveTo(street.coords[0].x * rect.width, street.coords[0].y * rect.height)
-      mapCtx.lineTo(street.coords[1].x * rect.width, street.coords[1].y * rect.height)
+      
+      if (street.curved && street.coords.length > 2) {
+        mapCtx.moveTo(street.coords[0].x * rect.width, street.coords[0].y * rect.height)
+        
+        for (let i = 1; i < street.coords.length - 2; i++) {
+          const xc = (street.coords[i].x + street.coords[i + 1].x) / 2
+          const yc = (street.coords[i].y + street.coords[i + 1].y) / 2
+          mapCtx.quadraticCurveTo(
+            street.coords[i].x * rect.width,
+            street.coords[i].y * rect.height,
+            xc * rect.width,
+            yc * rect.height
+          )
+        }
+        
+        mapCtx.quadraticCurveTo(
+          street.coords[street.coords.length - 2].x * rect.width,
+          street.coords[street.coords.length - 2].y * rect.height,
+          street.coords[street.coords.length - 1].x * rect.width,
+          street.coords[street.coords.length - 1].y * rect.height
+        )
+      } else {
+        mapCtx.moveTo(street.coords[0].x * rect.width, street.coords[0].y * rect.height)
+        mapCtx.lineTo(street.coords[1].x * rect.width, street.coords[1].y * rect.height)
+      }
+      
       mapCtx.stroke()
     })
 
