@@ -29,14 +29,14 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.9
+    const radiusKm = Math.random() * 0.5
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
     
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
-    const age = 20 + Math.floor(Math.random() * 40)
+    const age = 18 + Math.floor(Math.random() * 52)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
     users.push({
@@ -46,7 +46,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       gender,
       receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
       ageRangeMin: 18,
-      ageRangeMax: 80,
+      ageRangeMax: 70,
       location: { lat, lng },
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
@@ -168,6 +168,19 @@ export function getApproximateDistance(km: number): string {
   if (km < 5) return 'Within 5km'
   if (km < 10) return 'Within 10km'
   return 'Far away'
+}
+
+export function getRandomLocationNearCenter(): { lat: number; lng: number } {
+  const angle = Math.random() * 2 * Math.PI
+  const radiusKm = Math.random() * 0.2
+  
+  const latOffset = (radiusKm / 111) * Math.cos(angle)
+  const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
+  
+  return {
+    lat: CENTER_LAT + latOffset,
+    lng: CENTER_LNG + lngOffset
+  }
 }
 
 export function generateInitialChatRequests(

@@ -13,7 +13,7 @@ import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
 import { ChatInterface } from '@/components/ChatInterface'
 import { UserProfileView } from '@/components/UserProfileView'
-import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests, CENTER_LAT, CENTER_LNG } from '@/lib/helpers'
+import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests, getRandomLocationNearCenter, CENTER_LAT, CENTER_LNG } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
@@ -137,7 +137,7 @@ function App() {
     const newProfile: UserProfile = {
       ...profileData,
       id: myProfile?.id || `user-current`,
-      location: myProfile?.location || { lat: CENTER_LAT, lng: CENTER_LNG },
+      location: myProfile?.location || getRandomLocationNearCenter(),
       isActive: true,
       lastActive: Date.now()
     }
