@@ -18,11 +18,11 @@ import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
 function App() {
-  const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile', null)
+  const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v2', null)
   const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(2000))
-  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests', [])
-  const [conversations, setConversations] = useKV<Conversation[]>('conversations', [])
-  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages', {})
+  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v2', [])
+  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v2', [])
+  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v2', {})
   const [searchRadius, setSearchRadius] = useState([0.8])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)

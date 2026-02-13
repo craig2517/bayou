@@ -29,7 +29,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.9
+    const radiusKm = Math.random() * 0.5
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -208,11 +208,23 @@ export function generateInitialChatRequests(
     return canMessage
   })
   
-  const numRequests = Math.min(count, Math.max(2, Math.floor(eligibleUsers.length * 0.15)))
+  const numRequests = Math.min(count, Math.max(3, Math.floor(eligibleUsers.length * 0.2)))
   
   const selectedUsers = eligibleUsers
     .sort(() => Math.random() - 0.5)
     .slice(0, numRequests)
+  
+  console.log('🔔 GENERATING INITIAL REQUESTS:', {
+    totalDemoUsers: demoUsers.length,
+    eligibleUsers: eligibleUsers.length,
+    numRequests,
+    myProfile: {
+      gender: myProfile.gender,
+      age: myProfile.age,
+      receiveFrom: myProfile.receiveMessagesFrom,
+      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
+    }
+  })
   
   return selectedUsers.map((user, index) => ({
     id: `initial-req-${Date.now()}-${index}`,
