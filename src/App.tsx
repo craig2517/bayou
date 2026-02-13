@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -33,6 +33,7 @@ function App() {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const hasInitializedDemoData = useRef(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
@@ -41,93 +42,71 @@ function App() {
   useEffect(() => {
     if (!myProfile) {
       setShowProfileDialog(true)
-    } else {
-      const acceptedRequests = (chatRequests || []).filter(req => req.status === 'accepted')
-      const hasConversations = (conversations && conversations.length > 0)
-      const hasAcceptedRequests = acceptedRequests.length > 0
-      const hasPendingRequests = (chatRequests || []).some(req => req.status === 'pending' && req.toUserId === myProfile.id)
+      return
+    }
+
+    if (hasInitializedDemoData.current) {
+      return
+    }
+
+    const acceptedRequests = (chatRequests || []).filter(req => req.status === 'accepted')
+    const hasConversations = conversations && conversations.length > 0
+    const hasPendingRequests = (chatRequests || []).some(req => req.status === 'pending' && req.toUserId === myProfile.id)
+    
+    const hasAnyData = hasConversations || acceptedRequests.length > 0 || hasPendingRequests
+    
+    if (!hasAnyData) {
+      console.log('🎬 Generating initial demo data...')
+      console.log('Profile:', { id: myProfile.id, location: myProfile.location, gender: myProfile.gender, age: myProfile.age })
+      console.log('Total demo users:', demoUsers.length)
       
-      const hasExistingData = hasConversations || hasAcceptedRequests || hasPendingRequests
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 6)
       
-      if (!hasExistingData) {
-        console.log('🎬 Generating initial demo data...')
-        console.log('Current profile:', myProfile)
-        console.log('Total demo users:', demoUsers.length)
+      if (demoData.conversations.length > 0 || demoData.chatRequests.length > 0) {
+        setConversations(demoData.conversations)
+        setChatRequests(demoData.chatRequests)
+        setMessages(demoData.messages)
         
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 8)
+        const existingUserIds = [
+          ...demoData.conversations.flatMap(c => c.participants),
+          ...demoData.chatRequests.map(r => r.fromUserId),
+          ...demoData.chatRequests.map(r => r.toUserId)
+        ].filter(id => id !== myProfile.id)
+        const uniqueExistingUserIds = [...new Set(existingUserIds)]
+        
+        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 12)
+        
+        if (pendingRequests.length > 0) {
+          setChatRequests(current => [...(current || []), ...pendingRequests])
+          
+          const pendingToMe = pendingRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+          if (pendingToMe.length > 0) {
+            toast.success(`You have ${pendingToMe.length} new message requests!`, {
+              description: 'Check the Requests tab to connect',
+              duration: 4000
+            })
+          }
+        }
         
         if (demoData.conversations.length > 0) {
-          setConversations(demoData.conversations)
-          setChatRequests(demoData.chatRequests)
-          setMessages(demoData.messages)
-          
-          const existingUserIds = [
-            ...demoData.conversations.flatMap(c => c.participants),
-            ...demoData.chatRequests.map(r => r.fromUserId),
-            ...demoData.chatRequests.map(r => r.toUserId)
-          ].filter(id => id !== myProfile.id)
-          const uniqueExistingUserIds = [...new Set(existingUserIds)]
-          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 15)
-          
-          if (additionalRequests.length > 0) {
-            setChatRequests(current => [...(current || []), ...additionalRequests])
-            toast.success(`You have ${additionalRequests.length} new message requests!`, {
-              description: 'Check the Requests tab to connect',
-              duration: 4000
-            })
-          } else {
-            console.log('⚠️ No additional requests generated - trying to force create some')
-            const forcedRequests = generateAdditionalChatRequests(myProfile, demoUsers, [], 15)
-            if (forcedRequests.length > 0) {
-              setChatRequests(current => [...(current || []), ...forcedRequests])
-              toast.success(`You have ${forcedRequests.length} new message requests!`, {
-                description: 'Check the Requests tab to connect',
-                duration: 4000
-              })
-            }
-          }
-          
-          toast.success(`${demoData.conversations.length} demo conversations with messages created!`, {
-            description: 'Switch to Messages and Requests tabs to view them',
+          toast.success(`Demo data loaded: ${demoData.conversations.length} conversations created!`, {
+            description: 'Check Messages and Requests tabs',
             duration: 3500
           })
-        } else {
-          console.log('⚠️ No eligible users found for demo data generation')
-          console.log('Attempting to force generate with relaxed criteria...')
-          
-          setTimeout(() => {
-            const newDemoUsers = generateDemoUsers(2000)
-            setDemoUsers(newDemoUsers)
-          }, 500)
         }
-      } else {
-        console.log('📊 Existing data found:', {
-          conversations: conversations?.length || 0,
-          acceptedRequests: acceptedRequests.length,
-          pendingRequests: (chatRequests || []).filter(req => req.status === 'pending' && req.toUserId === myProfile.id).length
-        })
         
-        if (!hasPendingRequests && hasConversations) {
-          console.log('⚠️ No pending requests found but conversations exist - generating some requests')
-          const existingUserIds = [
-            ...(conversations || []).flatMap(c => c.participants),
-            ...(chatRequests || []).map(r => r.fromUserId),
-            ...(chatRequests || []).map(r => r.toUserId)
-          ].filter(id => id !== myProfile.id)
-          const uniqueExistingUserIds = [...new Set(existingUserIds)]
-          const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 12)
-          
-          if (newRequests.length > 0) {
-            setChatRequests(current => [...(current || []), ...newRequests])
-            toast.success(`You have ${newRequests.length} new message requests!`, {
-              description: 'Check the Requests tab to connect',
-              duration: 4000
-            })
-          }
-        }
+        hasInitializedDemoData.current = true
+      } else {
+        console.log('⚠️ No demo data generated. Refreshing users...')
+        setTimeout(() => {
+          const newDemoUsers = generateDemoUsers(2000)
+          setDemoUsers(newDemoUsers)
+        }, 500)
       }
+    } else {
+      hasInitializedDemoData.current = true
     }
-  }, [myProfile])
+  }, [myProfile, chatRequests, conversations, demoUsers])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -419,6 +398,7 @@ function App() {
     setConversations([])
     setChatRequests([])
     setMessages({})
+    hasInitializedDemoData.current = false
     
     setTimeout(() => {
       console.log('🔄 Force regenerating demo data after clear...')
@@ -440,6 +420,8 @@ function App() {
         if (additionalRequests.length > 0) {
           setChatRequests(current => [...(current || []), ...additionalRequests])
         }
+        
+        hasInitializedDemoData.current = true
         
         toast.success('Demo data regenerated!', {
           description: `${demoData.conversations.length} conversations and ${additionalRequests.length} requests created`,
