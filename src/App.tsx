@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Toaster } from '@/components/ui/sonner'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -19,7 +19,7 @@ import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/type
 
 function App() {
   const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile', null)
-  const [demoUsers] = useState(() => generateDemoUsers(800))
+  const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(800))
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages', {})
@@ -204,6 +204,11 @@ function App() {
     setViewingUserDistance(distance !== undefined ? formatDistance(distance) : undefined)
   }
 
+  const handleRefreshUsers = () => {
+    setDemoUsers(generateDemoUsers(800))
+    toast.success('Nearby users refreshed!')
+  }
+
   const handleSendMessage = (conversationId: string, text: string) => {
     if (!myProfile) return
 
@@ -345,7 +350,18 @@ function App() {
             ) : (
               <>
                 <div className="space-y-3 p-4 bg-card rounded-lg border border-border">
-                  <Label>Search Radius: {searchRadius[0]} km</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Search Radius: {searchRadius[0]} km</Label>
+                    <Button
+                      onClick={handleRefreshUsers}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowsClockwise />
+                      Refresh
+                    </Button>
+                  </div>
                   <Slider
                     value={searchRadius}
                     onValueChange={setSearchRadius}
