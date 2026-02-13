@@ -34,7 +34,16 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.sqrt(Math.random()) * 0.8
+    const rand = Math.random()
+    let radiusKm: number
+    
+    if (rand < 0.7) {
+      radiusKm = Math.sqrt(Math.random()) * 0.8
+    } else if (rand < 0.85) {
+      radiusKm = Math.random() * 1.2
+    } else {
+      radiusKm = Math.random() * 2
+    }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
