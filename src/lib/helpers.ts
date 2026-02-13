@@ -11,7 +11,10 @@ const FIRST_NAMES = [
   'Micah', 'Nova', 'Oakley', 'Payton', 'Remy', 'Skylar', 'Spencer', 'Winter',
   'Adrian', 'Bailey', 'Camden', 'Dylan', 'Ellis', 'Frankie', 'Gray', 'Hunter',
   'Indigo', 'Justice', 'Kennedy', 'Lee', 'Milan', 'Nico', 'Ocean', 'Perry',
-  'Quinn', 'Rain', 'Skyler', 'Tatum', 'Val', 'Wren', 'Zion', 'Ash'
+  'Quincy', 'Rain', 'Skyler', 'Tatum', 'Val', 'Wren', 'Zion', 'Ash',
+  'Brooklyn', 'Devon', 'Emerson', 'Flynn', 'Harper', 'Indiana', 'Jordan', 'Lennox',
+  'Marley', 'Arden', 'Peyton', 'Reign', 'Sutton', 'Tyler', 'Eden', 'Jules',
+  'Max', 'Sam', 'Chris', 'Stevie', 'Dallas', 'Austin', 'Angel', 'Robin'
 ]
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
@@ -37,12 +40,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const rand = Math.random()
     let radiusKm: number
     
-    if (rand < 0.90) {
-      radiusKm = Math.sqrt(Math.random()) * 0.8
-    } else if (rand < 0.97) {
-      radiusKm = Math.random() * 1.2
+    if (rand < 0.70) {
+      radiusKm = Math.pow(Math.random(), 2) * 0.5
+    } else if (rand < 0.92) {
+      radiusKm = (0.5 + Math.random() * 0.5)
     } else {
-      radiusKm = Math.random() * 2.5
+      radiusKm = (1.0 + Math.random() * 1.5)
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -50,7 +53,11 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
-    const age = Math.floor(Math.random() * 40) + 20
+    const age = Math.floor(Math.random() * 43) + 18
+    
+    const ageVariance = Math.floor(Math.random() * 15) + 5
+    const minAge = Math.max(18, age - ageVariance)
+    const maxAge = Math.min(80, age + ageVariance + Math.floor(Math.random() * 10))
     
     users.push({
       id: `user-${i + 1}`,
@@ -58,13 +65,13 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
       receiveMessagesFrom: getRandomGenderPreferences(),
-      ageRangeMin: Math.max(18, age - 25),
-      ageRangeMax: Math.min(80, age + 25),
+      ageRangeMin: minAge,
+      ageRangeMax: maxAge,
       location: { lat, lng },
-      isActive: Math.random() > 0.02,
-      lastActive: Date.now() - Math.floor(Math.random() * 3600000),
-      locationSharingEnabled: Math.random() > 0.02,
-      requireApproval: Math.random() > 0.4
+      isActive: Math.random() > 0.05,
+      lastActive: Date.now() - Math.floor(Math.random() * 7200000),
+      locationSharingEnabled: Math.random() > 0.08,
+      requireApproval: Math.random() > 0.5
     })
   }
   
@@ -183,12 +190,14 @@ export function generateInitialChatRequests(
     return canMessage
   })
   
+  const numRequests = Math.min(count, Math.max(2, Math.floor(eligibleUsers.length * 0.15)))
+  
   const selectedUsers = eligibleUsers
     .sort(() => Math.random() - 0.5)
-    .slice(0, Math.min(count, eligibleUsers.length))
+    .slice(0, numRequests)
   
   return selectedUsers.map((user, index) => ({
-    id: `initial-req-${index}`,
+    id: `initial-req-${Date.now()}-${index}`,
     fromUserId: user.id,
     toUserId: myProfile.id,
     status: 'pending' as const,
