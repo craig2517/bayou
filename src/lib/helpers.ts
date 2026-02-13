@@ -431,37 +431,20 @@ export function generateDemoConversationsAndMessages(
     return canMessage
   })
   
-  const usersWhoRequireApproval = eligibleUsers.filter(u => u.requireApproval)
   const usersWhoDoNotRequireApproval = eligibleUsers.filter(u => !u.requireApproval)
-  
-  const numConversationsFromNoApproval = Math.min(
-    Math.floor(conversationCount * 0.7),
-    usersWhoDoNotRequireApproval.length
-  )
-  
-  const numConversationsFromApproval = Math.min(
-    conversationCount - numConversationsFromNoApproval,
-    usersWhoRequireApproval.length
-  )
   
   const selectedNoApprovalUsers = usersWhoDoNotRequireApproval
     .sort(() => Math.random() - 0.5)
-    .slice(0, numConversationsFromNoApproval)
-  
-  const selectedApprovalUsers = usersWhoRequireApproval
-    .sort(() => Math.random() - 0.5)
-    .slice(0, numConversationsFromApproval)
-  
-  const selectedUsers = [...selectedNoApprovalUsers, ...selectedApprovalUsers]
+    .slice(0, Math.min(conversationCount, usersWhoDoNotRequireApproval.length))
   
   const conversations: any[] = []
   const chatRequests: any[] = []
   const allMessages: Record<string, any[]> = {}
   
-  selectedUsers.forEach((user, index) => {
+  selectedNoApprovalUsers.forEach((user, index) => {
     const conversationId = [myProfile.id, user.id].sort().join('-')
     
-    const messageCount = Math.floor(Math.random() * 8) + 4
+    const messageCount = Math.floor(Math.random() * 10) + 5
     const messages = generateDemoMessages(conversationId, myProfile.id, user.id, messageCount)
     
     allMessages[conversationId] = messages
@@ -491,10 +474,7 @@ export function generateDemoConversationsAndMessages(
     conversationCount: conversations.length,
     totalMessages: Object.values(allMessages).flat().length,
     eligibleUsers: eligibleUsers.length,
-    requireApprovalUsers: usersWhoRequireApproval.length,
     noApprovalUsers: usersWhoDoNotRequireApproval.length,
-    conversationsFromNoApproval: numConversationsFromNoApproval,
-    conversationsFromApproval: numConversationsFromApproval,
     attemptedCount: conversationCount,
     myProfileLocation: myProfile.location,
     sampleEligibleUsers: eligibleUsers.slice(0, 5).map(u => ({
@@ -543,17 +523,20 @@ export function generateAdditionalChatRequests(
     return canMessage
   })
   
-  const numRequestsToMe = Math.floor(count * 0.7)
-  const numRequestsFromMe = count - numRequestsToMe
+  const usersWhoRequireApprovalFromMe = eligibleUsers.filter(u => myProfile.requireApproval)
+  const usersToSendRequestsFrom = eligibleUsers.filter(u => u.requireApproval || myProfile.requireApproval)
   
-  const selectedUsersForRequestsToMe = eligibleUsers
+  const numRequestsToMe = Math.ceil(count * 0.75)
+  const numRequestsFromMe = Math.floor(count * 0.25)
+  
+  const selectedUsersForRequestsToMe = usersToSendRequestsFrom
     .sort(() => Math.random() - 0.5)
-    .slice(0, numRequestsToMe)
+    .slice(0, Math.min(numRequestsToMe, usersToSendRequestsFrom.length))
   
   const selectedUsersForRequestsFromMe = eligibleUsers
     .filter(u => !selectedUsersForRequestsToMe.includes(u))
     .sort(() => Math.random() - 0.5)
-    .slice(0, numRequestsFromMe)
+    .slice(0, Math.min(numRequestsFromMe, eligibleUsers.length - selectedUsersForRequestsToMe.length))
   
   const requestsToMe = selectedUsersForRequestsToMe.map((user, index) => ({
     id: `pending-req-to-me-${Date.now()}-${index}`,
@@ -578,13 +561,21 @@ export function generateAdditionalChatRequests(
     requestsToMe: requestsToMe.length,
     requestsFromMe: requestsFromMe.length,
     eligibleUsers: eligibleUsers.length,
+    usersWhoRequireApprovalFromMe: usersWhoRequireApprovalFromMe.length,
+    usersToSendRequestsFrom: usersToSendRequestsFrom.length,
     existingRequests: existingRequestUserIds.length,
     attemptedCount: count,
-    sampleRequestsToMe: requestsToMe.map(r => {
+    myProfile: {
+      requireApproval: myProfile.requireApproval,
+      gender: myProfile.gender,
+      age: myProfile.age
+    },
+    sampleRequestsToMe: requestsToMe.slice(0, 3).map(r => {
       const user = demoUsers.find(u => u.id === r.fromUserId)
       return {
         from: user?.name,
-        requiresApproval: user?.requireApproval
+        requiresApprovalFromMe: myProfile.requireApproval,
+        theyRequireApproval: user?.requireApproval
       }
     }),
     sampleEligibleUsers: eligibleUsers.slice(0, 5).map(u => ({

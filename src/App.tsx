@@ -54,7 +54,7 @@ function App() {
         console.log('Current profile:', myProfile)
         console.log('Total demo users:', demoUsers.length)
         
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 5)
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 6)
         
         if (demoData.conversations.length > 0) {
           setConversations(demoData.conversations)
@@ -67,7 +67,7 @@ function App() {
             ...demoData.chatRequests.map(r => r.toUserId)
           ].filter(id => id !== myProfile.id)
           const uniqueExistingUserIds = [...new Set(existingUserIds)]
-          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 10)
+          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 12)
           
           if (additionalRequests.length > 0) {
             setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -77,7 +77,7 @@ function App() {
             })
           } else {
             console.log('⚠️ No additional requests generated - trying to force create some')
-            const forcedRequests = generateAdditionalChatRequests(myProfile, demoUsers, [], 10)
+            const forcedRequests = generateAdditionalChatRequests(myProfile, demoUsers, [], 12)
             if (forcedRequests.length > 0) {
               setChatRequests(current => [...(current || []), ...forcedRequests])
               toast.success(`You have ${forcedRequests.length} new message requests!`, {
@@ -87,9 +87,9 @@ function App() {
             }
           }
           
-          toast.success(`${demoData.conversations.length} demo conversations created!`, {
-            description: 'Switch to Messages tab to view them',
-            duration: 3000
+          toast.success(`${demoData.conversations.length} demo conversations with messages created!`, {
+            description: 'Switch to Messages and Requests tabs to view them',
+            duration: 3500
           })
         } else {
           console.log('⚠️ No eligible users found for demo data generation')
@@ -115,7 +115,7 @@ function App() {
             ...(chatRequests || []).map(r => r.toUserId)
           ].filter(id => id !== myProfile.id)
           const uniqueExistingUserIds = [...new Set(existingUserIds)]
-          const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 8)
+          const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 10)
           
           if (newRequests.length > 0) {
             setChatRequests(current => [...(current || []), ...newRequests])
@@ -434,14 +434,14 @@ function App() {
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
     
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 3)
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 4)
     
     if (demoData.conversations.length > 0) {
       setConversations(current => [...(current || []), ...demoData.conversations])
       setChatRequests(current => [...(current || []), ...demoData.chatRequests])
       setMessages(current => ({ ...(current || {}), ...demoData.messages }))
       
-      toast.success(`Added ${demoData.conversations.length} new conversations!`)
+      toast.success(`Added ${demoData.conversations.length} new conversations with messages!`)
     }
     
     const newExistingIds = [
@@ -451,7 +451,7 @@ function App() {
       ...demoData.chatRequests.map(r => r.toUserId)
     ].filter(id => id !== myProfile.id)
     const finalUniqueIds = [...new Set(newExistingIds)]
-    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 4)
+    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 6)
     
     if (additionalRequests.length > 0) {
       setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -476,7 +476,7 @@ function App() {
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
     
-    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 8)
+    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 10)
     
     if (newRequests.length > 0) {
       setChatRequests(current => [...(current || []), ...newRequests])
