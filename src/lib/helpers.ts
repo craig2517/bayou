@@ -33,8 +33,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   
   for (let i = 0; i < count; i++) {
-    const lat = CENTER_LAT + (Math.random() - 0.5) * 0.015
-    const lng = CENTER_LNG + (Math.random() - 0.5) * 0.015
+    const lat = CENTER_LAT + (Math.random() - 0.5) * 0.009
+    const lng = CENTER_LNG + (Math.random() - 0.5) * 0.009
     const age = Math.floor(Math.random() * 35) + 21
     
     users.push({
