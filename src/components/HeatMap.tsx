@@ -155,11 +155,6 @@ export function HeatMap({ points }: HeatMapProps) {
           {points.length} active nearby
         </span>
       </div>
-      <div className="absolute top-4 left-4 px-3 py-1.5 bg-card/80 backdrop-blur-sm rounded-lg border border-border/50">
-        <span className="text-xs font-medium text-muted-foreground">
-          Urban Area Map
-        </span>
-      </div>
     </div>
   )
 }
