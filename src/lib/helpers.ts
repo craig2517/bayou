@@ -21,7 +21,7 @@ const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
   const rand = Math.random()
-  if (rand < 0.85) {
+  if (rand < 0.95) {
     return [...GENDERS]
   } else {
     const count = 2 + Math.floor(Math.random() * 2)
@@ -33,10 +33,10 @@ function getRandomGenderPreferences(): string[] {
 export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   
-  const veryCloseCount = Math.min(800, Math.floor(count * 0.4))
+  const veryCloseCount = Math.min(900, Math.floor(count * 0.45))
   for (let i = 0; i < veryCloseCount; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.4
+    const radiusKm = Math.random() * 0.35
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -46,8 +46,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const age = 18 + Math.floor(Math.random() * 47)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
-    const ageRangeMin = 18
-    const ageRangeMax = 80
+    const ageRangeMin = Math.max(18, age - 15)
+    const ageRangeMax = Math.min(80, age + 15)
     
     users.push({
       id: `user-demo-close-${i + 1}-${Date.now()}`,
@@ -68,7 +68,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   const remainingCount = count - veryCloseCount
   for (let i = 0; i < remainingCount; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = 0.4 + Math.random() * 0.6
+    const radiusKm = 0.35 + Math.random() * 0.65
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -78,8 +78,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const age = 18 + Math.floor(Math.random() * 47)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
-    const ageRangeMin = 18
-    const ageRangeMax = 80
+    const ageRangeMin = Math.max(18, age - 15)
+    const ageRangeMax = Math.min(80, age + 15)
     
     users.push({
       id: `user-demo-${i + 1}-${Date.now()}`,
