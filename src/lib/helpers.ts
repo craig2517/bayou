@@ -18,9 +18,9 @@ const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
   const rand = Math.random()
-  if (rand < 0.85) {
+  if (rand < 0.95) {
     return [...GENDERS]
-  } else if (rand < 0.95) {
+  } else if (rand < 0.98) {
     const count = Math.floor(Math.random() * 2) + 2
     const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
     return shuffled.slice(0, count)
@@ -37,10 +37,10 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const rand = Math.random()
     let radiusKm: number
     
-    if (rand < 0.85) {
-      radiusKm = Math.sqrt(Math.random()) * 0.9
-    } else if (rand < 0.95) {
-      radiusKm = Math.random() * 1.5
+    if (rand < 0.90) {
+      radiusKm = Math.sqrt(Math.random()) * 0.8
+    } else if (rand < 0.97) {
+      radiusKm = Math.random() * 1.2
     } else {
       radiusKm = Math.random() * 2.5
     }
@@ -58,13 +58,13 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
       receiveMessagesFrom: getRandomGenderPreferences(),
-      ageRangeMin: Math.max(18, age - 20),
-      ageRangeMax: Math.min(80, age + 20),
+      ageRangeMin: Math.max(18, age - 25),
+      ageRangeMax: Math.min(80, age + 25),
       location: { lat, lng },
-      isActive: Math.random() > 0.05,
+      isActive: Math.random() > 0.02,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
-      locationSharingEnabled: Math.random() > 0.05,
-      requireApproval: Math.random() > 0.5
+      locationSharingEnabled: Math.random() > 0.02,
+      requireApproval: Math.random() > 0.4
     })
   }
   
