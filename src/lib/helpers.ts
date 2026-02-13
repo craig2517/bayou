@@ -17,10 +17,10 @@ const FIRST_NAMES = [
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
-  const preferences: string[] = []
   const count = Math.floor(Math.random() * 4) + 1
   const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
-  return shuffled.slice(0, count)
+  const result = shuffled.slice(0, count)
+  return result.length > 0 ? result : [GENDERS[0]]
 }
 
 export function generateDemoUsers(count: number = 50): UserProfile[] {

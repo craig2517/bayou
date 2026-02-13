@@ -53,10 +53,10 @@ function App() {
         )
         
         const canMessage = 
-          user.receiveMessagesFrom.includes(myProfile.gender) &&
+          user.receiveMessagesFrom?.includes(myProfile.gender) &&
           user.ageRangeMin <= myProfile.age &&
           user.ageRangeMax >= myProfile.age &&
-          myProfile.receiveMessagesFrom.includes(user.gender) &&
+          myProfile.receiveMessagesFrom?.includes(user.gender) &&
           myProfile.ageRangeMin <= user.age &&
           myProfile.ageRangeMax >= user.age
         
@@ -95,10 +95,10 @@ function App() {
     }
 
     const canMessage = 
-      toUser.receiveMessagesFrom.includes(myProfile.gender) &&
+      toUser.receiveMessagesFrom?.includes(myProfile.gender) &&
       toUser.ageRangeMin <= myProfile.age &&
       toUser.ageRangeMax >= myProfile.age &&
-      myProfile.receiveMessagesFrom.includes(toUser.gender) &&
+      myProfile.receiveMessagesFrom?.includes(toUser.gender) &&
       myProfile.ageRangeMin <= toUser.age &&
       myProfile.ageRangeMax >= toUser.age
 

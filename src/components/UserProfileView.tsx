@@ -84,7 +84,7 @@ export function UserProfileView({ user, distance }: UserProfileViewProps) {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Looking For</p>
-              <p className="font-semibold text-foreground">{user.receiveMessagesFrom.join(', ')}</p>
+              <p className="font-semibold text-foreground">{user.receiveMessagesFrom?.join(', ') || 'Not specified'}</p>
             </div>
           </div>
 
