@@ -431,10 +431,28 @@ export function generateDemoConversationsAndMessages(
     return canMessage
   })
   
-  const numConversations = Math.min(conversationCount, eligibleUsers.length)
-  const selectedUsers = eligibleUsers
+  const usersWhoRequireApproval = eligibleUsers.filter(u => u.requireApproval)
+  const usersWhoDoNotRequireApproval = eligibleUsers.filter(u => !u.requireApproval)
+  
+  const numConversationsFromNoApproval = Math.min(
+    Math.floor(conversationCount * 0.7),
+    usersWhoDoNotRequireApproval.length
+  )
+  
+  const numConversationsFromApproval = Math.min(
+    conversationCount - numConversationsFromNoApproval,
+    usersWhoRequireApproval.length
+  )
+  
+  const selectedNoApprovalUsers = usersWhoDoNotRequireApproval
     .sort(() => Math.random() - 0.5)
-    .slice(0, numConversations)
+    .slice(0, numConversationsFromNoApproval)
+  
+  const selectedApprovalUsers = usersWhoRequireApproval
+    .sort(() => Math.random() - 0.5)
+    .slice(0, numConversationsFromApproval)
+  
+  const selectedUsers = [...selectedNoApprovalUsers, ...selectedApprovalUsers]
   
   const conversations: any[] = []
   const chatRequests: any[] = []
@@ -457,10 +475,13 @@ export function generateDemoConversationsAndMessages(
       unreadCount: 0
     })
     
+    const whoInitiated = Math.random() > 0.5 ? myProfile.id : user.id
+    const whoReceived = whoInitiated === myProfile.id ? user.id : myProfile.id
+    
     chatRequests.push({
       id: `demo-req-${conversationId}`,
-      fromUserId: Math.random() > 0.5 ? myProfile.id : user.id,
-      toUserId: Math.random() > 0.5 ? user.id : myProfile.id,
+      fromUserId: whoInitiated,
+      toUserId: whoReceived,
       status: 'accepted' as const,
       timestamp: messages[0].timestamp - 60000
     })
@@ -470,13 +491,18 @@ export function generateDemoConversationsAndMessages(
     conversationCount: conversations.length,
     totalMessages: Object.values(allMessages).flat().length,
     eligibleUsers: eligibleUsers.length,
+    requireApprovalUsers: usersWhoRequireApproval.length,
+    noApprovalUsers: usersWhoDoNotRequireApproval.length,
+    conversationsFromNoApproval: numConversationsFromNoApproval,
+    conversationsFromApproval: numConversationsFromApproval,
     attemptedCount: conversationCount,
     myProfileLocation: myProfile.location,
     sampleEligibleUsers: eligibleUsers.slice(0, 5).map(u => ({
       name: u.name,
       distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
       gender: u.gender,
-      age: u.age
+      age: u.age,
+      requireApproval: u.requireApproval
     }))
   })
   
@@ -517,31 +543,58 @@ export function generateAdditionalChatRequests(
     return canMessage
   })
   
-  const numRequests = Math.min(count, eligibleUsers.length)
-  const selectedUsers = eligibleUsers
-    .sort(() => Math.random() - 0.5)
-    .slice(0, numRequests)
+  const numRequestsToMe = Math.floor(count * 0.7)
+  const numRequestsFromMe = count - numRequestsToMe
   
-  const requests = selectedUsers.map((user, index) => ({
-    id: `additional-req-${Date.now()}-${index}`,
+  const selectedUsersForRequestsToMe = eligibleUsers
+    .sort(() => Math.random() - 0.5)
+    .slice(0, numRequestsToMe)
+  
+  const selectedUsersForRequestsFromMe = eligibleUsers
+    .filter(u => !selectedUsersForRequestsToMe.includes(u))
+    .sort(() => Math.random() - 0.5)
+    .slice(0, numRequestsFromMe)
+  
+  const requestsToMe = selectedUsersForRequestsToMe.map((user, index) => ({
+    id: `pending-req-to-me-${Date.now()}-${index}`,
     fromUserId: user.id,
     toUserId: myProfile.id,
     status: 'pending' as const,
     timestamp: Date.now() - Math.floor(Math.random() * 7200000)
   }))
   
+  const requestsFromMe = selectedUsersForRequestsFromMe.map((user, index) => ({
+    id: `pending-req-from-me-${Date.now()}-${index}`,
+    fromUserId: myProfile.id,
+    toUserId: user.id,
+    status: 'pending' as const,
+    timestamp: Date.now() - Math.floor(Math.random() * 7200000)
+  }))
+  
+  const allRequests = [...requestsToMe, ...requestsFromMe]
+  
   console.log('🔔 GENERATED ADDITIONAL REQUESTS:', {
-    requestCount: requests.length,
+    totalRequestCount: allRequests.length,
+    requestsToMe: requestsToMe.length,
+    requestsFromMe: requestsFromMe.length,
     eligibleUsers: eligibleUsers.length,
     existingRequests: existingRequestUserIds.length,
     attemptedCount: count,
+    sampleRequestsToMe: requestsToMe.map(r => {
+      const user = demoUsers.find(u => u.id === r.fromUserId)
+      return {
+        from: user?.name,
+        requiresApproval: user?.requireApproval
+      }
+    }),
     sampleEligibleUsers: eligibleUsers.slice(0, 5).map(u => ({
       name: u.name,
       distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
       gender: u.gender,
-      age: u.age
+      age: u.age,
+      requiresApproval: u.requireApproval
     }))
   })
   
-  return requests
+  return allRequests
 }

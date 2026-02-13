@@ -61,8 +61,13 @@ function App() {
           setChatRequests(demoData.chatRequests)
           setMessages(demoData.messages)
           
-          const existingUserIds = demoData.conversations.flatMap(c => c.participants)
-          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 10)
+          const existingUserIds = [
+            ...demoData.conversations.flatMap(c => c.participants),
+            ...demoData.chatRequests.map(r => r.fromUserId),
+            ...demoData.chatRequests.map(r => r.toUserId)
+          ].filter(id => id !== myProfile.id)
+          const uniqueExistingUserIds = [...new Set(existingUserIds)]
+          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 10)
           
           if (additionalRequests.length > 0) {
             setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -104,8 +109,13 @@ function App() {
         
         if (!hasPendingRequests && hasConversations) {
           console.log('⚠️ No pending requests found but conversations exist - generating some requests')
-          const existingUserIds = (conversations || []).flatMap(c => c.participants).concat((chatRequests || []).map(r => r.fromUserId))
-          const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 8)
+          const existingUserIds = [
+            ...(conversations || []).flatMap(c => c.participants),
+            ...(chatRequests || []).map(r => r.fromUserId),
+            ...(chatRequests || []).map(r => r.toUserId)
+          ].filter(id => id !== myProfile.id)
+          const uniqueExistingUserIds = [...new Set(existingUserIds)]
+          const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 8)
           
           if (newRequests.length > 0) {
             setChatRequests(current => [...(current || []), ...newRequests])
@@ -434,8 +444,14 @@ function App() {
       toast.success(`Added ${demoData.conversations.length} new conversations!`)
     }
     
-    const newExistingIds = [...uniqueExistingUserIds, ...demoData.conversations.flatMap(c => c.participants)]
-    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, newExistingIds, 4)
+    const newExistingIds = [
+      ...uniqueExistingUserIds,
+      ...demoData.conversations.flatMap(c => c.participants),
+      ...demoData.chatRequests.map(r => r.fromUserId),
+      ...demoData.chatRequests.map(r => r.toUserId)
+    ].filter(id => id !== myProfile.id)
+    const finalUniqueIds = [...new Set(newExistingIds)]
+    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 4)
     
     if (additionalRequests.length > 0) {
       setChatRequests(current => [...(current || []), ...additionalRequests])
