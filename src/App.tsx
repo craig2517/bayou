@@ -64,35 +64,34 @@ function App() {
     
     const inRadiusUsers = allUsersWithDistance.filter(item => item.distance <= searchRadius[0])
     
-    const sampleFailures = allUsersWithDistance.slice(0, 5).map(item => ({
-      name: item.user.name,
-      distance: item.distance.toFixed(3),
-      userAcceptsMe: item.userAcceptsMe,
-      userAgeMatchesMe: item.userAgeMatchesMe,
-      iAcceptUser: item.iAcceptUser,
-      myAgeMatchesUser: item.myAgeMatchesUser,
-      canMessage: item.canMessage,
-      userAge: item.user.age,
-      userAgeRange: [item.user.ageRangeMin, item.user.ageRangeMax],
-      userGender: item.user.gender,
-      userReceives: item.user.receiveMessagesFrom
-    }))
-    
-    console.log('🔍 DETAILED USER DEBUG:', {
+    console.log('🔍 DISCOVER DEBUG:', {
       myProfile: {
+        name: myProfile.name,
         gender: myProfile.gender,
         age: myProfile.age,
         receiveFrom: myProfile.receiveMessagesFrom,
-        ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
-        location: myProfile.location
+        ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
       },
-      searchRadius: searchRadius[0],
+      searchRadius: searchRadius[0] + 'km',
       totalDemoUsers: demoUsers.length,
-      activeUsers: demoUsers.filter(u => u.isActive).length,
-      locationSharingUsers: demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length,
+      activeWithLocationSharing: demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length,
       usersInRadius: inRadiusUsers.length,
-      canMessageCount: inRadiusUsers.filter(f => f.canMessage).length,
-      sampleUsers: sampleFailures
+      matchingUsers: inRadiusUsers.filter(f => f.canMessage).length,
+      firstThreeInRadius: inRadiusUsers.slice(0, 3).map(item => ({
+        name: item.user.name,
+        distance: item.distance.toFixed(3) + 'km',
+        gender: item.user.gender,
+        age: item.user.age,
+        userAgeRange: [item.user.ageRangeMin, item.user.ageRangeMax],
+        userReceives: item.user.receiveMessagesFrom,
+        checks: {
+          userAcceptsMe: item.userAcceptsMe,
+          userAgeMatchesMe: item.userAgeMatchesMe,
+          iAcceptUser: item.iAcceptUser,
+          myAgeMatchesUser: item.myAgeMatchesUser,
+          canMessage: item.canMessage
+        }
+      }))
     })
     
     const filtered = inRadiusUsers.sort((a, b) => a.distance - b.distance)

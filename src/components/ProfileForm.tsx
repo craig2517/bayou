@@ -26,7 +26,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   )
   const [ageRange, setAgeRange] = useState([
     profile?.ageRangeMin || 18,
-    profile?.ageRangeMax || 70
+    profile?.ageRangeMax || 80
   ])
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(profile?.locationSharingEnabled ?? true)
   const [requireApproval, setRequireApproval] = useState(profile?.requireApproval ?? true)
