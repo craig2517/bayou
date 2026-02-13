@@ -1,7 +1,7 @@
 import type { UserProfile, HeatMapPoint } from './types'
 
-const CENTER_LAT = 38.2545
-const CENTER_LNG = -85.7145
+export const CENTER_LAT = 38.2545
+export const CENTER_LNG = -85.7145
 
 const FIRST_NAMES = [
   'Alex', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Avery', 'Quinn',
@@ -26,10 +26,10 @@ function getRandomGenderPreferences(): string[] {
 export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   
-  const veryCloseCount = Math.min(900, Math.floor(count * 0.45))
-  for (let i = 0; i < veryCloseCount; i++) {
+  const ultraCloseCount = Math.min(1500, Math.floor(count * 0.75))
+  for (let i = 0; i < ultraCloseCount; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.35
+    const radiusKm = Math.random() * 0.75
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -43,7 +43,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const ageRangeMax = 80
     
     users.push({
-      id: `user-demo-close-${i + 1}-${Date.now()}`,
+      id: `user-demo-ultra-${i + 1}-${Date.now()}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender,
@@ -58,10 +58,10 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     })
   }
   
-  const remainingCount = count - veryCloseCount
+  const remainingCount = count - ultraCloseCount
   for (let i = 0; i < remainingCount; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = 0.35 + Math.random() * 0.65
+    const radiusKm = 0.75 + Math.random() * 0.25
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -75,7 +75,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const ageRangeMax = 80
     
     users.push({
-      id: `user-demo-${i + 1}-${Date.now()}`,
+      id: `user-demo-far-${i + 1}-${Date.now()}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender,

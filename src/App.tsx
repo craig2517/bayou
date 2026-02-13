@@ -13,7 +13,7 @@ import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
 import { ChatInterface } from '@/components/ChatInterface'
 import { UserProfileView } from '@/components/UserProfileView'
-import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests } from '@/lib/helpers'
+import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests, CENTER_LAT, CENTER_LNG } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
@@ -132,8 +132,6 @@ function App() {
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
     const isNewProfile = !myProfile
-    const CENTER_LAT = 38.2545
-    const CENTER_LNG = -85.7145
     
     const newProfile: UserProfile = {
       ...profileData,
