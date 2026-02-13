@@ -40,48 +40,62 @@ function App() {
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
   const nearbyUsers = useMemo(() => {
-    if (!myProfile) return []
+    if (!myProfile) {
+      console.log('❌ No profile exists yet')
+      return []
+    }
     
     console.log('👤 MY PROFILE:', {
+      id: myProfile.id,
       location: myProfile.location,
       name: myProfile.name,
       gender: myProfile.gender,
       age: myProfile.age,
       receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
+      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
+      locationSharingEnabled: myProfile.locationSharingEnabled
     })
     
-    const allUsersWithDistance = demoUsers
-      .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
-      .map(user => {
-        const distance = calculateDistance(
-          myProfile.location.lat,
-          myProfile.location.lng,
-          user.location.lat,
-          user.location.lng
-        )
-        
-        const userAcceptsMe = user.receiveMessagesFrom?.includes(myProfile.gender)
-        const userAgeMatchesMe = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
-        const iAcceptUser = myProfile.receiveMessagesFrom?.includes(user.gender)
-        const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
-        
-        const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser
-        
-        return { user, distance, canMessage, userAcceptsMe, userAgeMatchesMe, iAcceptUser, myAgeMatchesUser }
-      })
+    const eligibleDemoUsers = demoUsers.filter(user => 
+      user.id !== myProfile.id && user.isActive && user.locationSharingEnabled
+    )
+    
+    console.log('📊 ELIGIBLE USERS:', {
+      totalDemoUsers: demoUsers.length,
+      afterFiltering: eligibleDemoUsers.length,
+      removedByMyId: demoUsers.filter(u => u.id === myProfile.id).length,
+      removedByInactive: demoUsers.filter(u => !u.isActive).length,
+      removedByLocationSharing: demoUsers.filter(u => !u.locationSharingEnabled).length
+    })
+    
+    const allUsersWithDistance = eligibleDemoUsers.map(user => {
+      const distance = calculateDistance(
+        myProfile.location.lat,
+        myProfile.location.lng,
+        user.location.lat,
+        user.location.lng
+      )
+      
+      const userAcceptsMe = user.receiveMessagesFrom?.includes(myProfile.gender)
+      const userAgeMatchesMe = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
+      const iAcceptUser = myProfile.receiveMessagesFrom?.includes(user.gender)
+      const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+      
+      const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser
+      
+      return { user, distance, canMessage, userAcceptsMe, userAgeMatchesMe, iAcceptUser, myAgeMatchesUser }
+    })
     
     const inRadiusUsers = allUsersWithDistance.filter(item => item.distance <= searchRadius[0])
     
     console.log('🔍 DISCOVER DEBUG:', {
       searchRadius: searchRadius[0] + 'km',
-      totalDemoUsers: demoUsers.length,
-      activeWithLocationSharing: demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length,
       usersInRadius: inRadiusUsers.length,
       matchingUsers: inRadiusUsers.filter(f => f.canMessage).length,
-      closestUsers: inRadiusUsers.slice(0, 5).map(item => ({
+      closestUsers: allUsersWithDistance.slice(0, 10).map(item => ({
         name: item.user.name,
         distance: item.distance.toFixed(3) + 'km',
+        inRadius: item.distance <= searchRadius[0],
         gender: item.user.gender,
         age: item.user.age,
         userAgeRange: [item.user.ageRangeMin, item.user.ageRangeMax],

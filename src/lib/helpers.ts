@@ -28,13 +28,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const rand = Math.random()
     let radiusKm: number
     
-    if (rand < 0.85) {
-      radiusKm = Math.random() * 0.5
+    if (i < count * 0.9) {
+      radiusKm = Math.random() * 0.2
     } else {
-      radiusKm = 0.5 + Math.random() * 0.5
+      radiusKm = 0.2 + Math.random() * 0.3
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -42,14 +41,14 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
-    const age = 18 + Math.floor(Math.random() * 42)
+    const age = 21 + Math.floor(Math.random() * 34)
     
     users.push({
-      id: `user-${i + 1}`,
+      id: `user-demo-${i + 1}-${Date.now()}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
-      receiveMessagesFrom: [...GENDERS],
+      receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
       ageRangeMin: 18,
       ageRangeMax: 80,
       location: { lat, lng },
@@ -59,6 +58,19 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       requireApproval: Math.random() > 0.3
     })
   }
+  
+  console.log('🎲 Generated demo users:', {
+    count: users.length,
+    sample: users.slice(0, 3).map(u => ({
+      id: u.id,
+      name: u.name,
+      age: u.age,
+      gender: u.gender,
+      location: u.location,
+      receiveFrom: u.receiveMessagesFrom,
+      ageRange: [u.ageRangeMin, u.ageRangeMax]
+    }))
+  })
   
   return users
 }
