@@ -31,10 +31,10 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const rand = Math.random()
     let radiusKm: number
     
-    if (rand < 0.90) {
-      radiusKm = Math.random() * 0.5
+    if (rand < 0.95) {
+      radiusKm = Math.random() * 0.3
     } else {
-      radiusKm = 0.5 + Math.random() * 0.5
+      radiusKm = 0.3 + Math.random() * 0.3
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -49,7 +49,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
-      receiveMessagesFrom: getRandomGenderPreferences(),
+      receiveMessagesFrom: [...GENDERS],
       ageRangeMin: 18,
       ageRangeMax: 80,
       location: { lat, lng },

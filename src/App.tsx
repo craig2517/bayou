@@ -42,6 +42,8 @@ function App() {
   const nearbyUsers = useMemo(() => {
     if (!myProfile) return []
     
+    console.log('👤 MY PROFILE LOCATION:', myProfile.location)
+    
     const allUsersWithDistance = demoUsers
       .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
       .map(user => {
@@ -77,6 +79,11 @@ function App() {
       activeWithLocationSharing: demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length,
       usersInRadius: inRadiusUsers.length,
       matchingUsers: inRadiusUsers.filter(f => f.canMessage).length,
+      distancesSample: allUsersWithDistance.slice(0, 10).map(item => ({
+        name: item.user.name,
+        distance: item.distance.toFixed(3) + 'km',
+        withinRadius: item.distance <= searchRadius[0]
+      })),
       firstThreeInRadius: inRadiusUsers.slice(0, 3).map(item => ({
         name: item.user.name,
         distance: item.distance.toFixed(3) + 'km',
@@ -112,6 +119,13 @@ function App() {
       isActive: true,
       lastActive: Date.now()
     }
+    
+    console.log('💾 SAVED PROFILE:', {
+      profile: newProfile,
+      isNewProfile,
+      totalDemoUsers: demoUsers.length
+    })
+    
     setMyProfile(newProfile)
     setShowProfileDialog(false)
     
