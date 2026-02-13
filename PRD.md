@@ -49,81 +49,93 @@ This is a focused MVP with core features: heat map visualization, user profiles,
 - **Location simulation**: Use randomized demo coordinates around a central point for MVP testing
 
 ## Design Direction
-The design should feel modern, social, and welcoming - evoking excitement about local community without feeling corporate or clinical. Warm, approachable, with emphasis on spatial awareness through the map interface. Should feel like a blend between a social app and an exploration tool.
+The design should feel modern, social, and welcoming - evoking excitement about local community with a polished, refined aesthetic. The interface prioritizes visual hierarchy, generous spacing, and thoughtful micro-interactions that make every interaction feel intentional and delightful. Warm, approachable, sophisticated, with emphasis on spatial awareness through the map interface while maintaining a premium feel through elevated shadows, refined borders, and smooth transitions.
 
 ## Color Selection
-Vibrant gradient-based palette with warm tones that evoke energy, connection, and community.
+Vibrant gradient-based palette with warm tones that evoke energy, connection, and community, refined with deeper saturation and better contrast.
 
-- **Primary Color**: Vibrant coral-pink `oklch(0.68 0.18 15)` - Warm, inviting, and energetic; communicates friendliness and social connection
-- **Secondary Colors**: Deep purple `oklch(0.45 0.15 295)` for depth and sophistication in secondary UI elements
-- **Accent Color**: Bright cyan `oklch(0.75 0.13 195)` - Eye-catching for CTAs, notifications, and active states
+- **Primary Color**: Vibrant coral-orange `oklch(0.70 0.20 20)` - Warm, inviting, and energetic with deeper saturation; communicates friendliness and social connection
+- **Secondary Colors**: Rich purple `oklch(0.48 0.18 295)` for depth and sophistication in secondary UI elements
+- **Accent Color**: Bright teal-cyan `oklch(0.76 0.15 200)` - Eye-catching for CTAs, notifications, and active states
 - **Foreground/Background Pairings**: 
-  - Background (Soft cream `oklch(0.98 0.01 85)`): Dark purple text `oklch(0.25 0.05 295)` - Ratio 11.2:1 ✓
-  - Primary (Coral pink `oklch(0.68 0.18 15)`): White text `oklch(1 0 0)` - Ratio 4.9:1 ✓
-  - Accent (Bright cyan `oklch(0.75 0.13 195)`): Dark purple text `oklch(0.25 0.05 295)` - Ratio 6.8:1 ✓
+  - Background (Near white `oklch(0.99 0.005 85)`): Deep purple text `oklch(0.20 0.05 295)` - Ratio 14.8:1 ✓
+  - Primary (Coral orange `oklch(0.70 0.20 20)`): White text `oklch(1 0 0)` - Ratio 5.2:1 ✓
+  - Accent (Bright teal `oklch(0.76 0.15 200)`): Dark purple text `oklch(0.20 0.05 295)` - Ratio 7.5:1 ✓
 
 ## Font Selection
-Typography should feel contemporary and friendly with geometric clarity for the social interface and readable text for profiles/messages.
+Typography should feel contemporary and friendly with geometric clarity for the social interface and readable text for profiles/messages. Refined hierarchy with tighter letter spacing for headings.
 
 - **Primary Font**: Space Grotesk - Modern geometric sans with personality, perfect for headings and UI elements
 - **Secondary Font**: Inter - Clean, highly legible for body text and messaging interface
 
 **Typographic Hierarchy**:
-- H1 (App Name/Hero): Space Grotesk Bold/32px/tight letter spacing (-0.02em)
-- H2 (Section Headers): Space Grotesk Semibold/24px/normal spacing
-- H3 (Card Titles): Space Grotesk Medium/18px/normal spacing
+- H1 (App Name/Hero): Space Grotesk Bold/32px/tight letter spacing (-0.025em)
+- H2 (Section Headers/Dialog Titles): Space Grotesk Semibold/24px/tight letter spacing (-0.025em)
+- H3 (Card Titles): Space Grotesk Semibold/18px/tight letter spacing (-0.025em)
 - Body (Profiles/Messages): Inter Regular/15px/relaxed line height (1.6)
-- Small (Distance/Metadata): Inter Medium/13px/tracking wide (0.01em)
+- Small (Distance/Metadata): Inter Medium/13px/normal spacing
+- Labels: Inter Semibold/14px for form labels and section headers
 
 ## Animations
-Animations should enhance spatial awareness and create delight during discovery moments.
+Animations should enhance spatial awareness, create delight during discovery moments, and provide smooth, polished transitions throughout the interface.
 
 - **Heat map**: Subtle pulsing glow effect on high-density zones, smooth color transitions between density levels
-- **Card interactions**: Gentle lift on hover with scale (1.02) and shadow depth increase
-- **Message sends**: Quick slide-up with fade for sent messages, gentle bounce for received
+- **Card interactions**: Elevated lift on hover with scale (1.02-1.05) and dramatic shadow depth increase, border color shift
+- **Message sends**: Quick slide-up with fade for sent messages (300ms), gentle bounce for received
 - **Chat requests**: Celebratory micro-animation when mutual connection established
-- **Transitions**: Smooth page transitions with slight fade and slide (200ms ease-out)
+- **Transitions**: Smooth page transitions with slight fade (all duration-200 to duration-300)
+- **Avatar hovers**: Scale transform on profile avatars with transition-transform
+- **Button interactions**: Shadow elevation changes from sm to md to lg on hover states
+- **Empty states**: Duotone icons for softer, more polished appearance
 
 ## Component Selection
 - **Components**: 
-  - Card (user profiles in discovery, message threads)
-  - Button (primary actions, chat requests)
-  - Avatar (user profile pictures - will use initials fallback)
-  - Badge (online status, distance indicators, notification counts, location sharing status)
-  - Dialog (profile editing, chat request confirmations)
-  - Tabs (navigation between heat map, discovery, messages, profile)
-  - Input/Textarea (profile fields, message composition)
+  - Card (user profiles in discovery, message threads) - Enhanced with border-2, rounded-xl, and elevation shadows
+  - Button (primary actions, chat requests) - Larger touch targets (h-11, h-12), enhanced shadows
+  - Avatar (user profile pictures - initials fallback with gradient backgrounds)
+  - Badge (online status, distance indicators, notification counts) - Refined with shadow-sm
+  - Dialog (profile editing, chat request confirmations) - Larger titles (text-2xl), max-height with scroll
+  - Tabs (navigation) - Enhanced height (h-auto, py-2.5), active state shadows
+  - Input/Textarea (profile fields, message composition) - Taller height (h-11) for better touch
   - ScrollArea (message threads, user lists)
-  - Slider (radius selection for proximity search)
-  - Switch (location sharing toggle in profile settings)
+  - Slider (radius selection)
+  - Switch (location sharing toggle)
   
 - **Customizations**: 
-  - Custom heat map component using canvas or SVG with gradient overlays
-  - Custom user card component combining Card, Avatar, Badge with distance display
-  - Custom message bubble component with sender/receiver styling distinction
+  - Custom heat map component with border-2 and rounded-xl
+  - Enhanced user card with group hover effects and gradient avatars
+  - Message bubbles with refined padding (px-4 py-3), border on received messages
+  - Empty states with larger icons (size-56), duotone weight, rounded containers
+  - Profile info cards with gradient backgrounds and larger icon circles
   
 - **States**: 
-  - Buttons: Default (gradient fill), hover (brightness increase + lift), active (slight scale down), disabled (reduced opacity + grayscale)
-  - Cards: Default (subtle shadow), hover (elevated shadow + border glow), selected (accent border)
-  - Inputs: Default (border only), focus (accent border + ring), error (destructive border + message)
+  - Buttons: shadow-sm default, shadow-md hover, shadow-lg for primary CTAs
+  - Cards: hover:shadow-xl with border color transitions (hover:border-primary/30)
+  - Avatars: hover:scale-105 with smooth transitions
+  - Form controls: Taller inputs (h-11), bordered checkboxes in rounded containers
   
 - **Icon Selection**: 
-  - MapTrifold (heat map tab)
-  - MagnifyingGlass (discovery/search)
-  - ChatCircle (messages)
-  - User (profile)
-  - MapPin (location sharing status)
-  - PaperPlaneTilt (send message)
-  - Check/X (accept/decline requests)
+  - MapTrifold (heat map tab) - size 20
+  - MagnifyingGlass (discovery/search) - size 20, duotone for empty states
+  - ChatCircle (messages) - size 20, duotone for empty states
+  - User (profile) - size 20, size 18 in buttons, duotone for empty states
+  - MapPin (location sharing status) - size 14-22, weight fill for emphasis
+  - PaperPlaneTilt (send message) - size 20, weight fill
+  - Check/X (accept/decline requests) - size 18
+  - ArrowsClockwise (refresh) - size 18
+  - Calendar, Heart (user profile details) - size 22, weight duotone
   
 - **Spacing**: 
-  - Page padding: `p-6` on mobile, `p-8` on tablet+
-  - Card gaps: `gap-4` for lists, `gap-6` for grid layouts
+  - Page padding: `px-4 sm:px-6 py-6 sm:py-8` with responsive breakpoints
+  - Container: max-w-7xl for better large screen layouts
+  - Card gaps: `gap-4` for lists, `gap-5` for grids, `lg:grid-cols-3` for discover
   - Section spacing: `space-y-6` between major sections
-  - Inline elements: `gap-2` for buttons/badges
+  - Card padding: `p-5` for content cards, `p-6` for profile cards
+  - Form spacing: `space-y-6` for forms, generous vertical rhythm
   
 - **Mobile**: 
-  - Bottom tab navigation on mobile, side navigation on desktop
-  - Single column card layout on mobile, 2-3 column grid on desktop
-  - Full-screen modals for profile/messaging on mobile, dialogs on desktop
-  - Collapsible filters in discovery, always-visible on desktop
+  - Responsive tab labels with `hidden sm:inline` for text, always show icons
+  - Grid: single column mobile → 2 cols tablet → 3 cols desktop
+  - Dialog: max-h-[90vh] with overflow-y-auto for long content
+  - Header: responsive padding, shadow-sm for elevation
+  - Touch targets: Minimum h-11 for all interactive elements

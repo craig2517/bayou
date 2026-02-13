@@ -254,112 +254,122 @@ function App() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight">
-              <span className="text-red-600">Here</span>
-              <span className="text-yellow-500">o</span>
+            <h1 className="text-3xl font-bold tracking-tight">
+              <span className="text-red-600 drop-shadow-sm">Here</span>
+              <span className="text-yellow-500 drop-shadow-sm">o</span>
             </h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               {pendingIncomingRequests.length > 0 && (
-                <Badge variant="destructive" className="animate-pulse">
+                <Badge variant="destructive" className="animate-pulse shadow-md px-2.5 py-1">
                   {pendingIncomingRequests.length}
                 </Badge>
               )}
               {myProfile && !myProfile.locationSharingEnabled && (
-                <Badge variant="outline" className="flex items-center gap-1.5">
+                <Badge variant="outline" className="flex items-center gap-1.5 shadow-sm">
                   <MapPin size={14} />
-                  Discover Off
+                  <span className="hidden sm:inline">Discover Off</span>
                 </Badge>
               )}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowProfileDialog(true)}
+                className="shadow-sm hover:shadow-md transition-all"
               >
-                <User className="mr-2" />
-                {myProfile ? myProfile.name : 'Profile'}
+                <User className="mr-1.5" size={18} />
+                <span className="hidden sm:inline">{myProfile ? myProfile.name : 'Profile'}</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <MapTrifold />
-              <span className="hidden sm:inline">Map</span>
+          <TabsList className="grid w-full grid-cols-4 mb-8 h-auto p-1.5 bg-muted/50 shadow-sm">
+            <TabsTrigger value="map" className="flex items-center gap-2 py-2.5 data-[state=active]:shadow-sm">
+              <MapTrifold size={20} />
+              <span className="hidden sm:inline font-medium">Map</span>
             </TabsTrigger>
-            <TabsTrigger value="discover" className="flex items-center gap-2">
-              <MagnifyingGlass />
-              <span className="hidden sm:inline">Discover</span>
+            <TabsTrigger value="discover" className="flex items-center gap-2 py-2.5 data-[state=active]:shadow-sm">
+              <MagnifyingGlass size={20} />
+              <span className="hidden sm:inline font-medium">Discover</span>
             </TabsTrigger>
-            <TabsTrigger value="messages" className="flex items-center gap-2">
-              <ChatCircle />
-              <span className="hidden sm:inline">Messages</span>
+            <TabsTrigger value="messages" className="flex items-center gap-2 py-2.5 data-[state=active]:shadow-sm">
+              <ChatCircle size={20} />
+              <span className="hidden sm:inline font-medium">Messages</span>
               {activeConversations.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
+                <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] px-1.5">
                   {activeConversations.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="requests" className="flex items-center gap-2">
-              <User />
-              <span className="hidden sm:inline">Requests</span>
+            <TabsTrigger value="requests" className="flex items-center gap-2 py-2.5 data-[state=active]:shadow-sm">
+              <User size={20} />
+              <span className="hidden sm:inline font-medium">Requests</span>
               {pendingIncomingRequests.length > 0 && (
-                <Badge variant="destructive" className="ml-1">
+                <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1.5">
                   {pendingIncomingRequests.length}
                 </Badge>
               )}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="map" className="space-y-4">
-            <div className="h-[600px] rounded-lg overflow-hidden border border-border">
+          <TabsContent value="map" className="space-y-6">
+            <div className="h-[600px] rounded-xl overflow-hidden border-2 border-border shadow-lg">
               <HeatMap points={heatMapData} />
             </div>
-            <p className="text-center text-muted-foreground text-sm">
+            <p className="text-center text-muted-foreground text-sm bg-muted/30 p-3 rounded-lg">
               Heat map shows approximate user density. Locations are fuzzed for privacy.
             </p>
           </TabsContent>
 
           <TabsContent value="discover" className="space-y-6">
             {!myProfile ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Please complete your profile to discover nearby users.</p>
-                <Button onClick={() => setShowProfileDialog(true)} className="mt-4 bg-primary">
-                  Create Profile
-                </Button>
+              <div className="text-center py-16">
+                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto shadow-sm">
+                  <MagnifyingGlass className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
+                  <p className="text-lg text-foreground font-medium mb-2">Complete Your Profile</p>
+                  <p className="text-muted-foreground mb-6">Create your profile to discover and connect with nearby users.</p>
+                  <Button onClick={() => setShowProfileDialog(true)} className="bg-primary shadow-md hover:shadow-lg transition-all" size="lg">
+                    Create Profile
+                  </Button>
+                </div>
               </div>
             ) : !myProfile.locationSharingEnabled ? (
-              <div className="text-center py-12 space-y-4">
-                <MapPin className="mx-auto text-muted-foreground" size={48} />
-                <div className="space-y-2">
-                  <p className="text-lg font-semibold">Not Discoverable</p>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    You've hidden yourself from Discover. Enable discovery in your profile settings to appear in nearby searches and be discovered by others.
-                  </p>
+              <div className="text-center py-16">
+                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto shadow-sm">
+                  <MapPin className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
+                  <div className="space-y-3">
+                    <p className="text-xl font-semibold text-foreground">Not Discoverable</p>
+                    <p className="text-muted-foreground">
+                      You've hidden yourself from Discover. Enable discovery in your profile settings to appear in nearby searches and be discovered by others.
+                    </p>
+                  </div>
+                  <Button onClick={() => setShowProfileDialog(true)} className="mt-6 bg-primary shadow-md hover:shadow-lg transition-all" size="lg">
+                    Enable in Settings
+                  </Button>
                 </div>
-                <Button onClick={() => setShowProfileDialog(true)} className="mt-4 bg-primary">
-                  Enable in Settings
-                </Button>
               </div>
             ) : (
               <>
-                <div className="space-y-3 p-4 bg-card rounded-lg border border-border">
+                <div className="space-y-4 p-5 bg-card rounded-xl border border-border shadow-sm">
                   <div className="flex items-center justify-between">
-                    <Label>Search Radius: {searchRadius[0]} km</Label>
+                    <div className="space-y-1">
+                      <Label className="text-base font-semibold">Search Radius</Label>
+                      <p className="text-sm text-muted-foreground">{searchRadius[0]} km</p>
+                    </div>
                     <Button
                       onClick={handleRefreshUsers}
                       variant="outline"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 shadow-sm hover:shadow-md transition-all"
                     >
-                      <ArrowsClockwise />
-                      Refresh
+                      <ArrowsClockwise size={18} />
+                      <span className="hidden sm:inline">Refresh</span>
                     </Button>
                   </div>
                   <Slider
@@ -373,13 +383,16 @@ function App() {
                 </div>
 
                 {nearbyUsers.length === 0 ? (
-                  <div className="text-center py-12">
-                    <MagnifyingGlass className="mx-auto text-muted-foreground mb-4" size={48} />
-                    <p className="text-muted-foreground">No users found within {searchRadius[0]} km</p>
-                    <p className="text-sm text-muted-foreground mt-2">Try increasing the search radius</p>
+                  <div className="text-center py-16">
+                    <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto">
+                      <MagnifyingGlass className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
+                      <p className="text-lg font-medium text-foreground mb-2">No Users Found</p>
+                      <p className="text-muted-foreground">No users within {searchRadius[0]} km</p>
+                      <p className="text-sm text-muted-foreground mt-2">Try increasing the search radius</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {nearbyUsers.map(({ user, distance, canMessage }) => (
                       <UserCard
                         key={user.id}
@@ -396,21 +409,27 @@ function App() {
             )}
           </TabsContent>
 
-          <TabsContent value="messages" className="space-y-4">
+          <TabsContent value="messages" className="space-y-6">
             {!myProfile ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Please complete your profile first.</p>
+              <div className="text-center py-16">
+                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto">
+                  <ChatCircle className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
+                  <p className="text-lg font-medium text-foreground">Complete Your Profile</p>
+                  <p className="text-muted-foreground mt-2">Create your profile to start messaging.</p>
+                </div>
               </div>
             ) : activeConversations.length === 0 ? (
-              <div className="text-center py-12">
-                <ChatCircle className="mx-auto text-muted-foreground mb-4" size={48} />
-                <p className="text-muted-foreground">No conversations yet</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Send a message request to start chatting
-                </p>
+              <div className="text-center py-16">
+                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto">
+                  <ChatCircle className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
+                  <p className="text-lg font-medium text-foreground mb-2">No Conversations Yet</p>
+                  <p className="text-muted-foreground">
+                    Send a message request to start chatting
+                  </p>
+                </div>
               </div>
             ) : selectedConversation && currentConversation ? (
-              <div className="h-[600px]">
+              <div className="h-[600px] rounded-xl overflow-hidden shadow-lg">
                 <ChatInterface
                   messages={currentMessages}
                   currentUserId={myProfile.id}
@@ -421,16 +440,16 @@ function App() {
                 />
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-4">
                 {activeConversations.map(conv => (
                   <div
                     key={conv.id}
                     onClick={() => setSelectedConversation(conv.id)}
-                    className="p-4 bg-card rounded-lg border border-border hover:border-accent/50 cursor-pointer transition-all hover:shadow-md"
+                    className="p-5 bg-card rounded-xl border border-border hover:border-primary/30 hover:shadow-md cursor-pointer transition-all duration-200"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                       <div 
-                        className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold cursor-pointer hover:scale-105 transition-transform"
+                        className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold cursor-pointer hover:scale-105 transition-transform text-lg shadow-sm"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleViewUserProfile(conv.otherUser!)
@@ -440,7 +459,7 @@ function App() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 
-                          className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                          className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleViewUserProfile(conv.otherUser!)
@@ -449,13 +468,13 @@ function App() {
                           {conv.otherUser!.name}
                         </h3>
                         {conv.lastMessage && (
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className="text-sm text-muted-foreground truncate mt-1">
                             {conv.lastMessage.text}
                           </p>
                         )}
                       </div>
                       {conv.lastMessage && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground font-medium">
                           {new Date(conv.lastMessage.timestamp).toLocaleDateString()}
                         </span>
                       )}
@@ -466,60 +485,72 @@ function App() {
             )}
           </TabsContent>
 
-          <TabsContent value="requests" className="space-y-4">
+          <TabsContent value="requests" className="space-y-6">
             {!myProfile ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Please complete your profile first.</p>
+              <div className="text-center py-16">
+                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto">
+                  <User className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
+                  <p className="text-lg font-medium text-foreground">Complete Your Profile</p>
+                  <p className="text-muted-foreground mt-2">Create your profile to receive requests.</p>
+                </div>
               </div>
             ) : pendingIncomingRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <User className="mx-auto text-muted-foreground mb-4" size={48} />
-                <p className="text-muted-foreground">No pending requests</p>
+              <div className="text-center py-16">
+                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto">
+                  <User className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
+                  <p className="text-lg font-medium text-foreground">No Pending Requests</p>
+                  <p className="text-muted-foreground mt-2">When someone wants to connect, you'll see them here.</p>
+                </div>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {pendingIncomingRequests.map(request => {
                   const fromUser = demoUsers.find(u => u.id === request.fromUserId)
                   if (!fromUser) return null
                   return (
                     <div
                       key={request.id}
-                      className="p-4 bg-card rounded-lg border border-border flex items-center justify-between"
+                      className="p-5 bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200"
                     >
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold cursor-pointer hover:scale-105 transition-transform"
-                          onClick={() => handleViewUserProfile(fromUser)}
-                        >
-                          {fromUser.name[0]}
-                        </div>
-                        <div>
-                          <h3 
-                            className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div 
+                            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold cursor-pointer hover:scale-105 transition-transform text-lg shadow-sm"
                             onClick={() => handleViewUserProfile(fromUser)}
                           >
-                            {fromUser.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {fromUser.age} • {fromUser.gender}
-                          </p>
+                            {fromUser.name[0]}
+                          </div>
+                          <div>
+                            <h3 
+                              className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => handleViewUserProfile(fromUser)}
+                            >
+                              {fromUser.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-0.5">
+                              {fromUser.age} • {fromUser.gender}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleAcceptRequest(request)}
-                          className="bg-primary hover:bg-primary/90"
-                        >
-                          <Check />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeclineRequest(request)}
-                        >
-                          <X />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="default"
+                            onClick={() => handleAcceptRequest(request)}
+                            className="bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all"
+                          >
+                            <Check size={18} className="mr-1.5" />
+                            Accept
+                          </Button>
+                          <Button
+                            size="default"
+                            variant="outline"
+                            onClick={() => handleDeclineRequest(request)}
+                            className="shadow-sm hover:shadow-md transition-all"
+                          >
+                            <X size={18} className="mr-1.5" />
+                            Decline
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )
@@ -531,10 +562,10 @@ function App() {
       </main>
 
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Your Profile</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-2xl">Your Profile</DialogTitle>
+            <DialogDescription className="text-base">
               Complete your profile to start connecting with nearby users
             </DialogDescription>
           </DialogHeader>
@@ -545,21 +576,21 @@ function App() {
       <Dialog open={!!pendingRequestUser} onOpenChange={() => setPendingRequestUser(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Request Sent!</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-2xl">Request Sent!</DialogTitle>
+            <DialogDescription className="text-base">
               Your chat request has been sent to {pendingRequestUser?.name}. You'll be notified when they respond.
             </DialogDescription>
           </DialogHeader>
-          <Button onClick={() => setPendingRequestUser(null)} className="bg-primary">
+          <Button onClick={() => setPendingRequestUser(null)} className="bg-primary shadow-md hover:shadow-lg transition-all" size="lg">
             Got it
           </Button>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!viewingUser} onOpenChange={() => setViewingUser(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>User Profile</DialogTitle>
+            <DialogTitle className="text-2xl">User Profile</DialogTitle>
           </DialogHeader>
           {viewingUser && (
             <UserProfileView user={viewingUser} distance={viewingUserDistance} />

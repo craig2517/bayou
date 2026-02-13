@@ -61,21 +61,22 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const isValid = name && age && gender && receiveMessagesFrom.length > 0 && parseInt(age) >= 18 && parseInt(age) <= 100
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 border-0 shadow-none">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name" className="text-sm font-semibold">Name</Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter your name"
+            className="h-11"
             required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="age">Age</Label>
+          <Label htmlFor="age" className="text-sm font-semibold">Age</Label>
           <Input
             id="age"
             type="number"
@@ -84,14 +85,15 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             value={age}
             onChange={(e) => setAge(e.target.value)}
             placeholder="Enter your age"
+            className="h-11"
             required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="gender">Gender</Label>
+          <Label htmlFor="gender" className="text-sm font-semibold">Gender</Label>
           <Select value={gender} onValueChange={setGender}>
-            <SelectTrigger id="gender">
+            <SelectTrigger id="gender" className="h-11">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
@@ -104,11 +106,11 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
           </Select>
         </div>
 
-        <div className="space-y-3">
-          <Label>Receive Messages From</Label>
+        <div className="space-y-3 pt-2">
+          <Label className="text-sm font-semibold">Receive Messages From</Label>
           <div className="grid grid-cols-2 gap-3">
             {GENDERS.filter(g => g !== 'Prefer not to say').map(genderOption => (
-              <div key={genderOption} className="flex items-center space-x-2">
+              <div key={genderOption} className="flex items-center space-x-2.5 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
                 <Checkbox
                   id={`receive-${genderOption}`}
                   checked={receiveMessagesFrom.includes(genderOption)}
@@ -116,7 +118,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
                 />
                 <Label
                   htmlFor={`receive-${genderOption}`}
-                  className="text-sm font-normal cursor-pointer"
+                  className="text-sm font-normal cursor-pointer flex-1"
                 >
                   {genderOption}
                 </Label>
@@ -125,8 +127,8 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <Label>Age Range to Receive Messages From: {ageRange[0]} - {ageRange[1]}</Label>
+        <div className="space-y-3 pt-2">
+          <Label className="text-sm font-semibold">Age Range: {ageRange[0]} - {ageRange[1]}</Label>
           <Slider
             value={ageRange}
             onValueChange={setAgeRange}
@@ -135,20 +137,20 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             step={1}
             className="w-full"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
             You'll receive messages from users aged {ageRange[0]} to {ageRange[1]}
           </p>
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-border">
-          <div className="flex items-center justify-between gap-4">
+        <div className="space-y-4 pt-4 border-t-2 border-border">
+          <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
             <div className="flex items-start gap-3 flex-1">
-              <MapPin className="text-primary mt-1 flex-shrink-0" size={20} weight="fill" />
+              <MapPin className="text-primary mt-1 flex-shrink-0" size={22} weight="fill" />
               <div className="space-y-1">
-                <Label htmlFor="location-sharing" className="cursor-pointer font-semibold">
+                <Label htmlFor="location-sharing" className="cursor-pointer font-semibold text-base">
                   Appear in Discover
                 </Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Allow others to discover you in nearby searches. You can disable this at any time.
                 </p>
               </div>
@@ -160,19 +162,19 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             />
           </div>
           {!locationSharingEnabled && (
-            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+            <p className="text-sm text-muted-foreground bg-yellow-500/10 border border-yellow-500/20 p-3.5 rounded-lg">
               With this disabled, you won't appear in Discover searches, but your anonymized location will still contribute to the heat map.
             </p>
           )}
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-border">
-          <div className="flex items-center justify-between gap-4">
+        <div className="space-y-4 pt-4 border-t-2 border-border">
+          <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
             <div className="flex-1">
-              <Label htmlFor="require-approval" className="cursor-pointer font-semibold">
+              <Label htmlFor="require-approval" className="cursor-pointer font-semibold text-base">
                 Require Approval for Messages
               </Label>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                 When enabled, you'll review and approve chat requests before receiving messages. When disabled, matching users can message you directly.
               </p>
             </div>
@@ -180,13 +182,14 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
               id="require-approval"
               checked={requireApproval}
               onCheckedChange={setRequireApproval}
+              className="mt-1"
             />
           </div>
         </div>
 
         <Button
           type="submit"
-          className="w-full bg-primary hover:bg-primary/90"
+          className="w-full bg-primary hover:bg-primary/90 h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
           disabled={!isValid}
         >
           Save Profile
