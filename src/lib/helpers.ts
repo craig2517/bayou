@@ -18,10 +18,10 @@ const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
   const rand = Math.random()
-  if (rand < 0.5) {
+  if (rand < 0.65) {
     return [...GENDERS]
-  } else if (rand < 0.7) {
-    const count = Math.floor(Math.random() * 3) + 2
+  } else if (rand < 0.85) {
+    const count = Math.floor(Math.random() * 2) + 2
     const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
     return shuffled.slice(0, count)
   } else {
@@ -33,9 +33,9 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   
   for (let i = 0; i < count; i++) {
-    const lat = CENTER_LAT + (Math.random() - 0.5) * 0.018
-    const lng = CENTER_LNG + (Math.random() - 0.5) * 0.018
-    const age = Math.floor(Math.random() * 32) + 21
+    const lat = CENTER_LAT + (Math.random() - 0.5) * 0.015
+    const lng = CENTER_LNG + (Math.random() - 0.5) * 0.015
+    const age = Math.floor(Math.random() * 35) + 21
     
     users.push({
       id: `user-${i + 1}`,
@@ -43,13 +43,13 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
       receiveMessagesFrom: getRandomGenderPreferences(),
-      ageRangeMin: Math.max(18, age - 20),
-      ageRangeMax: Math.min(80, age + 20),
+      ageRangeMin: Math.max(18, age - 15),
+      ageRangeMax: Math.min(80, age + 15),
       location: { lat, lng },
-      isActive: Math.random() > 0.02,
+      isActive: Math.random() > 0.01,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
-      locationSharingEnabled: Math.random() > 0.02,
-      requireApproval: Math.random() > 0.4
+      locationSharingEnabled: Math.random() > 0.01,
+      requireApproval: Math.random() > 0.5
     })
   }
   
@@ -143,7 +143,7 @@ export function getApproximateDistance(km: number): string {
 export function generateInitialChatRequests(
   myProfile: UserProfile,
   demoUsers: UserProfile[],
-  count: number = 5
+  count: number = 8
 ) {
   const eligibleUsers = demoUsers.filter(user => {
     if (!user.isActive || !user.locationSharingEnabled) return false
