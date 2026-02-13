@@ -168,7 +168,7 @@ export function generateInitialChatRequests(
   count: number = 8
 ) {
   const eligibleUsers = demoUsers.filter(user => {
-    if (!user.isActive || !user.locationSharingEnabled) return false
+    if (!user.isActive) return false
     
     const distance = calculateDistance(
       myProfile.location.lat,

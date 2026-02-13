@@ -43,7 +43,7 @@ function App() {
     if (!myProfile) return []
     
     return demoUsers
-      .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
+      .filter(user => user.id !== myProfile.id && user.isActive)
       .map(user => {
         const distance = calculateDistance(
           myProfile.location.lat,
@@ -339,23 +339,21 @@ function App() {
                   </Button>
                 </div>
               </div>
-            ) : !myProfile.locationSharingEnabled ? (
-              <div className="text-center py-16">
-                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto shadow-sm">
-                  <MapPin className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
-                  <div className="space-y-3">
-                    <p className="text-xl font-semibold text-foreground">Not Discoverable</p>
-                    <p className="text-muted-foreground">
-                      You've hidden yourself from Discover. Enable discovery in your profile settings to appear in nearby searches and be discovered by others.
-                    </p>
-                  </div>
-                  <Button onClick={() => setShowProfileDialog(true)} className="mt-6 bg-primary shadow-md hover:shadow-lg transition-all" size="lg">
-                    Enable in Settings
-                  </Button>
-                </div>
-              </div>
             ) : (
               <>
+                {!myProfile.locationSharingEnabled && (
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="text-amber-600 flex-shrink-0 mt-0.5" size={24} weight="duotone" />
+                      <div className="space-y-1">
+                        <p className="font-semibold text-amber-900">Location Sharing Disabled</p>
+                        <p className="text-sm text-amber-800">
+                          Others cannot see you in their Discover feed, but you can still browse and message users.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-4 p-5 bg-card rounded-xl border border-border shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
