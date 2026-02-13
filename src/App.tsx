@@ -42,7 +42,14 @@ function App() {
   const nearbyUsers = useMemo(() => {
     if (!myProfile) return []
     
-    console.log('👤 MY PROFILE LOCATION:', myProfile.location)
+    console.log('👤 MY PROFILE:', {
+      location: myProfile.location,
+      name: myProfile.name,
+      gender: myProfile.gender,
+      age: myProfile.age,
+      receiveFrom: myProfile.receiveMessagesFrom,
+      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
+    })
     
     const allUsersWithDistance = demoUsers
       .filter(user => user.id !== myProfile.id && user.isActive && user.locationSharingEnabled)
@@ -67,24 +74,12 @@ function App() {
     const inRadiusUsers = allUsersWithDistance.filter(item => item.distance <= searchRadius[0])
     
     console.log('🔍 DISCOVER DEBUG:', {
-      myProfile: {
-        name: myProfile.name,
-        gender: myProfile.gender,
-        age: myProfile.age,
-        receiveFrom: myProfile.receiveMessagesFrom,
-        ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
-      },
       searchRadius: searchRadius[0] + 'km',
       totalDemoUsers: demoUsers.length,
       activeWithLocationSharing: demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length,
       usersInRadius: inRadiusUsers.length,
       matchingUsers: inRadiusUsers.filter(f => f.canMessage).length,
-      distancesSample: allUsersWithDistance.slice(0, 10).map(item => ({
-        name: item.user.name,
-        distance: item.distance.toFixed(3) + 'km',
-        withinRadius: item.distance <= searchRadius[0]
-      })),
-      firstThreeInRadius: inRadiusUsers.slice(0, 3).map(item => ({
+      closestUsers: inRadiusUsers.slice(0, 5).map(item => ({
         name: item.user.name,
         distance: item.distance.toFixed(3) + 'km',
         gender: item.user.gender,
@@ -101,9 +96,7 @@ function App() {
       }))
     })
     
-    const filtered = inRadiusUsers.sort((a, b) => a.distance - b.distance)
-    
-    return filtered
+    return inRadiusUsers.sort((a, b) => a.distance - b.distance)
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
