@@ -98,6 +98,12 @@ function App() {
       totalWithDistance: allUsersWithDistance.length,
       inRadiusCount: inRadiusUsers.length,
       matchingCount: inRadiusUsers.filter(f => f.canMessage).length,
+      failedMatchReasons: {
+        userDoesntAcceptMe: inRadiusUsers.filter(f => !f.userAcceptsMe).length,
+        userAgeDoesntMatchMe: inRadiusUsers.filter(f => !f.userAgeMatchesMe).length,
+        iDontAcceptUser: inRadiusUsers.filter(f => !f.iAcceptUser).length,
+        myAgeDoesntMatchUser: inRadiusUsers.filter(f => !f.myAgeMatchesUser).length
+      },
       closest10: sortedByDistance.slice(0, 10).map(item => ({
         name: item.user.name,
         distance: item.distance.toFixed(4) + 'km',

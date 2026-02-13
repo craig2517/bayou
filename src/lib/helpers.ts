@@ -20,14 +20,7 @@ const FIRST_NAMES = [
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
-  const rand = Math.random()
-  if (rand < 0.95) {
-    return [...GENDERS]
-  } else {
-    const count = 2 + Math.floor(Math.random() * 2)
-    const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
-    return shuffled.slice(0, count)
-  }
+  return [...GENDERS]
 }
 
 export function generateDemoUsers(count: number = 50): UserProfile[] {
@@ -46,8 +39,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const age = 18 + Math.floor(Math.random() * 47)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
-    const ageRangeMin = Math.max(18, age - 15)
-    const ageRangeMax = Math.min(80, age + 15)
+    const ageRangeMin = 18
+    const ageRangeMax = 80
     
     users.push({
       id: `user-demo-close-${i + 1}-${Date.now()}`,
@@ -78,8 +71,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const age = 18 + Math.floor(Math.random() * 47)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
-    const ageRangeMin = Math.max(18, age - 15)
-    const ageRangeMax = Math.min(80, age + 15)
+    const ageRangeMin = 18
+    const ageRangeMax = 80
     
     users.push({
       id: `user-demo-${i + 1}-${Date.now()}`,
