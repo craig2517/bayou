@@ -30,12 +30,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const angle = Math.random() * 2 * Math.PI
     let radiusKm: number
     
-    if (i < count * 0.7) {
-      radiusKm = Math.random() * 0.3
-    } else if (i < count * 0.9) {
-      radiusKm = 0.3 + Math.random() * 0.3
+    if (i < count * 0.6) {
+      radiusKm = Math.random() * 0.4
+    } else if (i < count * 0.85) {
+      radiusKm = 0.4 + Math.random() * 0.5
     } else {
-      radiusKm = 0.6 + Math.random() * 0.4
+      radiusKm = 0.9 + Math.random() * 0.1
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -43,10 +43,38 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
-    const age = 21 + Math.floor(Math.random() * 34)
+    const age = 18 + Math.floor(Math.random() * 47)
     
     users.push({
       id: `user-demo-${i + 1}-${Date.now()}`,
+      name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
+      age,
+      gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
+      receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
+      ageRangeMin: 18,
+      ageRangeMax: 80,
+      location: { lat, lng },
+      isActive: true,
+      lastActive: Date.now() - Math.floor(Math.random() * 3600000),
+      locationSharingEnabled: true,
+      requireApproval: Math.random() > 0.3
+    })
+  }
+  
+  const veryCloseCount = Math.min(50, Math.floor(count * 0.1))
+  for (let i = 0; i < veryCloseCount; i++) {
+    const angle = Math.random() * 2 * Math.PI
+    const radiusKm = Math.random() * 0.15
+    
+    const latOffset = (radiusKm / 111) * Math.cos(angle)
+    const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
+    
+    const lat = CENTER_LAT + latOffset
+    const lng = CENTER_LNG + lngOffset
+    const age = 18 + Math.floor(Math.random() * 47)
+    
+    users.push({
+      id: `user-demo-close-${i + 1}-${Date.now()}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],

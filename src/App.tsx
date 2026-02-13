@@ -23,7 +23,7 @@ function App() {
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages', {})
-  const [searchRadius, setSearchRadius] = useState([0.5])
+  const [searchRadius, setSearchRadius] = useState([0.8])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
