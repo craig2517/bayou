@@ -30,6 +30,7 @@ function App() {
   const [pendingRequestUser, setPendingRequestUser] = useState<UserProfile | null>(null)
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
     if (!myProfile) {
@@ -158,9 +159,17 @@ function App() {
       console.log('🔔 Initial requests generated:', initialRequests.length)
       if (initialRequests.length > 0) {
         setChatRequests(current => [...(current || []), ...initialRequests])
-        toast.success(`Profile saved! You have ${initialRequests.length} new message requests.`)
+        toast.success(`Welcome to Hereo! You have ${initialRequests.length} new message requests.`, {
+          description: 'Check the Requests tab to connect with nearby users',
+          duration: 5000
+        })
+        setTimeout(() => setSelectedTab('requests'), 1000)
       } else {
-        toast.success('Profile saved! You are now discoverable nearby.')
+        toast.success('Profile saved! You are now discoverable nearby.', {
+          description: 'Explore the Discover tab to find nearby users',
+          duration: 4000
+        })
+        setTimeout(() => setSelectedTab('discover'), 1000)
       }
     } else if (profileData.locationSharingEnabled) {
       toast.success('Profile saved! You are now discoverable nearby.')
@@ -280,8 +289,12 @@ function App() {
   }
 
   const handleRefreshUsers = () => {
-    setDemoUsers(generateDemoUsers(2000))
-    toast.success('Nearby users refreshed!')
+    setIsRefreshing(true)
+    setTimeout(() => {
+      setDemoUsers(generateDemoUsers(2000))
+      setIsRefreshing(false)
+      toast.success('Nearby users refreshed!')
+    }, 500)
   }
 
   const handleSendMessage = (conversationId: string, text: string) => {
@@ -332,10 +345,19 @@ function App() {
       <header className="border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight">
-              <span className="text-red-600 drop-shadow-sm">Here</span>
-              <span className="text-yellow-500 drop-shadow-sm">o</span>
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight">
+                <span className="text-red-600 drop-shadow-sm">Here</span>
+                <span className="text-yellow-500 drop-shadow-sm">o</span>
+              </h1>
+              <Badge variant="secondary" className="hidden sm:flex items-center gap-1.5 bg-accent/10 text-accent-foreground border-accent/20 text-xs px-2 py-0.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                </span>
+                Demo Mode
+              </Badge>
+            </div>
             <div className="flex items-center gap-2.5">
               {pendingIncomingRequests.length > 0 && (
                 <Badge variant="destructive" className="animate-pulse shadow-md px-2.5 py-1">
@@ -394,18 +416,25 @@ function App() {
           </TabsList>
 
           <TabsContent value="map" className="space-y-6">
+            <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10 rounded-xl p-5 shadow-sm">
+              <h2 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                <MapTrifold size={24} weight="duotone" className="text-primary" />
+                Real-Time Activity Heat Map
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Visualize anonymous user density in the Highlands area (40205). Brighter colors indicate higher activity. 
+                All locations are fuzzed to protect privacy.
+              </p>
+            </div>
             <div className="h-[600px] rounded-xl overflow-hidden border-2 border-border shadow-lg">
               <HeatMap points={heatMapData} />
             </div>
-            <p className="text-center text-muted-foreground text-sm bg-muted/30 p-3 rounded-lg">
-              Heat map shows approximate user density. Locations are fuzzed for privacy.
-            </p>
           </TabsContent>
 
           <TabsContent value="discover" className="space-y-6">
             {!myProfile ? (
               <div className="text-center py-16">
-                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto shadow-sm">
+                <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <MagnifyingGlass className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
                   <p className="text-lg text-foreground font-medium mb-2">Complete Your Profile</p>
                   <p className="text-muted-foreground mb-6">Create your profile to discover and connect with nearby users.</p>
@@ -439,9 +468,10 @@ function App() {
                       onClick={handleRefreshUsers}
                       variant="outline"
                       size="sm"
+                      disabled={isRefreshing}
                       className="flex items-center gap-2 shadow-sm hover:shadow-md transition-all"
                     >
-                      <ArrowsClockwise size={18} />
+                      <ArrowsClockwise size={18} className={isRefreshing ? 'animate-spin' : ''} />
                       <span className="hidden sm:inline">Refresh</span>
                     </Button>
                   </div>
@@ -455,27 +485,31 @@ function App() {
                   />
                 </div>
 
-                <div className="bg-card border border-border rounded-xl p-4 mb-6 shadow-sm">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex gap-6">
-                      <span className="text-muted-foreground">
-                        Total Users: <span className="font-semibold text-foreground">{demoUsers.length}</span>
-                      </span>
-                      <span className="text-muted-foreground">
-                        Active: <span className="font-semibold text-foreground">{demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length}</span>
-                      </span>
-                      <span className="text-muted-foreground">
-                        In Range: <span className="font-semibold text-foreground">{nearbyUsers.length}</span>
-                      </span>
-                      <span className="text-muted-foreground">
-                        Matching: <span className="font-semibold text-foreground">{nearbyUsers.filter(u => u.canMessage).length}</span>
-                      </span>
+                <div className="bg-card border border-border rounded-xl p-5 mb-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="grid grid-cols-2 sm:flex gap-4 sm:gap-6 w-full sm:w-auto">
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Users</p>
+                        <p className="text-2xl font-bold text-foreground">{demoUsers.length}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Active</p>
+                        <p className="text-2xl font-bold text-accent">{demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">In Range</p>
+                        <p className="text-2xl font-bold text-primary">{nearbyUsers.length}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Matching</p>
+                        <p className="text-2xl font-bold text-secondary">{nearbyUsers.filter(u => u.canMessage).length}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {nearbyUsers.length === 0 ? (
-                  <div className="text-center py-16">
+                  <div className="text-center py-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="bg-muted/30 rounded-2xl p-8 max-w-md mx-auto">
                       <MagnifyingGlass className="mx-auto text-muted-foreground mb-4" size={56} weight="duotone" />
                       <p className="text-lg font-medium text-foreground mb-2">No Users Found</p>
@@ -484,17 +518,24 @@ function App() {
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {nearbyUsers.map(({ user, distance, canMessage }) => (
-                      <UserCard
-                        key={user.id}
-                        user={user}
-                        distance={formatDistance(distance)}
-                        canMessage={canMessage}
-                        onMessage={() => handleSendChatRequest(user)}
-                        onViewProfile={() => handleViewUserProfile(user, distance)}
-                      />
-                    ))}
+                  <div className={`relative ${isRefreshing ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {nearbyUsers.map(({ user, distance, canMessage }, index) => (
+                        <div 
+                          key={user.id}
+                          className="animate-in fade-in slide-in-from-bottom-4"
+                          style={{ animationDelay: `${index * 50}ms`, animationDuration: '400ms' }}
+                        >
+                          <UserCard
+                            user={user}
+                            distance={formatDistance(distance)}
+                            canMessage={canMessage}
+                            onMessage={() => handleSendChatRequest(user)}
+                            onViewProfile={() => handleViewUserProfile(user, distance)}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </>
@@ -653,12 +694,26 @@ function App() {
         </Tabs>
       </main>
 
+      <footer className="border-t border-border bg-card/50 backdrop-blur-sm mt-12">
+        <div className="container mx-auto px-4 sm:px-6 py-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">Hereo</span> - Connect with people nearby · 
+            <span className="ml-2">Demo Application with {demoUsers.length} simulated users</span>
+          </p>
+        </div>
+      </footer>
+
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Your Profile</DialogTitle>
+            <DialogTitle className="text-2xl">
+              {myProfile ? 'Your Profile' : '👋 Welcome to Hereo!'}
+            </DialogTitle>
             <DialogDescription className="text-base">
-              Complete your profile to start connecting with nearby users
+              {myProfile 
+                ? 'Update your profile settings and preferences'
+                : 'Create your profile to start discovering and connecting with people nearby'
+              }
             </DialogDescription>
           </DialogHeader>
           <ProfileForm profile={myProfile || null} onSave={handleSaveProfile} />

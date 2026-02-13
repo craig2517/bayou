@@ -21,10 +21,10 @@ export function UserCard({ user, distance, canMessage = true, onMessage, onViewP
     .toUpperCase()
 
   return (
-    <Card className="p-5 hover:shadow-xl hover:border-primary/30 transition-all duration-300 group">
+    <Card className="p-5 hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 group">
       <div className="flex items-start gap-4">
         <Avatar 
-          className="w-16 h-16 border-2 border-primary/20 cursor-pointer group-hover:scale-105 group-hover:border-primary/40 transition-all duration-300 shadow-sm"
+          className="w-16 h-16 border-2 border-primary/20 cursor-pointer group-hover:scale-110 group-hover:border-primary/40 transition-all duration-300 shadow-sm"
           onClick={onViewProfile}
         >
           <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-lg">
