@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PaperPlaneTilt, ArrowLeft, ChatCircle } from '@phosphor-icons/react'
+import { isPhotoValid } from '@/lib/helpers'
 import type { Message, UserProfile } from '@/lib/types'
 
 interface ChatInterfaceProps {
@@ -40,14 +41,7 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
     .join('')
     .toUpperCase()
 
-  const isPhotoValid = () => {
-    if (!otherUser.profilePicture) return false
-    const now = Date.now()
-    const hoursSinceCapture = (now - otherUser.profilePicture.capturedAt) / (1000 * 60 * 60)
-    return hoursSinceCapture < 24
-  }
-
-  const photoValid = isPhotoValid()
+  const photoValid = otherUser.profilePicture ? isPhotoValid(otherUser.profilePicture) : false
 
   return (
     <Card className="flex flex-col h-full border-2 shadow-lg">

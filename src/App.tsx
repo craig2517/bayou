@@ -14,7 +14,7 @@ import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
 import { ChatInterface } from '@/components/ChatInterface'
 import { UserProfileView } from '@/components/UserProfileView'
-import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests, getRandomLocationNearCenter, CENTER_LAT, CENTER_LNG } from '@/lib/helpers'
+import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests, getRandomLocationNearCenter, isPhotoValid, CENTER_LAT, CENTER_LNG } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
@@ -33,11 +33,8 @@ function App() {
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const isPhotoValid = (user: UserProfile | null) => {
-    if (!user?.profilePicture) return false
-    const now = Date.now()
-    const hoursSinceCapture = (now - user.profilePicture.capturedAt) / (1000 * 60 * 60)
-    return hoursSinceCapture < 24
+  const isProfilePhotoValid = (user: UserProfile | null) => {
+    return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
   }
 
   useEffect(() => {
@@ -136,7 +133,8 @@ function App() {
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
-    return (chatRequests || []).filter(req => req.toUserId === myProfile?.id && req.status === 'pending')
+    if (!myProfile || !chatRequests) return []
+    return chatRequests.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
   }, [chatRequests, myProfile])
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
@@ -270,16 +268,20 @@ function App() {
     )
 
     const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
-    const existingConv = (conversations || []).find(c => c.id === conversationId)
-
-    if (!existingConv) {
-      const newConversation: Conversation = {
-        id: conversationId,
-        participants: [request.fromUserId, request.toUserId] as [string, string],
-        unreadCount: 0
+    
+    setConversations(current => {
+      const conversations = current || []
+      const existingConv = conversations.find(c => c.id === conversationId)
+      if (!existingConv) {
+        const newConversation: Conversation = {
+          id: conversationId,
+          participants: [request.fromUserId, request.toUserId] as [string, string],
+          unreadCount: 0
+        }
+        return [...conversations, newConversation]
       }
-      setConversations(current => [...(current || []), newConversation])
-    }
+      return conversations
+    })
 
     toast.success('Chat request accepted!')
   }
@@ -329,10 +331,11 @@ function App() {
   }
 
   const activeConversations = useMemo(() => {
-    return (conversations || [])
-      .filter(conv => myProfile && conv.participants.includes(myProfile.id))
+    if (!myProfile || !conversations) return []
+    return conversations
+      .filter(conv => conv.participants.includes(myProfile.id))
       .map(conv => {
-        const otherUserId = conv.participants.find(id => id !== myProfile?.id)
+        const otherUserId = conv.participants.find(id => id !== myProfile.id)
         const otherUser = demoUsers.find(u => u.id === otherUserId)
         return { ...conv, otherUser }
       })
@@ -345,7 +348,7 @@ function App() {
   }, [conversations, myProfile, demoUsers])
 
   const currentConversation = activeConversations.find(c => c.id === selectedConversation)
-  const currentMessages = selectedConversation ? (messages || {})[selectedConversation] || [] : []
+  const currentMessages = selectedConversation && messages ? messages[selectedConversation] || [] : []
 
   return (
     <div className="min-h-screen bg-background">
@@ -384,7 +387,7 @@ function App() {
                 onClick={() => setShowProfileDialog(true)}
                 className="shadow-sm hover:shadow-md transition-all flex items-center gap-2"
               >
-                {myProfile && isPhotoValid(myProfile) && myProfile.profilePicture ? (
+                {myProfile && isProfilePhotoValid(myProfile) && myProfile.profilePicture ? (
                   <Avatar className="w-6 h-6 border border-border">
                     <AvatarImage src={myProfile.profilePicture.dataUrl} alt={myProfile.name} />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-xs">
@@ -592,7 +595,7 @@ function App() {
             ) : (
               <div className="grid grid-cols-1 gap-4">
                 {activeConversations.map(conv => {
-                  const otherUserPhotoValid = isPhotoValid(conv.otherUser!)
+                  const otherUserPhotoValid = conv.otherUser?.profilePicture ? isPhotoValid(conv.otherUser.profilePicture) : false
                   return (
                     <div
                       key={conv.id}
@@ -665,7 +668,7 @@ function App() {
                 {pendingIncomingRequests.map(request => {
                   const fromUser = demoUsers.find(u => u.id === request.fromUserId)
                   if (!fromUser) return null
-                  const fromUserPhotoValid = isPhotoValid(fromUser)
+                  const fromUserPhotoValid = fromUser.profilePicture ? isPhotoValid(fromUser.profilePicture) : false
                   return (
                     <div
                       key={request.id}

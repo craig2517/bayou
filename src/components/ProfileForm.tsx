@@ -30,6 +30,12 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
     profile?.ageRangeMin || 18,
     profile?.ageRangeMax || 100
   ])
+
+  const handleAgeRangeChange = (values: number[]) => {
+    if (values[0] <= values[1]) {
+      setAgeRange(values)
+    }
+  }
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(profile?.locationSharingEnabled ?? true)
   const [requireApproval, setRequireApproval] = useState(profile?.requireApproval ?? true)
   const [profilePicture, setProfilePicture] = useState<{ dataUrl: string; capturedAt: number } | undefined>(
@@ -225,10 +231,11 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
           <Label className="text-sm font-semibold">Age Range: {ageRange[0]} - {ageRange[1]}</Label>
           <Slider
             value={ageRange}
-            onValueChange={setAgeRange}
+            onValueChange={handleAgeRangeChange}
             min={18}
             max={100}
             step={1}
+            minStepsBetweenThumbs={1}
             className="w-full"
           />
           <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">

@@ -17,8 +17,18 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    startCamera()
+    let mounted = true
+    
+    const initCamera = async () => {
+      if (mounted) {
+        await startCamera()
+      }
+    }
+    
+    initCamera()
+    
     return () => {
+      mounted = false
       stopCamera()
     }
   }, [])

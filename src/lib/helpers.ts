@@ -19,10 +19,6 @@ const FIRST_NAMES = [
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
-function getRandomGenderPreferences(): string[] {
-  return [...GENDERS]
-}
-
 export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   const timestamp = Date.now()
@@ -233,4 +229,10 @@ export function generateInitialChatRequests(
     status: 'pending' as const,
     timestamp: Date.now() - Math.floor(Math.random() * 3600000)
   }))
+}
+
+export function isPhotoValid(profilePicture?: { capturedAt: number }): boolean {
+  if (!profilePicture) return false
+  const hoursSinceCapture = (Date.now() - profilePicture.capturedAt) / (1000 * 60 * 60)
+  return hoursSinceCapture < 24
 }

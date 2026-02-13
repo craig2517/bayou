@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChatCircle } from '@phosphor-icons/react'
+import { isPhotoValid } from '@/lib/helpers'
 import type { UserProfile } from '@/lib/types'
 
 interface UserCardProps {
@@ -20,14 +21,7 @@ export function UserCard({ user, distance, canMessage = true, onMessage, onViewP
     .join('')
     .toUpperCase()
 
-  const isPhotoValid = () => {
-    if (!user.profilePicture) return false
-    const now = Date.now()
-    const hoursSinceCapture = (now - user.profilePicture.capturedAt) / (1000 * 60 * 60)
-    return hoursSinceCapture < 24
-  }
-
-  const photoValid = isPhotoValid()
+  const photoValid = user.profilePicture ? isPhotoValid(user.profilePicture) : false
 
   return (
     <Card className="p-5 hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 group">
