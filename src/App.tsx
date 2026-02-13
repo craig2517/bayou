@@ -51,8 +51,10 @@ function App() {
       
       if (!hasExistingData) {
         console.log('🎬 Generating initial demo data...')
+        console.log('Current profile:', myProfile)
+        console.log('Total demo users:', demoUsers.length)
         
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 5)
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 8)
         
         if (demoData.conversations.length > 0) {
           setConversations(demoData.conversations)
@@ -60,7 +62,7 @@ function App() {
           setMessages(demoData.messages)
           
           const existingUserIds = demoData.conversations.flatMap(c => c.participants)
-          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 6)
+          const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 8)
           
           if (additionalRequests.length > 0) {
             setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -76,6 +78,12 @@ function App() {
           })
         } else {
           console.log('⚠️ No eligible users found for demo data generation')
+          console.log('Attempting to force generate with relaxed criteria...')
+          
+          setTimeout(() => {
+            const newDemoUsers = generateDemoUsers(2000)
+            setDemoUsers(newDemoUsers)
+          }, 500)
         }
       } else {
         console.log('📊 Existing data found:', {
@@ -85,7 +93,7 @@ function App() {
         })
       }
     }
-  }, [myProfile, demoUsers])
+  }, [myProfile])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 

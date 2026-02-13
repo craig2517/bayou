@@ -70,7 +70,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.5
+    const radiusKm = Math.random() * 0.8
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -95,7 +95,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
       locationSharingEnabled: true,
-      requireApproval: Math.random() > 0.3,
+      requireApproval: i % 3 !== 0,
       profilePicture: {
         dataUrl: generateDemoAvatar(name, gender, age, i),
         capturedAt
@@ -405,6 +405,7 @@ export function generateDemoConversationsAndMessages(
   conversationCount: number = 5
 ) {
   const eligibleUsers = demoUsers.filter(user => {
+    if (user.id === myProfile.id) return false
     if (!user.isActive || !user.locationSharingEnabled) return false
     
     const distance = calculateDistance(
@@ -430,9 +431,10 @@ export function generateDemoConversationsAndMessages(
     return canMessage
   })
   
+  const numConversations = Math.min(conversationCount, eligibleUsers.length)
   const selectedUsers = eligibleUsers
     .sort(() => Math.random() - 0.5)
-    .slice(0, Math.min(conversationCount, eligibleUsers.length))
+    .slice(0, numConversations)
   
   const conversations: any[] = []
   const chatRequests: any[] = []
@@ -467,7 +469,15 @@ export function generateDemoConversationsAndMessages(
   console.log('💬 GENERATED DEMO CONVERSATIONS:', {
     conversationCount: conversations.length,
     totalMessages: Object.values(allMessages).flat().length,
-    eligibleUsers: eligibleUsers.length
+    eligibleUsers: eligibleUsers.length,
+    attemptedCount: conversationCount,
+    myProfileLocation: myProfile.location,
+    sampleEligibleUsers: eligibleUsers.slice(0, 5).map(u => ({
+      name: u.name,
+      distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
+      gender: u.gender,
+      age: u.age
+    }))
   })
   
   return { conversations, chatRequests, messages: allMessages }
@@ -480,6 +490,7 @@ export function generateAdditionalChatRequests(
   count: number = 5
 ) {
   const eligibleUsers = demoUsers.filter(user => {
+    if (user.id === myProfile.id) return false
     if (existingRequestUserIds.includes(user.id)) return false
     if (!user.isActive || !user.locationSharingEnabled) return false
     
@@ -506,9 +517,10 @@ export function generateAdditionalChatRequests(
     return canMessage
   })
   
+  const numRequests = Math.min(count, eligibleUsers.length)
   const selectedUsers = eligibleUsers
     .sort(() => Math.random() - 0.5)
-    .slice(0, Math.min(count, eligibleUsers.length))
+    .slice(0, numRequests)
   
   const requests = selectedUsers.map((user, index) => ({
     id: `additional-req-${Date.now()}-${index}`,
@@ -521,7 +533,14 @@ export function generateAdditionalChatRequests(
   console.log('🔔 GENERATED ADDITIONAL REQUESTS:', {
     requestCount: requests.length,
     eligibleUsers: eligibleUsers.length,
-    existingRequests: existingRequestUserIds.length
+    existingRequests: existingRequestUserIds.length,
+    attemptedCount: count,
+    sampleEligibleUsers: eligibleUsers.slice(0, 5).map(u => ({
+      name: u.name,
+      distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
+      gender: u.gender,
+      age: u.age
+    }))
   })
   
   return requests
