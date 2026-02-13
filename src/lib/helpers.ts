@@ -20,16 +20,25 @@ const FIRST_NAMES = [
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
 function getRandomGenderPreferences(): string[] {
-  return [...GENDERS]
+  const rand = Math.random()
+  if (rand < 0.7) {
+    return [...GENDERS]
+  } else if (rand < 0.85) {
+    return [GENDERS[Math.floor(Math.random() * GENDERS.length)]]
+  } else {
+    const count = 2 + Math.floor(Math.random() * 2)
+    const shuffled = [...GENDERS].sort(() => Math.random() - 0.5)
+    return shuffled.slice(0, count)
+  }
 }
 
 export function generateDemoUsers(count: number = 50): UserProfile[] {
   const users: UserProfile[] = []
   
-  const veryCloseCount = Math.min(300, Math.floor(count * 0.3))
+  const veryCloseCount = Math.min(800, Math.floor(count * 0.4))
   for (let i = 0; i < veryCloseCount; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.5
+    const radiusKm = Math.random() * 0.4
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -39,14 +48,17 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const age = 18 + Math.floor(Math.random() * 47)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
+    const ageRangeMin = 18 + Math.floor(Math.random() * 20)
+    const ageRangeMax = Math.max(ageRangeMin + 10, 50 + Math.floor(Math.random() * 30))
+    
     users.push({
       id: `user-demo-close-${i + 1}-${Date.now()}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender,
-      receiveMessagesFrom: GENDERS,
-      ageRangeMin: 18,
-      ageRangeMax: 80,
+      receiveMessagesFrom: getRandomGenderPreferences(),
+      ageRangeMin,
+      ageRangeMax,
       location: { lat, lng },
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
@@ -58,7 +70,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   const remainingCount = count - veryCloseCount
   for (let i = 0; i < remainingCount; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = 0.5 + Math.random() * 0.5
+    const radiusKm = 0.4 + Math.random() * 0.6
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -68,14 +80,17 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const age = 18 + Math.floor(Math.random() * 47)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     
+    const ageRangeMin = 18 + Math.floor(Math.random() * 20)
+    const ageRangeMax = Math.max(ageRangeMin + 10, 50 + Math.floor(Math.random() * 30))
+    
     users.push({
       id: `user-demo-${i + 1}-${Date.now()}`,
       name: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
       age,
       gender,
-      receiveMessagesFrom: GENDERS,
-      ageRangeMin: 18,
-      ageRangeMax: 80,
+      receiveMessagesFrom: getRandomGenderPreferences(),
+      ageRangeMin,
+      ageRangeMax,
       location: { lat, lng },
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
