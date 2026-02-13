@@ -422,7 +422,7 @@ function App() {
                 Real-Time Activity Heat Map
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Visualize anonymous user density in the Highlands area (40205). Brighter colors indicate higher activity. 
+                Visualize anonymous user density in the area. Brighter colors indicate higher activity. 
                 All locations are fuzzed to protect privacy.
               </p>
             </div>

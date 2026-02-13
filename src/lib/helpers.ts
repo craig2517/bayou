@@ -1,7 +1,7 @@
 import type { UserProfile, HeatMapPoint } from './types'
 
-export const CENTER_LAT = 38.2545
-export const CENTER_LNG = -85.7145
+export const CENTER_LAT = 40.7128
+export const CENTER_LNG = -74.0060
 
 const FIRST_NAMES = [
   'Alex', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Avery', 'Quinn',
@@ -29,7 +29,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.4
+    const radiusKm = Math.random() * 0.9
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
