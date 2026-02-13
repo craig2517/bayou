@@ -29,7 +29,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.3
+    const radiusKm = Math.random() * 0.9
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -171,15 +171,9 @@ export function getApproximateDistance(km: number): string {
 }
 
 export function getRandomLocationNearCenter(): { lat: number; lng: number } {
-  const angle = Math.random() * 2 * Math.PI
-  const radiusKm = Math.random() * 0.05
-  
-  const latOffset = (radiusKm / 111) * Math.cos(angle)
-  const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
-  
   return {
-    lat: CENTER_LAT + latOffset,
-    lng: CENTER_LNG + lngOffset
+    lat: CENTER_LAT,
+    lng: CENTER_LNG
   }
 }
 
