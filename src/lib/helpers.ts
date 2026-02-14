@@ -431,7 +431,7 @@ export function generateDemoMessages(
   const messages: any[] = []
   const now = Date.now()
   const oneDayMs = 24 * 60 * 60 * 1000
-  const baseTime = now - Math.random() * oneDayMs * 3
+  const baseTime = now - Math.random() * oneDayMs * 5
   
   let currentSender = Math.random() > 0.5 ? user1Id : user2Id
   let timeOffset = 0
@@ -448,10 +448,13 @@ export function generateDemoMessages(
     } else if (i === 3) {
       messageText = ENTHUSIASTIC_REPLIES[Math.floor(Math.random() * ENTHUSIASTIC_REPLIES.length)]
     } else {
-      messageText = SMALL_TALK[Math.floor(Math.random() * SMALL_TALK.length)]
+      const allOptions = [...SMALL_TALK, ...CASUAL_RESPONSES, ...FOLLOW_UP_MESSAGES]
+      messageText = allOptions[Math.floor(Math.random() * allOptions.length)]
     }
     
-    timeOffset += Math.floor(Math.random() * 15 * 60 * 1000) + 30000
+    const minGap = 30000
+    const maxGap = Math.random() > 0.7 ? 60 * 60 * 1000 : 20 * 60 * 1000
+    timeOffset += Math.floor(Math.random() * (maxGap - minGap)) + minGap
     
     messages.push({
       id: `msg-demo-${conversationId}-${i}`,
@@ -510,7 +513,7 @@ export function generateDemoConversationsAndMessages(
   selectedUsers.forEach((user, index) => {
     const conversationId = [myProfile.id, user.id].sort().join('-')
     
-    const messageCount = Math.floor(Math.random() * 15) + 8
+    const messageCount = Math.floor(Math.random() * 20) + 10
     const messages = generateDemoMessages(conversationId, myProfile.id, user.id, messageCount)
     
     allMessages[conversationId] = messages

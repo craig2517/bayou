@@ -60,7 +60,7 @@ function App() {
       console.log('Profile:', { id: myProfile.id, location: myProfile.location, gender: myProfile.gender, age: myProfile.age })
       console.log('Total demo users:', demoUsers.length)
       
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 8)
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 12)
       
       if (demoData.conversations.length > 0 || demoData.chatRequests.length > 0) {
         setConversations(demoData.conversations)
@@ -74,7 +74,7 @@ function App() {
         ].filter(id => id !== myProfile.id)
         const uniqueExistingUserIds = [...new Set(existingUserIds)]
         
-        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 15)
+        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
         
         if (pendingRequests.length > 0) {
           setChatRequests(current => [...(current || []), ...pendingRequests])
@@ -402,7 +402,7 @@ function App() {
     
     setTimeout(() => {
       console.log('🔄 Force regenerating demo data after clear...')
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 10)
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
       
       if (demoData.conversations.length > 0) {
         setConversations(demoData.conversations)
@@ -415,7 +415,7 @@ function App() {
           ...demoData.chatRequests.map(r => r.toUserId)
         ].filter(id => id !== myProfile.id)
         const uniqueExistingUserIds = [...new Set(existingUserIds)]
-        const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
+        const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
         
         if (additionalRequests.length > 0) {
           setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -447,7 +447,7 @@ function App() {
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
     
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 8)
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 10)
     
     if (demoData.conversations.length > 0) {
       setConversations(current => [...(current || []), ...demoData.conversations])
@@ -464,7 +464,7 @@ function App() {
       ...demoData.chatRequests.map(r => r.toUserId)
     ].filter(id => id !== myProfile.id)
     const finalUniqueIds = [...new Set(newExistingIds)]
-    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 15)
+    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 20)
     
     if (additionalRequests.length > 0) {
       setChatRequests(current => [...(current || []), ...additionalRequests])
@@ -489,7 +489,7 @@ function App() {
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
     
-    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 15)
+    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
     
     if (newRequests.length > 0) {
       setChatRequests(current => [...(current || []), ...newRequests])
