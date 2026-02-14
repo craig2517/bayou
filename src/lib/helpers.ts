@@ -302,7 +302,7 @@ export function generateInitialChatRequests(
 export function isPhotoValid(profilePicture?: { capturedAt: number }): boolean {
   if (!profilePicture) return false
   const hoursSinceCapture = (Date.now() - profilePicture.capturedAt) / (1000 * 60 * 60)
-  return hoursSinceCapture < 48
+  return hoursSinceCapture < 24
 }
 
 const CONVERSATION_STARTERS = [

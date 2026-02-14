@@ -41,30 +41,15 @@ function App() {
   }
 
   useEffect(() => {
-    console.log('📡 STATE UPDATE - Conversations:', {
-      type: typeof conversations,
-      isArray: Array.isArray(conversations),
-      value: conversations,
-      length: Array.isArray(conversations) ? conversations.length : 'N/A'
-    })
+    console.log('📡 STATE: Conversations -', Array.isArray(conversations) ? conversations.length : 'invalid')
   }, [conversations])
 
   useEffect(() => {
-    console.log('📡 STATE UPDATE - Chat Requests:', {
-      type: typeof chatRequests,
-      isArray: Array.isArray(chatRequests),
-      value: chatRequests,
-      length: Array.isArray(chatRequests) ? chatRequests.length : 'N/A'
-    })
+    console.log('📡 STATE: Chat Requests -', Array.isArray(chatRequests) ? chatRequests.length : 'invalid')
   }, [chatRequests])
 
   useEffect(() => {
-    console.log('📡 STATE UPDATE - Messages:', {
-      type: typeof messages,
-      isObject: messages && typeof messages === 'object',
-      value: messages,
-      keys: messages ? Object.keys(messages).length : 'N/A'
-    })
+    console.log('📡 STATE: Messages -', messages && typeof messages === 'object' ? Object.keys(messages).length : 'invalid')
   }, [messages])
 
   useEffect(() => {
@@ -73,112 +58,70 @@ function App() {
       return
     }
 
+    const conversationArray = Array.isArray(conversations) ? conversations : []
+    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
+    
+    console.log('🔄 DEMO DATA INITIALIZATION CHECK:', {
+      hasProfile: !!myProfile,
+      profileId: myProfile.id,
+      hasInitialized: hasInitializedDemoData.current,
+      conversationsCount: conversationArray.length,
+      requestsCount: requestArray.length,
+      demoUsersCount: demoUsers.length
+    })
+
     if (hasInitializedDemoData.current) {
+      console.log('⏭️ Already initialized, skipping')
       return
     }
 
-    const conversationArray = Array.isArray(conversations) ? conversations : []
-    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-    const hasConversations = conversationArray.length > 0
-    const hasAnyRequests = requestArray.length > 0
+    if (conversationArray.length > 0 || requestArray.length > 0) {
+      console.log('✅ Data already exists, marking as initialized')
+      hasInitializedDemoData.current = true
+      return
+    }
+
+    console.log('🎬 GENERATING DEMO DATA...')
+    hasInitializedDemoData.current = true
     
-    const hasAnyData = hasConversations || hasAnyRequests
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
     
-    console.log('🔄 INIT DEMO DATA CHECK:', {
-      hasProfile: !!myProfile,
-      profileId: myProfile?.id,
-      conversationsRaw: conversations,
-      conversationsType: typeof conversations,
-      conversationsIsArray: Array.isArray(conversations),
-      requestsRaw: chatRequests,
-      requestsType: typeof chatRequests,
-      requestsIsArray: Array.isArray(chatRequests),
-      hasConversations,
-      conversationsCount: conversationArray.length,
-      hasAnyRequests,
-      requestsCount: requestArray.length,
-      hasAnyData,
-      demoUsersCount: demoUsers.length
+    if (demoData.conversations.length === 0) {
+      console.warn('⚠️ No conversations generated - checking eligibility')
+      toast.error('No compatible users found', {
+        description: 'Try adjusting your profile preferences',
+        duration: 4000
+      })
+      return
+    }
+    
+    const existingUserIds = [
+      ...demoData.conversations.flatMap(c => c.participants),
+      ...demoData.chatRequests.map(r => r.fromUserId),
+      ...demoData.chatRequests.map(r => r.toUserId)
+    ].filter(id => id !== myProfile.id)
+    const uniqueExistingUserIds = [...new Set(existingUserIds)]
+    
+    const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+    const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+    
+    console.log('✅ Demo data generated:', {
+      conversations: demoData.conversations.length,
+      totalRequests: allChatRequests.length,
+      pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length
     })
     
-    if (!hasAnyData) {
-      hasInitializedDemoData.current = true
-      
-      console.log('🎬 Starting demo data generation...')
-      console.log('Profile:', { 
-        id: myProfile.id, 
-        location: myProfile.location, 
-        gender: myProfile.gender, 
-        age: myProfile.age,
-        receiveFrom: myProfile.receiveMessagesFrom,
-        ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
-      })
-      console.log('Total demo users:', demoUsers.length)
-      
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-      
-      console.log('📊 Generated conversations result:', {
-        conversationsLength: demoData.conversations.length,
-        requestsLength: demoData.chatRequests.length,
-        messagesKeys: Object.keys(demoData.messages).length
-      })
-      
-      const existingUserIds = [
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id)
-      const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      
-      console.log('🔔 Generating additional pending requests...')
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-      
-      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-      
-      console.log('✅ Demo data generation complete:', {
-        conversations: demoData.conversations.length,
-        initialRequests: demoData.chatRequests.length,
-        pendingRequests: pendingRequests.length,
-        totalRequests: allChatRequests.length,
-        pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length,
-        acceptedRequests: allChatRequests.filter(r => r.status === 'accepted').length
-      })
-      
-      console.log('📦 Setting all KV data...')
-      
-      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      
-      console.log('💾 About to save:', {
-        conversationsToSave: demoData.conversations.length,
-        requestsToSave: allChatRequests.length,
-        messagesToSave: Object.keys(demoData.messages).length,
-        pendingToMe: pendingToMe.length
-      })
-      
-      setTimeout(() => {
-        setConversations(demoData.conversations)
-        setChatRequests(allChatRequests)
-        setMessages(demoData.messages)
-        
-        console.log('✅ KV data saved successfully')
-        
-        if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
-          toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
-            description: 'Check Messages and Requests tabs',
-            duration: 4000
-          })
-        } else {
-          toast.info('No compatible users found for demo data', {
-            description: 'Adjust your profile preferences or refresh users to generate data',
-            duration: 5000
-          })
-        }
-      }, 100)
-    } else {
-      hasInitializedDemoData.current = true
-      console.log('✅ Demo data already exists, skipping generation')
-    }
-  }, [myProfile, demoUsers, conversations, chatRequests])
+    setConversations(demoData.conversations)
+    setChatRequests(allChatRequests)
+    setMessages(demoData.messages)
+    
+    const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+    
+    toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
+      description: 'Check Messages and Requests tabs',
+      duration: 4000
+    })
+  }, [myProfile])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -329,6 +272,10 @@ function App() {
       receiveMessagesFrom: newProfile.receiveMessagesFrom,
       ageRange: [newProfile.ageRangeMin, newProfile.ageRangeMax]
     })
+    
+    if (isNewProfile) {
+      hasInitializedDemoData.current = false
+    }
     
     setMyProfile(newProfile)
     setShowProfileDialog(false)
@@ -510,9 +457,24 @@ function App() {
   const handleClearAllData = () => {
     if (!myProfile) return
     
-    console.log('🔄 Force regenerating demo data after clear...')
+    console.log('🔄 FORCE REGENERATING DEMO DATA...')
+    hasInitializedDemoData.current = false
     
     const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+    
+    console.log('📊 Generated data result:', {
+      conversations: demoData.conversations.length,
+      chatRequests: demoData.chatRequests.length,
+      messages: Object.keys(demoData.messages).length
+    })
+    
+    if (demoData.conversations.length === 0) {
+      toast.error('No compatible users found', {
+        description: 'Try adjusting your profile preferences or refreshing users',
+        duration: 3000
+      })
+      return
+    }
     
     const existingUserIds = [
       ...demoData.conversations.flatMap(c => c.participants),
@@ -536,15 +498,12 @@ function App() {
       pendingToMe: pendingToMe.length
     })
     
+    hasInitializedDemoData.current = true
+    
     if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
       toast.success('Demo data regenerated!', {
         description: `${demoData.conversations.length} conversations and ${pendingToMe.length} requests created`,
         duration: 4000
-      })
-    } else {
-      toast.error('No compatible users found', {
-        description: 'Try adjusting your profile preferences or refreshing users',
-        duration: 3000
       })
     }
   }
@@ -762,12 +721,12 @@ function App() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
-                    onClick={() => {
+                    onClick={async () => {
                       console.log('🗑️ Clearing all data and reloading...')
                       hasInitializedDemoData.current = false
-                      setConversations([])
-                      setChatRequests([])
-                      setMessages({})
+                      await setChatRequests([])
+                      await setConversations([])
+                      await setMessages({})
                       toast.success('All data cleared!', {
                         description: 'Reloading page...',
                         duration: 1500
@@ -822,12 +781,28 @@ function App() {
       {showDebug && (
         <div className="bg-yellow-50 border-b-2 border-yellow-200 p-4">
           <div className="container mx-auto px-4 sm:px-6">
-            <h3 className="font-bold text-sm mb-2">Debug Panel</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-sm">Debug Panel</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearAllData}
+                disabled={!myProfile}
+                className="h-7 text-xs"
+              >
+                🔄 Force Generate Demo Data
+              </Button>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
               <div>
                 <div className="font-bold text-yellow-800">Profile:</div>
                 <div>{myProfile ? '✅ Created' : '❌ None'}</div>
-                {myProfile && <div className="text-yellow-700">{myProfile.id}</div>}
+                {myProfile && (
+                  <>
+                    <div className="text-yellow-700 truncate">{myProfile.name}</div>
+                    <div className="text-yellow-600">{myProfile.gender}, {myProfile.age}</div>
+                  </>
+                )}
               </div>
               <div>
                 <div className="font-bold text-yellow-800">Conversations:</div>
@@ -846,7 +821,7 @@ function App() {
               </div>
             </div>
             <div className="mt-2 text-xs text-yellow-800">
-              Init: {hasInitializedDemoData.current ? '✅ Yes' : '❌ No'} | 
+              Init Flag: {hasInitializedDemoData.current ? '✅ Yes' : '❌ No'} | 
               Demo Users: {demoUsers.length}
             </div>
           </div>
