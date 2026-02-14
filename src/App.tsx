@@ -80,36 +80,43 @@ function App() {
       
       hasInitializedDemoData.current = true
       
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== myProfile.id)
+      const uniqueExistingUserIds = [...new Set(existingUserIds)]
+      
+      console.log('🔔 Generating additional pending requests...')
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+      
+      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+      
+      console.log('✅ Demo data generation complete:', {
+        conversations: demoData.conversations.length,
+        initialRequests: demoData.chatRequests.length,
+        pendingRequests: pendingRequests.length,
+        totalRequests: allChatRequests.length,
+        pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length,
+        acceptedRequests: allChatRequests.filter(r => r.status === 'accepted').length
+      })
+      
+      console.log('📦 Setting all KV data...')
+      setConversations(demoData.conversations)
+      setChatRequests(allChatRequests)
+      setMessages(demoData.messages)
+      
       setTimeout(() => {
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-        
-        const existingUserIds = [
-          ...demoData.conversations.flatMap(c => c.participants),
-          ...demoData.chatRequests.map(r => r.fromUserId),
-          ...demoData.chatRequests.map(r => r.toUserId)
-        ].filter(id => id !== myProfile.id)
-        const uniqueExistingUserIds = [...new Set(existingUserIds)]
-        
-        console.log('🔔 Generating additional pending requests...')
-        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-        
-        const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-        
-        console.log('✅ Demo data generation complete:', {
-          conversations: demoData.conversations.length,
-          initialRequests: demoData.chatRequests.length,
-          pendingRequests: pendingRequests.length,
-          totalRequests: allChatRequests.length,
-          pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length,
-          acceptedRequests: allChatRequests.filter(r => r.status === 'accepted').length
-        })
-        
-        console.log('📦 Setting all KV data...')
-        setConversations(demoData.conversations)
-        setChatRequests(allChatRequests)
-        setMessages(demoData.messages)
-        
         const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+        
+        console.log('📊 VERIFICATION - Data should be in KV now:', {
+          conversationsSet: demoData.conversations.length,
+          requestsSet: allChatRequests.length,
+          messagesSet: Object.keys(demoData.messages).length,
+          pendingToMe: pendingToMe.length
+        })
         
         if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
           toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
@@ -122,7 +129,7 @@ function App() {
             duration: 5000
           })
         }
-      }, 100)
+      }, 500)
     } else {
       console.log('✅ Demo data already exists, skipping generation')
       hasInitializedDemoData.current = true
