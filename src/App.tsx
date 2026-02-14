@@ -50,8 +50,8 @@ function App() {
       return
     }
 
-    const conversationArray = conversations || []
-    const requestArray = chatRequests || []
+    const conversationArray = Array.isArray(conversations) ? conversations : []
+    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     const hasConversations = conversationArray.length > 0
     const hasAnyRequests = requestArray.length > 0
     
@@ -61,7 +61,11 @@ function App() {
       hasProfile: !!myProfile,
       profileId: myProfile?.id,
       conversationsRaw: conversations,
+      conversationsType: typeof conversations,
+      conversationsIsArray: Array.isArray(conversations),
       requestsRaw: chatRequests,
+      requestsType: typeof chatRequests,
+      requestsIsArray: Array.isArray(chatRequests),
       hasConversations,
       conversationsCount: conversationArray.length,
       hasAnyRequests,
@@ -239,15 +243,23 @@ function App() {
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
-    const requestArray = chatRequests || []
+    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     if (!myProfile) {
-      console.log('🔍 PENDING REQUESTS: No profile', { hasProfile: !!myProfile, chatRequestsRaw: chatRequests, chatRequestsCount: requestArray.length })
+      console.log('🔍 PENDING REQUESTS: No profile', { 
+        hasProfile: !!myProfile, 
+        chatRequestsRaw: chatRequests, 
+        chatRequestsType: typeof chatRequests,
+        chatRequestsIsArray: Array.isArray(chatRequests),
+        chatRequestsCount: requestArray.length 
+      })
       return []
     }
     const filtered = requestArray.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
     console.log('🔍 PENDING INCOMING REQUESTS:', {
       myProfileId: myProfile.id,
       chatRequestsRaw: chatRequests,
+      chatRequestsType: typeof chatRequests,
+      chatRequestsIsArray: Array.isArray(chatRequests),
       totalChatRequests: requestArray.length,
       pendingToMe: filtered.length,
       allPending: requestArray.filter(r => r.status === 'pending').length,
@@ -336,7 +348,8 @@ function App() {
       return
     }
 
-    const existingRequest = (chatRequests || []).find(
+    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
+    const existingRequest = requestArray.find(
       req =>
         (req.fromUserId === myProfile.id && req.toUserId === toUser.id) ||
         (req.fromUserId === toUser.id && req.toUserId === myProfile.id)
@@ -364,14 +377,20 @@ function App() {
         timestamp: Date.now()
       }
 
-      setChatRequests(current => [...(current || []), autoAcceptedRequest])
+      setChatRequests(current => {
+        const currentArray = Array.isArray(current) ? current : []
+        return [...currentArray, autoAcceptedRequest]
+      })
 
       const newConversation: Conversation = {
         id: conversationId,
         participants: [myProfile.id, toUser.id] as [string, string],
         unreadCount: 0
       }
-      setConversations(current => [...(current || []), newConversation])
+      setConversations(current => {
+        const currentArray = Array.isArray(current) ? current : []
+        return [...currentArray, newConversation]
+      })
 
       setSelectedConversation(conversationId)
       setSelectedTab('messages')
@@ -387,7 +406,10 @@ function App() {
       timestamp: Date.now()
     }
 
-    setChatRequests(current => [...(current || []), newRequest])
+    setChatRequests(current => {
+      const currentArray = Array.isArray(current) ? current : []
+      return [...currentArray, newRequest]
+    })
     setPendingRequestUser(toUser)
     toast.success(`Chat request sent to ${toUser.name}!`)
   }
@@ -395,33 +417,35 @@ function App() {
   const handleAcceptRequest = (request: ChatRequest) => {
     if (!myProfile) return
     
-    setChatRequests(current =>
-      (current || []).map(req => (req.id === request.id ? { ...req, status: 'accepted' as const } : req))
-    )
+    setChatRequests(current => {
+      const currentArray = Array.isArray(current) ? current : []
+      return currentArray.map(req => (req.id === request.id ? { ...req, status: 'accepted' as const } : req))
+    })
 
     const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
     
     setConversations(current => {
-      const conversations = current || []
-      const existingConv = conversations.find(c => c.id === conversationId)
+      const currentArray = Array.isArray(current) ? current : []
+      const existingConv = currentArray.find(c => c.id === conversationId)
       if (!existingConv) {
         const newConversation: Conversation = {
           id: conversationId,
           participants: [request.fromUserId, request.toUserId] as [string, string],
           unreadCount: 0
         }
-        return [...conversations, newConversation]
+        return [...currentArray, newConversation]
       }
-      return conversations
+      return currentArray
     })
 
     toast.success('Chat request accepted!')
   }
 
   const handleDeclineRequest = (request: ChatRequest) => {
-    setChatRequests(current =>
-      (current || []).map(req => (req.id === request.id ? { ...req, status: 'declined' as const } : req))
-    )
+    setChatRequests(current => {
+      const currentArray = Array.isArray(current) ? current : []
+      return currentArray.map(req => (req.id === request.id ? { ...req, status: 'declined' as const } : req))
+    })
     toast.info('Request declined')
   }
 
@@ -433,8 +457,11 @@ function App() {
   const handleRefreshUsers = () => {
     setIsRefreshing(true)
     setTimeout(() => {
-      const existingRequestIds = (chatRequests || []).map(req => [req.fromUserId, req.toUserId])
-      const existingConvIds = (conversations || []).flatMap(conv => conv.participants)
+      const requestArray = Array.isArray(chatRequests) ? chatRequests : []
+      const conversationArray = Array.isArray(conversations) ? conversations : []
+      
+      const existingRequestIds = requestArray.map(req => [req.fromUserId, req.toUserId])
+      const existingConvIds = conversationArray.flatMap(conv => conv.participants)
       const protectedUserIds = [...new Set([...existingConvIds, ...existingRequestIds.flat()])]
       
       const newUsers = generateDemoUsers(2000)
@@ -498,16 +525,19 @@ function App() {
   const handleGenerateMoreDemoData = () => {
     if (!myProfile) return
     
+    const conversationArray = Array.isArray(conversations) ? conversations : []
+    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
+    
     console.log('📝 GENERATING MORE DATA - Current state:', {
-      existingConversations: conversations?.length || 0,
-      existingRequests: chatRequests?.length || 0,
+      existingConversations: conversationArray.length,
+      existingRequests: requestArray.length,
       totalDemoUsers: demoUsers.length
     })
     
     const existingUserIds = [
-      ...(conversations || []).flatMap(c => c.participants),
-      ...(chatRequests || []).map(r => r.fromUserId),
-      ...(chatRequests || []).map(r => r.toUserId)
+      ...conversationArray.flatMap(c => c.participants),
+      ...requestArray.map(r => r.fromUserId),
+      ...requestArray.map(r => r.toUserId)
     ].filter(id => id !== myProfile.id)
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
@@ -515,9 +545,18 @@ function App() {
     const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 10)
     
     if (demoData.conversations.length > 0) {
-      setConversations(current => [...(current || []), ...demoData.conversations])
-      setChatRequests(current => [...(current || []), ...demoData.chatRequests])
-      setMessages(current => ({ ...(current || {}), ...demoData.messages }))
+      setConversations(current => {
+        const currentArray = Array.isArray(current) ? current : []
+        return [...currentArray, ...demoData.conversations]
+      })
+      setChatRequests(current => {
+        const currentArray = Array.isArray(current) ? current : []
+        return [...currentArray, ...demoData.chatRequests]
+      })
+      setMessages(current => {
+        const currentObj = current && typeof current === 'object' ? current : {}
+        return { ...currentObj, ...demoData.messages }
+      })
       
       toast.success(`Added ${demoData.conversations.length} new conversations with messages!`)
     }
@@ -532,7 +571,10 @@ function App() {
     const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 20)
     
     if (additionalRequests.length > 0) {
-      setChatRequests(current => [...(current || []), ...additionalRequests])
+      setChatRequests(current => {
+        const currentArray = Array.isArray(current) ? current : []
+        return [...currentArray, ...additionalRequests]
+      })
       toast.success(`${additionalRequests.length} new message requests!`)
     }
     
@@ -546,10 +588,13 @@ function App() {
   const handleGeneratePendingRequests = () => {
     if (!myProfile) return
     
+    const conversationArray = Array.isArray(conversations) ? conversations : []
+    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
+    
     const existingUserIds = [
-      ...(conversations || []).flatMap(c => c.participants),
-      ...(chatRequests || []).map(r => r.fromUserId),
-      ...(chatRequests || []).map(r => r.toUserId)
+      ...conversationArray.flatMap(c => c.participants),
+      ...requestArray.map(r => r.fromUserId),
+      ...requestArray.map(r => r.toUserId)
     ].filter(id => id !== myProfile.id)
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
@@ -557,7 +602,10 @@ function App() {
     const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
     
     if (newRequests.length > 0) {
-      setChatRequests(current => [...(current || []), ...newRequests])
+      setChatRequests(current => {
+        const currentArray = Array.isArray(current) ? current : []
+        return [...currentArray, ...newRequests]
+      })
       toast.success(`Generated ${newRequests.length} new pending requests!`, {
         description: 'Check the Requests tab',
         duration: 3000
@@ -580,23 +628,29 @@ function App() {
       timestamp: Date.now()
     }
 
-    setMessages(current => ({
-      ...(current || {}),
-      [conversationId]: [...((current || {})[conversationId] || []), newMessage]
-    }))
+    setMessages(current => {
+      const currentObj = current && typeof current === 'object' ? current : {}
+      return {
+        ...currentObj,
+        [conversationId]: [...(currentObj[conversationId] || []), newMessage]
+      }
+    })
 
-    setConversations(current =>
-      (current || []).map(conv =>
+    setConversations(current => {
+      const currentArray = Array.isArray(current) ? current : []
+      return currentArray.map(conv =>
         conv.id === conversationId ? { ...conv, lastMessage: newMessage } : conv
       )
-    )
+    })
   }
 
   const activeConversations = useMemo(() => {
-    const conversationArray = conversations || []
+    const conversationArray = Array.isArray(conversations) ? conversations : []
     if (!myProfile) return []
     console.log('💬 ACTIVE CONVERSATIONS CALC:', {
       conversationsRaw: conversations,
+      conversationsType: typeof conversations,
+      conversationsIsArray: Array.isArray(conversations),
       conversationsArray: conversationArray.length,
       myProfileId: myProfile.id
     })
