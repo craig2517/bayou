@@ -36,6 +36,7 @@ function App() {
   const [showDebug, setShowDebug] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const hasInitializedDemoData = useRef(false)
+  const isInitializing = useRef(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
@@ -59,6 +60,16 @@ function App() {
       return
     }
 
+    if (isInitializing.current) {
+      console.log('⏳ Already initializing, skipping...')
+      return
+    }
+
+    if (hasInitializedDemoData.current) {
+      console.log('⏭️ Already initialized, skipping')
+      return
+    }
+
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     
@@ -66,15 +77,11 @@ function App() {
       hasProfile: !!myProfile,
       profileId: myProfile.id,
       hasInitialized: hasInitializedDemoData.current,
+      isInitializing: isInitializing.current,
       conversationsCount: conversationArray.length,
       requestsCount: requestArray.length,
       demoUsersCount: demoUsers.length
     })
-
-    if (hasInitializedDemoData.current) {
-      console.log('⏭️ Already initialized, skipping')
-      return
-    }
 
     if (conversationArray.length > 0 || requestArray.length > 0) {
       console.log('✅ Data already exists, marking as initialized')
@@ -83,45 +90,54 @@ function App() {
     }
 
     console.log('🎬 GENERATING DEMO DATA...')
-    hasInitializedDemoData.current = true
+    isInitializing.current = true
     
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-    
-    if (demoData.conversations.length === 0) {
-      console.warn('⚠️ No conversations generated - checking eligibility')
-      toast.error('No compatible users found', {
-        description: 'Try adjusting your profile preferences',
+    setTimeout(async () => {
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      
+      if (demoData.conversations.length === 0) {
+        console.warn('⚠️ No conversations generated - checking eligibility')
+        hasInitializedDemoData.current = true
+        isInitializing.current = false
+        toast.error('No compatible users found', {
+          description: 'Try adjusting your profile preferences',
+          duration: 4000
+        })
+        return
+      }
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== myProfile.id)
+      const uniqueExistingUserIds = [...new Set(existingUserIds)]
+      
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+      
+      console.log('✅ Demo data generated:', {
+        conversations: demoData.conversations.length,
+        totalRequests: allChatRequests.length,
+        pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length
+      })
+      
+      await Promise.all([
+        setConversations(demoData.conversations),
+        setChatRequests(allChatRequests),
+        setMessages(demoData.messages)
+      ])
+      
+      hasInitializedDemoData.current = true
+      isInitializing.current = false
+      
+      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      
+      toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
+        description: 'Check Messages and Requests tabs',
         duration: 4000
       })
-      return
-    }
-    
-    const existingUserIds = [
-      ...demoData.conversations.flatMap(c => c.participants),
-      ...demoData.chatRequests.map(r => r.fromUserId),
-      ...demoData.chatRequests.map(r => r.toUserId)
-    ].filter(id => id !== myProfile.id)
-    const uniqueExistingUserIds = [...new Set(existingUserIds)]
-    
-    const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-    const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-    
-    console.log('✅ Demo data generated:', {
-      conversations: demoData.conversations.length,
-      totalRequests: allChatRequests.length,
-      pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length
-    })
-    
-    setConversations(demoData.conversations)
-    setChatRequests(allChatRequests)
-    setMessages(demoData.messages)
-    
-    const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-    
-    toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
-      description: 'Check Messages and Requests tabs',
-      duration: 4000
-    })
+    }, 100)
   }, [myProfile])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
@@ -455,7 +471,7 @@ function App() {
     }, 500)
   }
 
-  const handleClearAllData = () => {
+  const handleClearAllData = async () => {
     if (!myProfile) {
       toast.error('No profile exists', {
         description: 'Create a profile first before generating demo data',
@@ -528,6 +544,7 @@ function App() {
     }
     
     hasInitializedDemoData.current = false
+    isInitializing.current = false
     
     const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
     
@@ -562,9 +579,9 @@ function App() {
       messageKeys: Object.keys(demoData.messages).length
     })
     
-    setConversations(demoData.conversations)
-    setChatRequests(allRequests)
-    setMessages(demoData.messages)
+    await setConversations(demoData.conversations)
+    await setChatRequests(allRequests)
+    await setMessages(demoData.messages)
     
     const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
     
@@ -805,6 +822,7 @@ function App() {
                     onClick={async () => {
                       console.log('🗑️ Clearing all data and reloading...')
                       hasInitializedDemoData.current = false
+                      isInitializing.current = false
                       await setChatRequests([])
                       await setConversations([])
                       await setMessages({})
@@ -924,7 +942,7 @@ function App() {
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
                 <div className="font-bold text-yellow-800 mb-1">Demo Users</div>
                 <div className="text-lg font-bold text-yellow-900">{demoUsers.length}</div>
-                <div className="text-yellow-600 text-[10px]">Init: {hasInitializedDemoData.current ? '✅' : '❌'}</div>
+                <div className="text-yellow-600 text-[10px]">Init: {hasInitializedDemoData.current ? '✅' : '❌'} / Initializing: {isInitializing.current ? '⏳' : '✅'}</div>
                 {myProfile && (
                   <>
                     <div className="text-yellow-600 text-[10px] mt-1">
