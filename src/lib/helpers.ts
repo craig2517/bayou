@@ -499,6 +499,7 @@ export function generateDemoConversationsAndMessages(
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
     if (!user.isActive) return false
+    if (!user.locationSharingEnabled) return false
     
     const distance = calculateDistance(
       myProfile.location.lat,
@@ -524,7 +525,8 @@ export function generateDemoConversationsAndMessages(
   
   const afterSelf = demoUsers.filter(u => u.id !== myProfile.id)
   const afterActive = afterSelf.filter(u => u.isActive)
-  const afterDistance = afterActive.filter(u => {
+  const afterLocationSharing = afterActive.filter(u => u.locationSharingEnabled)
+  const afterDistance = afterLocationSharing.filter(u => {
     const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
     return dist <= 10
   })
@@ -557,9 +559,10 @@ export function generateDemoConversationsAndMessages(
     filterBreakdown: {
       afterSelfFilter: afterSelf.length,
       afterActiveFilter: afterActive.length,
+      afterLocationSharingFilter: afterLocationSharing.length,
       afterDistanceFilter: afterDistance.length,
       finalEligible: eligibleUsers.length,
-      failedMatchingChecks: failedChecks.length
+      failedMatchingChecks: afterDistance.length - eligibleUsers.length
     },
     failedMatchesBreakdown: failedChecks.slice(0, 10).map(u => {
       const userReceivesList = u.receiveMessagesFrom || []
@@ -687,6 +690,7 @@ export function generateAdditionalChatRequests(
     if (user.id === myProfile.id) return false
     if (existingRequestUserIds.includes(user.id)) return false
     if (!user.isActive) return false
+    if (!user.locationSharingEnabled) return false
     
     const distance = calculateDistance(
       myProfile.location.lat,
@@ -713,7 +717,8 @@ export function generateAdditionalChatRequests(
   const afterSelf = demoUsers.filter(u => u.id !== myProfile.id)
   const afterExisting = afterSelf.filter(u => !existingRequestUserIds.includes(u.id))
   const afterActive = afterExisting.filter(u => u.isActive)
-  const afterDistance = afterActive.filter(u => {
+  const afterLocationSharing = afterActive.filter(u => u.locationSharingEnabled)
+  const afterDistance = afterLocationSharing.filter(u => {
     const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
     return dist <= 10
   })
@@ -722,6 +727,7 @@ export function generateAdditionalChatRequests(
     afterSelfFilter: afterSelf.length,
     afterExistingFilter: afterExisting.length,
     afterActiveFilter: afterActive.length,
+    afterLocationSharingFilter: afterLocationSharing.length,
     afterDistanceFilter: afterDistance.length,
     finalEligible: eligibleUsers.length,
     failedMatchingChecks: afterDistance.length - eligibleUsers.length

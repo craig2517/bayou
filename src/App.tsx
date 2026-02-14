@@ -45,6 +45,8 @@ function App() {
   useEffect(() => {
     if (!myProfile) {
       setShowProfileDialog(true)
+      hasInitializedDemoData.current = false
+      isInitializing.current = false
       return
     }
 
@@ -59,7 +61,11 @@ function App() {
       return
     }
 
-    if (hasInitializedDemoData.current || isInitializing.current) {
+    if (hasInitializedDemoData.current) {
+      return
+    }
+
+    if (isInitializing.current) {
       return
     }
 
@@ -106,6 +112,14 @@ function App() {
         
         const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
         
+        console.log('✅ DEMO DATA SUCCESSFULLY SAVED TO KV STORE:', {
+          conversationsInState: demoData.conversations.length,
+          requestsInState: allChatRequests.length,
+          messagesInState: Object.keys(demoData.messages).length,
+          pendingRequestsToMe: pendingToMe.length,
+          initializationComplete: hasInitializedDemoData.current
+        })
+        
         toast.success(`${demoData.conversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
           description: 'Check Messages and Requests tabs',
           duration: 4000
@@ -117,7 +131,7 @@ function App() {
         toast.error('Failed to generate demo data')
       }
     }, 100)
-  }, [myProfile?.id])
+  }, [myProfile, demoUsers, conversations, chatRequests, setConversations, setChatRequests, setMessages])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -159,12 +173,22 @@ function App() {
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     if (!myProfile) return []
     
-    const filtered = requestArray.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
+    const filtered = requestArray.filter(req => 
+      req && 
+      req.toUserId === myProfile.id && 
+      req.status === 'pending'
+    )
     
-    console.log('🔍 PENDING REQUESTS:', {
+    console.log('🔍 PENDING REQUESTS CHECK:', {
       total: requestArray.length,
       pendingToMe: filtered.length,
-      myId: myProfile.id
+      myId: myProfile.id,
+      requestSample: requestArray.slice(0, 3).map(r => ({
+        id: r?.id,
+        from: r?.fromUserId,
+        to: r?.toUserId,
+        status: r?.status
+      }))
     })
     
     return filtered
@@ -181,11 +205,17 @@ function App() {
       lastActive: Date.now()
     }
     
-    console.log('💾 SAVING PROFILE:', newProfile)
+    console.log('💾 SAVING PROFILE:', {
+      isNewProfile,
+      profile: newProfile
+    })
     
     if (isNewProfile) {
       hasInitializedDemoData.current = false
       isInitializing.current = false
+      setChatRequests([])
+      setConversations([])
+      setMessages({})
     }
     
     setMyProfile(newProfile)
@@ -195,7 +225,7 @@ function App() {
       toast.success('Profile created! Generating demo data...', {
         duration: 3000
       })
-      setTimeout(() => setSelectedTab('messages'), 2000)
+      setTimeout(() => setSelectedTab('messages'), 3000)
     } else {
       toast.success('Profile updated!')
     }
@@ -361,12 +391,19 @@ function App() {
       return
     }
     
+    console.log('🔄 FORCE REGENERATING - Resetting all flags and data...')
+    
+    hasInitializedDemoData.current = false
+    isInitializing.current = false
+    
+    setChatRequests([])
+    setConversations([])
+    setMessages({})
+    
     setIsGenerating(true)
     
     setTimeout(() => {
       try {
-        console.log('🔄 FORCE REGENERATING...')
-        
         const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
         
         if (demoData.conversations.length === 0) {
@@ -400,10 +437,11 @@ function App() {
         setTimeout(() => setSelectedTab('messages'), 1000)
       } catch (error) {
         console.error('❌ Error:', error)
+        hasInitializedDemoData.current = false
         setIsGenerating(false)
         toast.error('Generation failed')
       }
-    }, 100)
+    }, 300)
   }
 
   const handleGenerateMoreDemoData = async () => {
@@ -533,7 +571,7 @@ function App() {
     if (!myProfile) return []
     
     const active = conversationArray
-      .filter(conv => conv.participants.includes(myProfile.id))
+      .filter(conv => conv && Array.isArray(conv.participants) && conv.participants.includes(myProfile.id))
       .map(conv => {
         const otherUserId = conv.participants.find(id => id !== myProfile.id)
         const otherUser = demoUsers.find(u => u.id === otherUserId)
@@ -546,9 +584,14 @@ function App() {
         return bTime - aTime
       })
     
-    console.log('💬 ACTIVE CONVERSATIONS:', {
+    console.log('💬 ACTIVE CONVERSATIONS CHECK:', {
       total: conversationArray.length,
-      active: active.length
+      active: active.length,
+      conversationSample: conversationArray.slice(0, 3).map(c => ({
+        id: c?.id,
+        participants: c?.participants,
+        hasLastMessage: !!c?.lastMessage
+      }))
     })
     
     return active
