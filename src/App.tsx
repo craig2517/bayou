@@ -34,19 +34,10 @@ function App() {
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const hasInitializedDemoData = useRef(false)
-  const [isGeneratingDemoData, setIsGeneratingDemoData] = useState(false)
-  const [kvLoaded, setKvLoaded] = useState(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
   }
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setKvLoaded(true)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [])
 
   useEffect(() => {
     if (!myProfile) {
@@ -54,82 +45,80 @@ function App() {
       return
     }
 
-    if (!kvLoaded) {
-      return
-    }
-
-    if (hasInitializedDemoData.current || isGeneratingDemoData) {
+    if (hasInitializedDemoData.current) {
       return
     }
 
     const hasConversations = conversations && conversations.length > 0
-    const hasPendingRequests = (chatRequests || []).some(req => req.status === 'pending' && req.toUserId === myProfile.id)
+    const hasAnyRequests = chatRequests && chatRequests.length > 0
     
-    const hasAnyData = hasConversations || hasPendingRequests
+    const hasAnyData = hasConversations || hasAnyRequests
     
-    console.log('🔄 INIT DEMO DATA EFFECT:', {
+    console.log('🔄 INIT DEMO DATA CHECK:', {
       hasProfile: !!myProfile,
+      profileId: myProfile?.id,
       hasConversations,
-      hasPendingRequests,
+      conversationsCount: conversations?.length || 0,
+      hasAnyRequests,
+      requestsCount: chatRequests?.length || 0,
       hasAnyData,
       hasInitialized: hasInitializedDemoData.current,
-      isGenerating: isGeneratingDemoData,
-      conversationsCount: conversations?.length || 0,
-      requestsCount: chatRequests?.length || 0,
-      pendingRequestsToMe: (chatRequests || []).filter(req => req.status === 'pending' && req.toUserId === myProfile.id).length,
-      shouldGenerate: !hasAnyData,
-      kvLoaded
+      demoUsersCount: demoUsers.length
     })
     
     if (!hasAnyData) {
-      console.log('🎬 Generating initial demo data...')
-      console.log('Profile:', { id: myProfile.id, location: myProfile.location, gender: myProfile.gender, age: myProfile.age })
+      console.log('🎬 Starting demo data generation...')
+      console.log('Profile:', { 
+        id: myProfile.id, 
+        location: myProfile.location, 
+        gender: myProfile.gender, 
+        age: myProfile.age,
+        receiveFrom: myProfile.receiveMessagesFrom,
+        ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
+      })
       console.log('Total demo users:', demoUsers.length)
       
-      setIsGeneratingDemoData(true)
       hasInitializedDemoData.current = true
       
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 20)
-      
-      const existingUserIds = [
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id)
-      const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      
-      console.log('🔔 Generating additional pending requests...')
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 30)
-      
-      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-      
-      console.log('✅ Demo data generation complete:', {
-        conversations: demoData.conversations.length,
-        initialRequests: demoData.chatRequests.length,
-        pendingRequests: pendingRequests.length,
-        totalRequests: allChatRequests.length,
-        pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length,
-        acceptedRequests: allChatRequests.filter(r => r.status === 'accepted').length
-      })
-      
-      console.log('📦 Setting all data at once...')
-      setConversations(demoData.conversations)
-      setChatRequests(allChatRequests)
-      setMessages(demoData.messages)
-      
       setTimeout(() => {
-        setIsGeneratingDemoData(false)
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+        
+        const existingUserIds = [
+          ...demoData.conversations.flatMap(c => c.participants),
+          ...demoData.chatRequests.map(r => r.fromUserId),
+          ...demoData.chatRequests.map(r => r.toUserId)
+        ].filter(id => id !== myProfile.id)
+        const uniqueExistingUserIds = [...new Set(existingUserIds)]
+        
+        console.log('🔔 Generating additional pending requests...')
+        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+        
+        const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+        
+        console.log('✅ Demo data generation complete:', {
+          conversations: demoData.conversations.length,
+          initialRequests: demoData.chatRequests.length,
+          pendingRequests: pendingRequests.length,
+          totalRequests: allChatRequests.length,
+          pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length,
+          acceptedRequests: allChatRequests.filter(r => r.status === 'accepted').length
+        })
+        
+        console.log('📦 Setting all KV data...')
+        setConversations(demoData.conversations)
+        setChatRequests(allChatRequests)
+        setMessages(demoData.messages)
         
         const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
         
         if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
           toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
             description: 'Check Messages and Requests tabs',
-            duration: 3500
+            duration: 4000
           })
         } else {
           toast.error('No compatible users found for demo data', {
-            description: 'Check console logs or try "Generate More Data" from Demo Mode menu',
+            description: 'Try adjusting your profile preferences or use Demo Mode menu',
             duration: 5000
           })
         }
@@ -138,7 +127,7 @@ function App() {
       console.log('✅ Demo data already exists, skipping generation')
       hasInitializedDemoData.current = true
     }
-  }, [myProfile, demoUsers, kvLoaded])
+  }, [myProfile, conversations, chatRequests, demoUsers, setConversations, setChatRequests, setMessages])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -438,45 +427,43 @@ function App() {
   const handleClearAllData = () => {
     if (!myProfile) return
     
-    hasInitializedDemoData.current = false
-    setConversations([])
-    setChatRequests([])
-    setMessages({})
+    console.log('🔄 Force regenerating demo data after clear...')
     
-    setTimeout(() => {
-      console.log('🔄 Force regenerating demo data after clear...')
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 20)
-      
-      const existingUserIds = [
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id)
-      const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 30)
-      
-      const allRequests = [...demoData.chatRequests, ...additionalRequests]
-      
-      setConversations(demoData.conversations)
-      setChatRequests(allRequests)
-      setMessages(demoData.messages)
-      
-      hasInitializedDemoData.current = true
-      
-      const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      
-      if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
-        toast.success('Demo data regenerated!', {
-          description: `${demoData.conversations.length} conversations and ${pendingToMe.length} requests created`,
-          duration: 4000
-        })
-      } else {
-        toast.error('No compatible users found', {
-          description: 'Try adjusting your profile preferences or refreshing users',
-          duration: 3000
-        })
-      }
-    }, 100)
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+    
+    const existingUserIds = [
+      ...demoData.conversations.flatMap(c => c.participants),
+      ...demoData.chatRequests.map(r => r.fromUserId),
+      ...demoData.chatRequests.map(r => r.toUserId)
+    ].filter(id => id !== myProfile.id)
+    const uniqueExistingUserIds = [...new Set(existingUserIds)]
+    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+    
+    const allRequests = [...demoData.chatRequests, ...additionalRequests]
+    
+    setConversations(demoData.conversations)
+    setChatRequests(allRequests)
+    setMessages(demoData.messages)
+    
+    const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+    
+    console.log('✅ Force regeneration complete:', {
+      conversations: demoData.conversations.length,
+      totalRequests: allRequests.length,
+      pendingToMe: pendingToMe.length
+    })
+    
+    if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
+      toast.success('Demo data regenerated!', {
+        description: `${demoData.conversations.length} conversations and ${pendingToMe.length} requests created`,
+        duration: 4000
+      })
+    } else {
+      toast.error('No compatible users found', {
+        description: 'Try adjusting your profile preferences or refreshing users',
+        duration: 3000
+      })
+    }
   }
 
   const handleGenerateMoreDemoData = () => {
@@ -643,15 +630,18 @@ function App() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={() => {
-                      hasInitializedDemoData.current = false
+                      console.log('🗑️ Clearing all data and reloading...')
                       setConversations([])
                       setChatRequests([])
                       setMessages({})
                       toast.success('All data cleared!', {
-                        description: 'Reloading page to regenerate data...',
-                        duration: 2000
+                        description: 'Reloading page...',
+                        duration: 1500
                       })
-                      setTimeout(() => window.location.reload(), 1000)
+                      setTimeout(() => {
+                        hasInitializedDemoData.current = false
+                        window.location.reload()
+                      }, 1000)
                     }} 
                     className="cursor-pointer text-destructive focus:text-destructive"
                   >
