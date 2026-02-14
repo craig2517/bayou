@@ -45,6 +45,10 @@ function App() {
       return
     }
 
+    if (hasInitializedDemoData.current) {
+      return
+    }
+
     const acceptedRequests = (chatRequests || []).filter(req => req.status === 'accepted')
     const hasConversations = conversations && conversations.length > 0
     const hasPendingRequests = (chatRequests || []).some(req => req.status === 'pending' && req.toUserId === myProfile.id)
@@ -59,13 +63,15 @@ function App() {
       hasInitialized: hasInitializedDemoData.current,
       conversationsCount: conversations?.length || 0,
       requestsCount: chatRequests?.length || 0,
-      shouldGenerate: !hasAnyData && !hasInitializedDemoData.current
+      shouldGenerate: !hasAnyData
     })
     
-    if (!hasAnyData && !hasInitializedDemoData.current) {
+    if (!hasAnyData) {
       console.log('🎬 Generating initial demo data...')
       console.log('Profile:', { id: myProfile.id, location: myProfile.location, gender: myProfile.gender, age: myProfile.age })
       console.log('Total demo users:', demoUsers.length)
+      
+      hasInitializedDemoData.current = true
       
       const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
       
@@ -105,12 +111,10 @@ function App() {
           duration: 5000
         })
       }
-      
-      hasInitializedDemoData.current = true
-    } else if (hasAnyData) {
+    } else {
       hasInitializedDemoData.current = true
     }
-  }, [myProfile, chatRequests, conversations])
+  }, [myProfile])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
