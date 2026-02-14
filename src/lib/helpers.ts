@@ -83,14 +83,22 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     
     const capturedAt = Date.now() - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
     
+    const allGenders = ['Male', 'Female', 'Non-binary', 'Other']
+    const numGendersToReceive = Math.random() > 0.3 ? allGenders.length : Math.floor(Math.random() * 3) + 1
+    const shuffledGenders = [...allGenders].sort(() => Math.random() - 0.5)
+    const receiveFrom = shuffledGenders.slice(0, numGendersToReceive)
+    
+    const minAge = 18 + Math.floor(Math.random() * 30)
+    const maxAge = minAge + 20 + Math.floor(Math.random() * 50)
+    
     users.push({
       id: `user-demo-${i + 1}-${timestamp}`,
       name,
       age,
       gender,
-      receiveMessagesFrom: ['Male', 'Female', 'Non-binary', 'Other'],
-      ageRangeMin: 18,
-      ageRangeMax: 100,
+      receiveMessagesFrom: receiveFrom,
+      ageRangeMin: minAge,
+      ageRangeMax: Math.min(maxAge, 100),
       location: { lat, lng },
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
@@ -299,7 +307,17 @@ const CONVERSATION_STARTERS = [
   "Hi! Cool to see someone so close on the map",
   "Hey there! How's your day going?",
   "Hi! This neighborhood is great right?",
-  "Hello! Random question - best coffee spot around here?"
+  "Hello! Random question - best coffee spot around here?",
+  "Hey! Just moved to the area, any recommendations?",
+  "Hi there! Always cool to meet people nearby",
+  "Hey! Love finding local connections on here",
+  "Hi! Have you lived here long?",
+  "Hello! This area has such good vibes",
+  "Hey! Small world, we're super close by",
+  "Hi! Do you know the area well?",
+  "Hey there! Nice to meet a neighbor",
+  "Hi! What's your favorite thing about this area?",
+  "Hello! I've been meaning to explore more around here"
 ]
 
 const CASUAL_RESPONSES = [
@@ -312,7 +330,17 @@ const CASUAL_RESPONSES = [
   "I work nearby so I'm around a lot",
   "Yeah it's a great spot, lots to do",
   "I'm here most weekends, great vibes",
-  "Not originally from here but it's grown on me"
+  "Not originally from here but it's grown on me",
+  "Yeah! I moved here last year and love it",
+  "Been living here my whole life pretty much",
+  "I'm around here all the time, it's home",
+  "Just a few months but already feel settled",
+  "Yeah, couldn't imagine living anywhere else",
+  "I spend a lot of time in this area for sure",
+  "It's been my neighborhood for years now",
+  "Recently moved but already loving it",
+  "Yeah I know it pretty well at this point",
+  "I'm local, happy to share recommendations!"
 ]
 
 const FOLLOW_UP_MESSAGES = [
@@ -325,7 +353,17 @@ const FOLLOW_UP_MESSAGES = [
   "Sweet! Maybe we can explore together sometime",
   "That's cool! I'm always looking for new places",
   "Awesome! Know any good restaurants nearby?",
-  "Nice to meet you! This area has such good energy"
+  "Nice to meet you! This area has such good energy",
+  "That's so cool! I'd love some local tips",
+  "Amazing! What's your favorite spot around here?",
+  "Nice! I'm still discovering hidden gems",
+  "That's great! Any places I should definitely check out?",
+  "Cool! Would love to hear your favorite spots",
+  "Sweet! I need some good recommendations",
+  "Nice! What would you say is a must-see?",
+  "That's awesome! I'm always up for exploring",
+  "Great! I love hearing from people who know the area",
+  "Nice! Would you want to show me around sometime?"
 ]
 
 const ENTHUSIASTIC_REPLIES = [
@@ -338,7 +376,17 @@ const ENTHUSIASTIC_REPLIES = [
   "Sure thing! Let me know what you're into",
   "That sounds fun! I'm usually free after 6",
   "Sounds good! I'm around pretty often",
-  "Yeah let's do it! This weekend maybe?"
+  "Yeah let's do it! This weekend maybe?",
+  "I'm totally down! Just say when",
+  "That would be great! I love meeting new people",
+  "For sure! I know this perfect place",
+  "Absolutely! Let me show you my favorites",
+  "I'd really enjoy that! Name the time",
+  "Yes! I've been wanting to show someone around",
+  "Count me in! What day works best?",
+  "I'm so down! There's so much to see",
+  "Definitely interested! Let's make it happen",
+  "That sounds perfect! I know just the spot"
 ]
 
 const SMALL_TALK = [
@@ -351,7 +399,27 @@ const SMALL_TALK = [
   "Is it usually this busy around here?",
   "I've been meaning to explore more of the neighborhood",
   "Have you met many people through this app?",
-  "This is such a cool way to connect with locals"
+  "This is such a cool way to connect with locals",
+  "What do you usually do on weekends?",
+  "I heard there's a great farmers market nearby",
+  "Do you have any favorite hidden spots?",
+  "The community here seems really friendly",
+  "Have you checked out the park area?",
+  "I love how walkable this neighborhood is",
+  "Are there any good happy hour spots?",
+  "What kind of food do you usually go for?",
+  "I'm always looking for good brunch places",
+  "Do you know any good spots for live music?",
+  "The local shops here are so unique",
+  "Have you been to any neighborhood events?",
+  "I love the vibe around here",
+  "Are you into outdoor activities at all?",
+  "What brought you to this area originally?",
+  "Do you work from home or commute?",
+  "I'm trying to get more involved locally",
+  "Any good workout spots you'd recommend?",
+  "I've been wanting to try that restaurant",
+  "The architecture around here is beautiful"
 ]
 
 export function generateDemoMessages(
@@ -442,7 +510,7 @@ export function generateDemoConversationsAndMessages(
   selectedUsers.forEach((user, index) => {
     const conversationId = [myProfile.id, user.id].sort().join('-')
     
-    const messageCount = Math.floor(Math.random() * 10) + 5
+    const messageCount = Math.floor(Math.random() * 15) + 8
     const messages = generateDemoMessages(conversationId, myProfile.id, user.id, messageCount)
     
     allMessages[conversationId] = messages
@@ -537,7 +605,7 @@ export function generateAdditionalChatRequests(
     return canMessage
   })
   
-  const numRequestsToMe = Math.ceil(count * 0.8)
+  const numRequestsToMe = Math.ceil(count * 0.85)
   const numRequestsFromMe = count - numRequestsToMe
   
   const selectedUsersForRequestsToMe = eligibleUsers
