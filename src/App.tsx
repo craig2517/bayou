@@ -35,17 +35,29 @@ function App() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showDebug, setShowDebug] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [kvLoaded, setKvLoaded] = useState(false)
   const hasInitializedDemoData = useRef(false)
-  const isInitializing = useRef(false)
+  const initializationTriggered = useRef(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setKvLoaded(true)
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
   }
 
   useEffect(() => {
-    if (!myProfile) {
+    if (!myProfile || !kvLoaded) {
       hasInitializedDemoData.current = false
-      isInitializing.current = false
+      initializationTriggered.current = false
+      return
+    }
+
+    if (initializationTriggered.current) {
       return
     }
 
@@ -54,83 +66,77 @@ function App() {
     
     const hasData = conversationArray.length > 0 || requestArray.length > 0
     
-    if (hasData && !hasInitializedDemoData.current) {
-      console.log('✅ Existing data detected on load')
+    if (hasData) {
+      console.log('✅ Existing data detected, skipping auto-generation:', {
+        conversations: conversationArray.length,
+        requests: requestArray.length
+      })
       hasInitializedDemoData.current = true
+      initializationTriggered.current = true
       return
     }
 
-    if (hasInitializedDemoData.current) {
-      return
-    }
-
-    if (isInitializing.current) {
-      return
-    }
-
-    console.log('🎬 AUTO-GENERATING DEMO DATA ON PROFILE CREATE')
-    isInitializing.current = true
+    console.log('🎬 AUTO-GENERATING DEMO DATA ON PROFILE CREATE', {
+      profile: myProfile,
+      demoUsersCount: demoUsers.length
+    })
+    initializationTriggered.current = true
     
-    setTimeout(() => {
-      try {
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-        
-        if (demoData.conversations.length === 0) {
-          console.warn('⚠️ No conversations generated')
-          hasInitializedDemoData.current = true
-          isInitializing.current = false
-          toast.error('No compatible users found', {
-            description: 'Try adjusting your profile preferences',
-            duration: 4000
-          })
-          return
-        }
-        
-        const existingUserIds = [
-          ...demoData.conversations.flatMap(c => c.participants),
-          ...demoData.chatRequests.map(r => r.fromUserId),
-          ...demoData.chatRequests.map(r => r.toUserId)
-        ].filter(id => id !== myProfile.id)
-        const uniqueExistingUserIds = [...new Set(existingUserIds)]
-        
-        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-        const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-        
-        console.log('💾 SAVING TO KV:', {
-          conversations: demoData.conversations.length,
-          requests: allChatRequests.length,
-          messages: Object.keys(demoData.messages).length
-        })
-        
-        setConversations(demoData.conversations)
-        setChatRequests(allChatRequests)
-        setMessages(demoData.messages)
-        
-        hasInitializedDemoData.current = true
-        isInitializing.current = false
-        
-        const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-        
-        console.log('✅ DEMO DATA SUCCESSFULLY SAVED TO KV STORE:', {
-          conversationsInState: demoData.conversations.length,
-          requestsInState: allChatRequests.length,
-          messagesInState: Object.keys(demoData.messages).length,
-          pendingRequestsToMe: pendingToMe.length,
-          initializationComplete: hasInitializedDemoData.current
-        })
-        
-        toast.success(`${demoData.conversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
-          description: 'Check Messages and Requests tabs',
-          duration: 4000
-        })
-      } catch (error) {
-        console.error('❌ Error:', error)
-        hasInitializedDemoData.current = false
-        isInitializing.current = false
-        toast.error('Failed to generate demo data')
-      }
-    }, 100)
-  }, [myProfile, demoUsers, conversations, chatRequests, setConversations, setChatRequests, setMessages])
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+    
+    console.log('📊 DEMO DATA GENERATION RESULT:', {
+      conversations: demoData.conversations.length,
+      chatRequests: demoData.chatRequests.length,
+      messages: Object.keys(demoData.messages).length
+    })
+    
+    if (demoData.conversations.length === 0) {
+      console.warn('⚠️ No conversations generated - this could be a matching issue')
+      hasInitializedDemoData.current = true
+      toast.error('No compatible users found', {
+        description: 'Click Force Generate in Debug menu or adjust preferences',
+        duration: 6000
+      })
+      return
+    }
+    
+    const existingUserIds = [
+      ...demoData.conversations.flatMap(c => c.participants),
+      ...demoData.chatRequests.map(r => r.fromUserId),
+      ...demoData.chatRequests.map(r => r.toUserId)
+    ].filter(id => id !== myProfile.id)
+    const uniqueExistingUserIds = [...new Set(existingUserIds)]
+    
+    const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+    const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+    
+    console.log('💾 SAVING TO KV:', {
+      conversations: demoData.conversations.length,
+      requests: allChatRequests.length,
+      messages: Object.keys(demoData.messages).length
+    })
+    
+    setConversations(demoData.conversations)
+    setChatRequests(allChatRequests)
+    setMessages(demoData.messages)
+    
+    hasInitializedDemoData.current = true
+    
+    const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+    
+    console.log('✅ DEMO DATA SUCCESSFULLY SAVED TO KV STORE:', {
+      conversationsInState: demoData.conversations.length,
+      requestsInState: allChatRequests.length,
+      messagesInState: Object.keys(demoData.messages).length,
+      pendingRequestsToMe: pendingToMe.length,
+      initializationComplete: hasInitializedDemoData.current
+    })
+    
+    toast.success(`${demoData.conversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
+      description: 'Check Messages and Requests tabs',
+      duration: 4000
+    })
+  }, [myProfile, kvLoaded])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -211,7 +217,7 @@ function App() {
     
     if (isNewProfile) {
       hasInitializedDemoData.current = false
-      isInitializing.current = false
+      initializationTriggered.current = false
       setChatRequests([])
       setConversations([])
       setMessages({})
@@ -393,7 +399,7 @@ function App() {
     console.log('🔄 FORCE REGENERATING - Resetting all flags and data...')
     
     hasInitializedDemoData.current = false
-    isInitializing.current = false
+    initializationTriggered.current = false
     
     setChatRequests([])
     setConversations([])
@@ -402,44 +408,38 @@ function App() {
     setIsGenerating(true)
     
     setTimeout(() => {
-      try {
-        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-        
-        if (demoData.conversations.length === 0) {
-          setIsGenerating(false)
-          toast.error('No compatible users - adjust preferences')
-          return
-        }
-        
-        const existingUserIds = [
-          ...demoData.conversations.flatMap(c => c.participants),
-          ...demoData.chatRequests.map(r => r.fromUserId),
-          ...demoData.chatRequests.map(r => r.toUserId)
-        ].filter(id => id !== myProfile.id)
-        
-        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, [...new Set(existingUserIds)], 25)
-        const allRequests = [...demoData.chatRequests, ...pendingRequests]
-        
-        setConversations(demoData.conversations)
-        setChatRequests(allRequests)
-        setMessages(demoData.messages)
-        
-        hasInitializedDemoData.current = true
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      
+      if (demoData.conversations.length === 0) {
         setIsGenerating(false)
-        
-        const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-        
-        toast.success(`✅ ${demoData.conversations.length} conversations, ${pendingToMe.length} requests!`, {
-          duration: 4000
-        })
-        
-        setTimeout(() => setSelectedTab('messages'), 1000)
-      } catch (error) {
-        console.error('❌ Error:', error)
-        hasInitializedDemoData.current = false
-        setIsGenerating(false)
-        toast.error('Generation failed')
+        toast.error('No compatible users - adjust preferences')
+        return
       }
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== myProfile.id)
+      
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, [...new Set(existingUserIds)], 25)
+      const allRequests = [...demoData.chatRequests, ...pendingRequests]
+      
+      setConversations(demoData.conversations)
+      setChatRequests(allRequests)
+      setMessages(demoData.messages)
+      
+      hasInitializedDemoData.current = true
+      initializationTriggered.current = true
+      setIsGenerating(false)
+      
+      const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      
+      toast.success(`✅ ${demoData.conversations.length} conversations, ${pendingToMe.length} requests!`, {
+        duration: 4000
+      })
+      
+      setTimeout(() => setSelectedTab('messages'), 1000)
     }, 300)
   }
 
@@ -656,7 +656,7 @@ function App() {
                     onClick={async () => {
                       console.log('🗑️ Clearing all data and reloading...')
                       hasInitializedDemoData.current = false
-                      isInitializing.current = false
+                      initializationTriggered.current = false
                       setChatRequests([])
                       setConversations([])
                       setMessages({})
@@ -738,7 +738,7 @@ function App() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs font-mono">
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
                 <div className="font-bold text-yellow-800 mb-1">Profile</div>
                 <div>{myProfile ? '✅' : '❌'}</div>
@@ -753,17 +753,28 @@ function App() {
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
                 <div className="font-bold text-yellow-800 mb-1">Conversations</div>
                 <div className="text-2xl font-bold text-yellow-900">{activeConversations.length}</div>
+                <div className="text-[10px] text-yellow-600">KV: {Array.isArray(conversations) ? conversations.length : 0}</div>
               </div>
               
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
                 <div className="font-bold text-yellow-800 mb-1">Requests</div>
                 <div className="text-2xl font-bold text-yellow-900">{pendingIncomingRequests.length}</div>
+                <div className="text-[10px] text-yellow-600">Total: {Array.isArray(chatRequests) ? chatRequests.length : 0}</div>
+              </div>
+              
+              <div className="bg-white/60 p-2 rounded border border-yellow-300">
+                <div className="font-bold text-yellow-800 mb-1">Messages</div>
+                <div className="text-2xl font-bold text-yellow-900">{messages && typeof messages === 'object' ? Object.keys(messages).length : 0}</div>
+                <div className="text-[10px] text-yellow-600">convos</div>
               </div>
               
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
                 <div className="font-bold text-yellow-800 mb-1">Status</div>
                 <div className="text-[10px] text-yellow-700">
-                  {hasInitializedDemoData.current ? '✅ Ready' : '⏳ Pending'}
+                  {kvLoaded ? '📦 Loaded' : '⏳ Loading'}
+                </div>
+                <div className="text-[10px] text-yellow-700">
+                  {hasInitializedDemoData.current ? '✅ Init' : '❌ Not Init'}
                 </div>
               </div>
             </div>
