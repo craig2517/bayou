@@ -50,6 +50,8 @@ function App() {
       return
     }
 
+    hasInitializedDemoData.current = true
+
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     const hasConversations = conversationArray.length > 0
@@ -71,7 +73,6 @@ function App() {
       hasAnyRequests,
       requestsCount: requestArray.length,
       hasAnyData,
-      hasInitialized: hasInitializedDemoData.current,
       demoUsersCount: demoUsers.length
     })
     
@@ -86,8 +87,6 @@ function App() {
         ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
       })
       console.log('Total demo users:', demoUsers.length)
-      
-      hasInitializedDemoData.current = true
       
       const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
       
@@ -129,29 +128,27 @@ function App() {
         pendingToMe: pendingToMe.length
       })
       
+      setConversations(demoData.conversations)
+      setChatRequests(allChatRequests)
+      setMessages(demoData.messages)
+      
+      console.log('✅ KV data saved successfully')
+      
       if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
-        setConversations(demoData.conversations)
-        setChatRequests(allChatRequests)
-        setMessages(demoData.messages)
-        
-        console.log('✅ KV data saved successfully')
-        
         toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
           description: 'Check Messages and Requests tabs',
           duration: 4000
         })
       } else {
-        console.log('⚠️ No data to save - no eligible users found')
-        toast.error('No compatible users found for demo data', {
-          description: 'Adjust your profile preferences to match more users',
+        toast.info('No compatible users found for demo data', {
+          description: 'Adjust your profile preferences or refresh users to generate data',
           duration: 5000
         })
       }
     } else {
       console.log('✅ Demo data already exists, skipping generation')
-      hasInitializedDemoData.current = true
     }
-  }, [myProfile, conversations, chatRequests, demoUsers, setConversations, setChatRequests, setMessages])
+  }, [myProfile, demoUsers])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -737,6 +734,7 @@ function App() {
                   <DropdownMenuItem 
                     onClick={() => {
                       console.log('🗑️ Clearing all data and reloading...')
+                      hasInitializedDemoData.current = false
                       setConversations([])
                       setChatRequests([])
                       setMessages({})
@@ -745,7 +743,6 @@ function App() {
                         duration: 1500
                       })
                       setTimeout(() => {
-                        hasInitializedDemoData.current = false
                         window.location.reload()
                       }, 1000)
                     }} 
