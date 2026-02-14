@@ -70,7 +70,15 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
-    const radiusKm = Math.random() * 0.8
+    
+    let radiusKm: number
+    if (i < count * 0.6) {
+      radiusKm = Math.random() * 0.3
+    } else if (i < count * 0.85) {
+      radiusKm = 0.3 + Math.random() * 0.3
+    } else {
+      radiusKm = 0.6 + Math.random() * 0.4
+    }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
     const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
@@ -84,12 +92,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const capturedAt = Date.now() - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
     
     const allGenders = ['Male', 'Female', 'Non-binary', 'Other']
-    const numGendersToReceive = Math.random() > 0.3 ? allGenders.length : Math.floor(Math.random() * 3) + 1
+    const numGendersToReceive = Math.random() > 0.2 ? allGenders.length : Math.floor(Math.random() * 3) + 1
     const shuffledGenders = [...allGenders].sort(() => Math.random() - 0.5)
     const receiveFrom = shuffledGenders.slice(0, numGendersToReceive)
     
-    const minAge = 18 + Math.floor(Math.random() * 30)
-    const maxAge = minAge + 20 + Math.floor(Math.random() * 50)
+    const minAge = 18 + Math.floor(Math.random() * 20)
+    const maxAge = minAge + 30 + Math.floor(Math.random() * 52)
     
     users.push({
       id: `user-demo-${i + 1}-${timestamp}`,
@@ -502,6 +510,20 @@ export function generateDemoConversationsAndMessages(
     return canMessage
   })
   
+  console.log('🔍 ELIGIBLE USERS FOR CONVERSATIONS:', {
+    count: eligibleUsers.length,
+    requestedCount: conversationCount,
+    first10: eligibleUsers.slice(0, 10).map(u => ({
+      name: u.name,
+      gender: u.gender,
+      age: u.age,
+      distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
+      receiveFrom: u.receiveMessagesFrom,
+      ageRange: [u.ageRangeMin, u.ageRangeMax],
+      requireApproval: u.requireApproval
+    }))
+  })
+
   const selectedUsers = eligibleUsers
     .sort(() => Math.random() - 0.5)
     .slice(0, Math.min(conversationCount, eligibleUsers.length))

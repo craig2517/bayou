@@ -51,58 +51,66 @@ function App() {
     
     const hasAnyData = hasConversations || acceptedRequests.length > 0 || hasPendingRequests
     
+    console.log('🔄 INIT DEMO DATA EFFECT:', {
+      hasProfile: !!myProfile,
+      hasConversations,
+      hasPendingRequests,
+      hasAnyData,
+      hasInitialized: hasInitializedDemoData.current,
+      conversationsCount: conversations?.length || 0,
+      requestsCount: chatRequests?.length || 0,
+      shouldGenerate: !hasAnyData && !hasInitializedDemoData.current
+    })
+    
     if (!hasAnyData && !hasInitializedDemoData.current) {
       console.log('🎬 Generating initial demo data...')
       console.log('Profile:', { id: myProfile.id, location: myProfile.location, gender: myProfile.gender, age: myProfile.age })
       console.log('Total demo users:', demoUsers.length)
       
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 12)
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
       
-      if (demoData.conversations.length > 0 || demoData.chatRequests.length > 0) {
-        setConversations(demoData.conversations)
-        setChatRequests(demoData.chatRequests)
-        setMessages(demoData.messages)
+      setConversations(demoData.conversations)
+      setChatRequests(demoData.chatRequests)
+      setMessages(demoData.messages)
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== myProfile.id)
+      const uniqueExistingUserIds = [...new Set(existingUserIds)]
+      
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+      
+      if (pendingRequests.length > 0) {
+        setChatRequests(current => [...(current || []), ...pendingRequests])
         
-        const existingUserIds = [
-          ...demoData.conversations.flatMap(c => c.participants),
-          ...demoData.chatRequests.map(r => r.fromUserId),
-          ...demoData.chatRequests.map(r => r.toUserId)
-        ].filter(id => id !== myProfile.id)
-        const uniqueExistingUserIds = [...new Set(existingUserIds)]
-        
-        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
-        
-        if (pendingRequests.length > 0) {
-          setChatRequests(current => [...(current || []), ...pendingRequests])
-          
-          const pendingToMe = pendingRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-          if (pendingToMe.length > 0) {
-            toast.success(`You have ${pendingToMe.length} new message requests!`, {
-              description: 'Check the Requests tab to connect',
-              duration: 4000
-            })
-          }
-        }
-        
-        if (demoData.conversations.length > 0) {
-          toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingRequests.length} requests!`, {
-            description: 'Check Messages and Requests tabs',
-            duration: 3500
+        const pendingToMe = pendingRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+        if (pendingToMe.length > 0) {
+          toast.success(`You have ${pendingToMe.length} new message requests!`, {
+            description: 'Check the Requests tab to connect',
+            duration: 4000
           })
         }
-        
-        hasInitializedDemoData.current = true
-      } else {
-        console.log('⚠️ No demo data generated. Refreshing users...')
-        setTimeout(() => {
-          const newDemoUsers = generateDemoUsers(2000)
-          setDemoUsers(newDemoUsers)
-        }, 500)
       }
+      
+      if (demoData.conversations.length > 0 || pendingRequests.length > 0) {
+        toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingRequests.length} requests!`, {
+          description: 'Check Messages and Requests tabs',
+          duration: 3500
+        })
+      } else {
+        toast.error('No compatible users found for demo data', {
+          description: 'Check console logs or try "Generate More Data" from Demo Mode menu',
+          duration: 5000
+        })
+      }
+      
+      hasInitializedDemoData.current = true
     } else if (hasAnyData) {
       hasInitializedDemoData.current = true
     }
-  }, [myProfile, chatRequests, conversations, demoUsers])
+  }, [myProfile, chatRequests, conversations])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -391,41 +399,41 @@ function App() {
   const handleClearAllData = () => {
     if (!myProfile) return
     
+    hasInitializedDemoData.current = false
     setConversations([])
     setChatRequests([])
     setMessages({})
-    hasInitializedDemoData.current = false
     
     setTimeout(() => {
       console.log('🔄 Force regenerating demo data after clear...')
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 20)
       
-      if (demoData.conversations.length > 0) {
-        setConversations(demoData.conversations)
-        setChatRequests(demoData.chatRequests)
-        setMessages(demoData.messages)
-        
-        const existingUserIds = [
-          ...demoData.conversations.flatMap(c => c.participants),
-          ...demoData.chatRequests.map(r => r.fromUserId),
-          ...demoData.chatRequests.map(r => r.toUserId)
-        ].filter(id => id !== myProfile.id)
-        const uniqueExistingUserIds = [...new Set(existingUserIds)]
-        const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-        
-        if (additionalRequests.length > 0) {
-          setChatRequests(current => [...(current || []), ...additionalRequests])
-        }
-        
-        hasInitializedDemoData.current = true
-        
+      setConversations(demoData.conversations)
+      setChatRequests(demoData.chatRequests)
+      setMessages(demoData.messages)
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== myProfile.id)
+      const uniqueExistingUserIds = [...new Set(existingUserIds)]
+      const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 30)
+      
+      if (additionalRequests.length > 0) {
+        setChatRequests(current => [...(current || []), ...additionalRequests])
+      }
+      
+      hasInitializedDemoData.current = true
+      
+      if (demoData.conversations.length > 0 || additionalRequests.length > 0) {
         toast.success('Demo data regenerated!', {
           description: `${demoData.conversations.length} conversations and ${additionalRequests.length} requests created`,
           duration: 4000
         })
       } else {
-        toast.error('Failed to generate demo data', {
-          description: 'Try refreshing users first',
+        toast.error('No compatible users found', {
+          description: 'Try adjusting your profile preferences',
           duration: 3000
         })
       }
@@ -434,6 +442,12 @@ function App() {
 
   const handleGenerateMoreDemoData = () => {
     if (!myProfile) return
+    
+    console.log('📝 GENERATING MORE DATA - Current state:', {
+      existingConversations: conversations?.length || 0,
+      existingRequests: chatRequests?.length || 0,
+      totalDemoUsers: demoUsers.length
+    })
     
     const existingUserIds = [
       ...(conversations || []).flatMap(c => c.participants),
@@ -468,8 +482,8 @@ function App() {
     }
     
     if (demoData.conversations.length === 0 && additionalRequests.length === 0) {
-      toast.info('No more eligible users available for demo data', {
-        description: 'Try refreshing users or adjusting your profile preferences'
+      toast.error('No more eligible users available for demo data', {
+        description: 'Try refreshing users or check console logs for debugging info'
       })
     }
   }
@@ -589,13 +603,15 @@ function App() {
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => {
+                      hasInitializedDemoData.current = false
                       setConversations([])
                       setChatRequests([])
                       setMessages({})
                       toast.success('All data cleared!', {
-                        description: 'Use other options to regenerate',
+                        description: 'Reloading page to regenerate data...',
                         duration: 2000
                       })
+                      setTimeout(() => window.location.reload(), 1000)
                     }} 
                     className="cursor-pointer text-destructive focus:text-destructive"
                   >
