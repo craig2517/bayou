@@ -34,6 +34,7 @@ function App() {
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const hasInitializedDemoData = useRef(false)
+  const [isGeneratingDemoData, setIsGeneratingDemoData] = useState(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
@@ -45,7 +46,7 @@ function App() {
       return
     }
 
-    if (hasInitializedDemoData.current) {
+    if (hasInitializedDemoData.current || isGeneratingDemoData) {
       return
     }
 
@@ -61,8 +62,10 @@ function App() {
       hasPendingRequests,
       hasAnyData,
       hasInitialized: hasInitializedDemoData.current,
+      isGenerating: isGeneratingDemoData,
       conversationsCount: conversations?.length || 0,
       requestsCount: chatRequests?.length || 0,
+      pendingRequestsToMe: (chatRequests || []).filter(req => req.status === 'pending' && req.toUserId === myProfile.id).length,
       shouldGenerate: !hasAnyData
     })
     
@@ -71,13 +74,10 @@ function App() {
       console.log('Profile:', { id: myProfile.id, location: myProfile.location, gender: myProfile.gender, age: myProfile.age })
       console.log('Total demo users:', demoUsers.length)
       
+      setIsGeneratingDemoData(true)
       hasInitializedDemoData.current = true
       
       const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-      
-      setConversations(demoData.conversations)
-      setChatRequests(demoData.chatRequests)
-      setMessages(demoData.messages)
       
       const existingUserIds = [
         ...demoData.conversations.flatMap(c => c.participants),
@@ -86,35 +86,47 @@ function App() {
       ].filter(id => id !== myProfile.id)
       const uniqueExistingUserIds = [...new Set(existingUserIds)]
       
+      console.log('🔔 Generating additional pending requests...')
       const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
       
-      if (pendingRequests.length > 0) {
-        setChatRequests(current => [...(current || []), ...pendingRequests])
+      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+      
+      console.log('✅ Demo data generation complete:', {
+        conversations: demoData.conversations.length,
+        initialRequests: demoData.chatRequests.length,
+        pendingRequests: pendingRequests.length,
+        totalRequests: allChatRequests.length,
+        pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length,
+        acceptedRequests: allChatRequests.filter(r => r.status === 'accepted').length
+      })
+      
+      console.log('📦 Setting all data at once...')
+      setConversations(demoData.conversations)
+      setChatRequests(allChatRequests)
+      setMessages(demoData.messages)
+      
+      setTimeout(() => {
+        setIsGeneratingDemoData(false)
         
         const pendingToMe = pendingRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-        if (pendingToMe.length > 0) {
-          toast.success(`You have ${pendingToMe.length} new message requests!`, {
-            description: 'Check the Requests tab to connect',
-            duration: 4000
+        
+        if (demoData.conversations.length > 0 || pendingRequests.length > 0) {
+          toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
+            description: 'Check Messages and Requests tabs',
+            duration: 3500
+          })
+        } else {
+          toast.error('No compatible users found for demo data', {
+            description: 'Check console logs or try "Generate More Data" from Demo Mode menu',
+            duration: 5000
           })
         }
-      }
-      
-      if (demoData.conversations.length > 0 || pendingRequests.length > 0) {
-        toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingRequests.length} requests!`, {
-          description: 'Check Messages and Requests tabs',
-          duration: 3500
-        })
-      } else {
-        toast.error('No compatible users found for demo data', {
-          description: 'Check console logs or try "Generate More Data" from Demo Mode menu',
-          duration: 5000
-        })
-      }
+      }, 100)
     } else {
+      console.log('✅ Demo data already exists, skipping generation')
       hasInitializedDemoData.current = true
     }
-  }, [myProfile])
+  }, [myProfile, conversations, chatRequests])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -206,21 +218,32 @@ function App() {
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
-    if (!myProfile || !chatRequests) return []
+    if (!myProfile || !chatRequests) {
+      console.log('🔍 PENDING REQUESTS: No profile or no chat requests', { hasProfile: !!myProfile, chatRequestsCount: chatRequests?.length || 0 })
+      return []
+    }
     const filtered = chatRequests.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
-    console.log('🔍 PENDING REQUESTS DEBUG:', {
+    console.log('🔍 PENDING INCOMING REQUESTS:', {
       myProfileId: myProfile.id,
       totalChatRequests: chatRequests.length,
-      allRequests: chatRequests.map(r => ({
+      pendingToMe: filtered.length,
+      allPending: chatRequests.filter(r => r.status === 'pending').length,
+      requestsBreakdown: {
+        toMe: chatRequests.filter(r => r.toUserId === myProfile.id).length,
+        fromMe: chatRequests.filter(r => r.fromUserId === myProfile.id).length,
+        accepted: chatRequests.filter(r => r.status === 'accepted').length,
+        pending: chatRequests.filter(r => r.status === 'pending').length,
+        declined: chatRequests.filter(r => r.status === 'declined').length
+      },
+      sampleRequests: chatRequests.slice(0, 5).map(r => ({
         id: r.id,
         from: r.fromUserId,
         to: r.toUserId,
         status: r.status,
         isToMe: r.toUserId === myProfile.id,
-        isPending: r.status === 'pending'
-      })),
-      filteredCount: filtered.length,
-      filtered: filtered.map(r => ({ id: r.id, from: r.fromUserId, status: r.status }))
+        isPending: r.status === 'pending',
+        matches: r.toUserId === myProfile.id && r.status === 'pending'
+      }))
     })
     return filtered
   }, [chatRequests, myProfile])
