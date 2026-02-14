@@ -34,6 +34,7 @@ function App() {
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showDebug, setShowDebug] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
   const hasInitializedDemoData = useRef(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
@@ -455,9 +456,77 @@ function App() {
   }
 
   const handleClearAllData = () => {
-    if (!myProfile) return
+    if (!myProfile) {
+      toast.error('No profile exists', {
+        description: 'Create a profile first before generating demo data',
+        duration: 3000
+      })
+      return
+    }
+    
+    setIsGenerating(true)
     
     console.log('🔄 FORCE REGENERATING DEMO DATA...')
+    console.log('📋 MY PROFILE BEFORE GENERATION:', {
+      id: myProfile.id,
+      name: myProfile.name,
+      gender: myProfile.gender,
+      age: myProfile.age,
+      receiveMessagesFrom: myProfile.receiveMessagesFrom,
+      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
+      location: myProfile.location,
+      locationSharingEnabled: myProfile.locationSharingEnabled,
+      requireApproval: myProfile.requireApproval
+    })
+    console.log('📋 DEMO USERS AVAILABLE:', demoUsers.length)
+    
+    const eligibleForConvCheck = demoUsers.filter(user => {
+      if (user.id === myProfile.id) return false
+      if (!user.isActive) return false
+      
+      const distance = calculateDistance(
+        myProfile.location.lat,
+        myProfile.location.lng,
+        user.location.lat,
+        user.location.lng
+      )
+      
+      if (distance > 10) return false
+      
+      const userReceivesList = user.receiveMessagesFrom || []
+      const myReceivesList = myProfile.receiveMessagesFrom || []
+      
+      const userAcceptsMyGender = userReceivesList.includes(myProfile.gender)
+      const myAgeInTheirRange = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
+      const iAcceptTheirGender = myReceivesList.includes(user.gender)
+      const theirAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+      
+      return userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange
+    })
+    
+    console.log('🔍 ELIGIBLE USERS PRE-CHECK:', eligibleForConvCheck.length)
+    
+    if (eligibleForConvCheck.length === 0) {
+      setIsGenerating(false)
+      toast.error('No compatible users found!', {
+        description: `Out of ${demoUsers.length} users, none match your preferences. Try: 1) Refreshing users, 2) Accepting all genders, or 3) Expanding age range`,
+        duration: 8000
+      })
+      
+      console.log('❌ FAILURE ANALYSIS:', {
+        totalUsers: demoUsers.length,
+        afterSelfFilter: demoUsers.filter(u => u.id !== myProfile.id).length,
+        afterActiveFilter: demoUsers.filter(u => u.id !== myProfile.id && u.isActive).length,
+        afterDistanceFilter: demoUsers.filter(u => {
+          if (u.id === myProfile.id || !u.isActive) return false
+          const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
+          return dist <= 10
+        }).length,
+        eligibleFinal: eligibleForConvCheck.length
+      })
+      return
+    }
+    
     hasInitializedDemoData.current = false
     
     const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
@@ -469,9 +538,10 @@ function App() {
     })
     
     if (demoData.conversations.length === 0) {
-      toast.error('No compatible users found', {
-        description: 'Try adjusting your profile preferences or refreshing users',
-        duration: 3000
+      setIsGenerating(false)
+      toast.error('Generation failed', {
+        description: `${eligibleForConvCheck.length} eligible users found but no conversations created. Check console for details.`,
+        duration: 5000
       })
       return
     }
@@ -486,6 +556,12 @@ function App() {
     
     const allRequests = [...demoData.chatRequests, ...additionalRequests]
     
+    console.log('💾 SETTING STATE WITH:', {
+      conversations: demoData.conversations.length,
+      totalRequests: allRequests.length,
+      messageKeys: Object.keys(demoData.messages).length
+    })
+    
     setConversations(demoData.conversations)
     setChatRequests(allRequests)
     setMessages(demoData.messages)
@@ -499,12 +575,17 @@ function App() {
     })
     
     hasInitializedDemoData.current = true
+    setIsGenerating(false)
     
     if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
-      toast.success('Demo data regenerated!', {
-        description: `${demoData.conversations.length} conversations and ${pendingToMe.length} requests created`,
-        duration: 4000
+      toast.success('✅ Demo data generated successfully!', {
+        description: `${demoData.conversations.length} conversations, ${allRequests.length} total requests (${pendingToMe.length} pending to you)`,
+        duration: 6000
       })
+      
+      setTimeout(() => {
+        setSelectedTab('messages')
+      }, 1000)
     }
   }
 
@@ -781,48 +862,92 @@ function App() {
       {showDebug && (
         <div className="bg-yellow-50 border-b-2 border-yellow-200 p-4">
           <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-bold text-sm">Debug Panel</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearAllData}
-                disabled={!myProfile}
-                className="h-7 text-xs"
-              >
-                🔄 Force Generate Demo Data
-              </Button>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-sm">🐛 Debug Panel - Data Generation Analysis</h3>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshUsers}
+                  disabled={isRefreshing}
+                  className="h-7 text-xs"
+                >
+                  🔄 Refresh Users
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleClearAllData}
+                  disabled={!myProfile || isGenerating}
+                  className="h-7 text-xs bg-yellow-600 hover:bg-yellow-700"
+                >
+                  {isGenerating ? '⏳ Generating...' : '⚡ Force Generate Demo Data'}
+                </Button>
+              </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
-              <div>
-                <div className="font-bold text-yellow-800">Profile:</div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-xs font-mono mb-3">
+              <div className="bg-white/60 p-2 rounded border border-yellow-300">
+                <div className="font-bold text-yellow-800 mb-1">Profile Status</div>
                 <div>{myProfile ? '✅ Created' : '❌ None'}</div>
                 {myProfile && (
                   <>
-                    <div className="text-yellow-700 truncate">{myProfile.name}</div>
-                    <div className="text-yellow-600">{myProfile.gender}, {myProfile.age}</div>
+                    <div className="text-yellow-700 truncate font-semibold">{myProfile.name}</div>
+                    <div className="text-yellow-600">{myProfile.gender}, {myProfile.age}y</div>
+                    <div className="text-yellow-600 text-[10px]">Receives: {myProfile.receiveMessagesFrom.join(', ')}</div>
+                    <div className="text-yellow-600 text-[10px]">Age: {myProfile.ageRangeMin}-{myProfile.ageRangeMax}</div>
                   </>
                 )}
               </div>
-              <div>
-                <div className="font-bold text-yellow-800">Conversations:</div>
-                <div>Raw: {conversations === null ? 'null' : conversations === undefined ? 'undefined' : conversations.length}</div>
-                <div>Active: {activeConversations.length}</div>
+              
+              <div className="bg-white/60 p-2 rounded border border-yellow-300">
+                <div className="font-bold text-yellow-800 mb-1">Conversations</div>
+                <div className="text-lg font-bold text-yellow-900">{Array.isArray(conversations) ? conversations.length : 0}</div>
+                <div className="text-yellow-600">Active: {activeConversations.length}</div>
+                <div className="text-yellow-600 text-[10px]">Type: {typeof conversations}</div>
               </div>
-              <div>
-                <div className="font-bold text-yellow-800">Chat Requests:</div>
-                <div>Raw: {chatRequests === null ? 'null' : chatRequests === undefined ? 'undefined' : chatRequests?.length || 0}</div>
-                <div>Pending: {pendingIncomingRequests.length}</div>
+              
+              <div className="bg-white/60 p-2 rounded border border-yellow-300">
+                <div className="font-bold text-yellow-800 mb-1">Chat Requests</div>
+                <div className="text-lg font-bold text-yellow-900">{Array.isArray(chatRequests) ? chatRequests.length : 0}</div>
+                <div className="text-yellow-600">Pending: {pendingIncomingRequests.length}</div>
+                <div className="text-yellow-600 text-[10px]">To Me: {pendingIncomingRequests.length}</div>
               </div>
-              <div>
-                <div className="font-bold text-yellow-800">Messages:</div>
-                <div>Keys: {messages ? Object.keys(messages).length : 'null/undefined'}</div>
-                <div>Total: {messages ? Object.values(messages).flat().length : 0}</div>
+              
+              <div className="bg-white/60 p-2 rounded border border-yellow-300">
+                <div className="font-bold text-yellow-800 mb-1">Messages</div>
+                <div className="text-lg font-bold text-yellow-900">{messages ? Object.keys(messages).length : 0}</div>
+                <div className="text-yellow-600">Total: {messages ? Object.values(messages).flat().length : 0}</div>
+                <div className="text-yellow-600 text-[10px]">Type: {typeof messages}</div>
+              </div>
+              
+              <div className="bg-white/60 p-2 rounded border border-yellow-300">
+                <div className="font-bold text-yellow-800 mb-1">Demo Users</div>
+                <div className="text-lg font-bold text-yellow-900">{demoUsers.length}</div>
+                <div className="text-yellow-600 text-[10px]">Init: {hasInitializedDemoData.current ? '✅' : '❌'}</div>
+                {myProfile && (
+                  <>
+                    <div className="text-yellow-600 text-[10px] mt-1">
+                      Eligible: {demoUsers.filter(user => {
+                        if (user.id === myProfile.id || !user.isActive) return false
+                        const distance = calculateDistance(myProfile.location.lat, myProfile.location.lng, user.location.lat, user.location.lng)
+                        if (distance > 10) return false
+                        const userReceivesList = user.receiveMessagesFrom || []
+                        const myReceivesList = myProfile.receiveMessagesFrom || []
+                        return userReceivesList.includes(myProfile.gender) && user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age && myReceivesList.includes(user.gender) && myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+                      }).length}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-            <div className="mt-2 text-xs text-yellow-800">
-              Init Flag: {hasInitializedDemoData.current ? '✅ Yes' : '❌ No'} | 
-              Demo Users: {demoUsers.length}
+            
+            <div className="text-xs text-yellow-800 bg-white/40 p-2 rounded border border-yellow-300">
+              <span className="font-bold">💡 Tip:</span> If no data is generating, try: 
+              <span className="font-semibold ml-1">1) Edit Profile → Accept all genders & expand age range (18-100)</span>, 
+              <span className="font-semibold ml-1">2) Click Refresh Users</span>, then 
+              <span className="font-semibold ml-1">3) Force Generate Demo Data</span>. 
+              Check browser console (F12) for detailed logs.
             </div>
           </div>
         </div>
