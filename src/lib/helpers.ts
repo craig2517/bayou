@@ -72,12 +72,12 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const angle = Math.random() * 2 * Math.PI
     
     let radiusKm: number
-    if (i < count * 0.6) {
-      radiusKm = Math.random() * 0.3
-    } else if (i < count * 0.85) {
-      radiusKm = 0.3 + Math.random() * 0.3
+    if (i < count * 0.7) {
+      radiusKm = Math.random() * 0.5
+    } else if (i < count * 0.9) {
+      radiusKm = 0.5 + Math.random() * 0.5
     } else {
-      radiusKm = 0.6 + Math.random() * 0.4
+      radiusKm = 1.0 + Math.random() * 0.5
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -85,19 +85,19 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     
     const lat = CENTER_LAT + latOffset
     const lng = CENTER_LNG + lngOffset
-    const age = 18 + Math.floor(Math.random() * 83)
+    const age = 18 + Math.floor(Math.random() * 63)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     const name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
     
-    const capturedAt = Date.now() - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
+    const capturedAt = Date.now() - Math.floor(Math.random() * 12 * 60 * 60 * 1000)
     
     const allGenders = ['Male', 'Female', 'Non-binary', 'Other']
-    const numGendersToReceive = Math.random() > 0.2 ? allGenders.length : Math.floor(Math.random() * 3) + 1
+    const numGendersToReceive = Math.random() > 0.15 ? allGenders.length : Math.floor(Math.random() * 3) + 1
     const shuffledGenders = [...allGenders].sort(() => Math.random() - 0.5)
     const receiveFrom = shuffledGenders.slice(0, numGendersToReceive)
     
-    const minAge = 18 + Math.floor(Math.random() * 20)
-    const maxAge = minAge + 30 + Math.floor(Math.random() * 52)
+    const minAge = Math.max(18, age - 20 - Math.floor(Math.random() * 10))
+    const maxAge = Math.min(100, age + 20 + Math.floor(Math.random() * 30))
     
     users.push({
       id: `user-demo-${i + 1}-${timestamp}`,
@@ -302,7 +302,7 @@ export function generateInitialChatRequests(
 export function isPhotoValid(profilePicture?: { capturedAt: number }): boolean {
   if (!profilePicture) return false
   const hoursSinceCapture = (Date.now() - profilePicture.capturedAt) / (1000 * 60 * 60)
-  return hoursSinceCapture < 24
+  return hoursSinceCapture < 48
 }
 
 const CONVERSATION_STARTERS = [
@@ -494,7 +494,7 @@ export function generateDemoConversationsAndMessages(
       user.location.lng
     )
     
-    if (distance > 1.5) return false
+    if (distance > 5) return false
     
     const userReceivesList = user.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
@@ -528,7 +528,7 @@ export function generateDemoConversationsAndMessages(
       afterDistanceFilter: demoUsers.filter(u => {
         if (u.id === myProfile.id || !u.isActive) return false
         const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
-        return dist <= 1.5
+        return dist <= 5
       }).length,
       finalEligible: eligibleUsers.length
     },
@@ -639,7 +639,7 @@ export function generateAdditionalChatRequests(
       user.location.lng
     )
     
-    if (distance > 1.5) return false
+    if (distance > 5) return false
     
     const userReceivesList = user.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
@@ -709,7 +709,7 @@ export function generateAdditionalChatRequests(
       afterDistanceFilter: demoUsers.filter(u => {
         if (u.id === myProfile.id || existingRequestUserIds.includes(u.id) || !u.isActive) return false
         const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
-        return dist <= 1.5
+        return dist <= 5
       }).length,
       finalEligible: eligibleUsers.length
     },

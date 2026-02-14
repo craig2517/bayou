@@ -53,7 +53,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
         
         const now = Date.now()
         const hoursSinceCapture = (now - profilePicture.capturedAt) / (1000 * 60 * 60)
-        if (hoursSinceCapture >= 24) {
+        if (hoursSinceCapture >= 48) {
           setIsExpired(true)
           setProfilePicture(undefined)
         }

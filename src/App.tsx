@@ -62,11 +62,10 @@ function App() {
       return
     }
 
-    const acceptedRequests = (chatRequests || []).filter(req => req.status === 'accepted')
     const hasConversations = conversations && conversations.length > 0
     const hasPendingRequests = (chatRequests || []).some(req => req.status === 'pending' && req.toUserId === myProfile.id)
     
-    const hasAnyData = hasConversations || acceptedRequests.length > 0 || hasPendingRequests
+    const hasAnyData = hasConversations || hasPendingRequests
     
     console.log('🔄 INIT DEMO DATA EFFECT:', {
       hasProfile: !!myProfile,
@@ -90,7 +89,7 @@ function App() {
       setIsGeneratingDemoData(true)
       hasInitializedDemoData.current = true
       
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 20)
       
       const existingUserIds = [
         ...demoData.conversations.flatMap(c => c.participants),
@@ -100,7 +99,7 @@ function App() {
       const uniqueExistingUserIds = [...new Set(existingUserIds)]
       
       console.log('🔔 Generating additional pending requests...')
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 30)
       
       const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
       
