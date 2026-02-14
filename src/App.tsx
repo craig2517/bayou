@@ -22,9 +22,9 @@ import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/type
 function App() {
   const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v2', null)
   const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(2000))
-  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v2', [])
-  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v2', [])
-  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v2', {})
+  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v3', [])
+  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v3', [])
+  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v3', {})
   const [searchRadius, setSearchRadius] = useState([0.8])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -41,6 +41,33 @@ function App() {
   }
 
   useEffect(() => {
+    console.log('📡 STATE UPDATE - Conversations:', {
+      type: typeof conversations,
+      isArray: Array.isArray(conversations),
+      value: conversations,
+      length: Array.isArray(conversations) ? conversations.length : 'N/A'
+    })
+  }, [conversations])
+
+  useEffect(() => {
+    console.log('📡 STATE UPDATE - Chat Requests:', {
+      type: typeof chatRequests,
+      isArray: Array.isArray(chatRequests),
+      value: chatRequests,
+      length: Array.isArray(chatRequests) ? chatRequests.length : 'N/A'
+    })
+  }, [chatRequests])
+
+  useEffect(() => {
+    console.log('📡 STATE UPDATE - Messages:', {
+      type: typeof messages,
+      isObject: messages && typeof messages === 'object',
+      value: messages,
+      keys: messages ? Object.keys(messages).length : 'N/A'
+    })
+  }, [messages])
+
+  useEffect(() => {
     if (!myProfile) {
       setShowProfileDialog(true)
       return
@@ -49,8 +76,6 @@ function App() {
     if (hasInitializedDemoData.current) {
       return
     }
-
-    hasInitializedDemoData.current = true
 
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
@@ -77,6 +102,8 @@ function App() {
     })
     
     if (!hasAnyData) {
+      hasInitializedDemoData.current = true
+      
       console.log('🎬 Starting demo data generation...')
       console.log('Profile:', { 
         id: myProfile.id, 
@@ -128,27 +155,30 @@ function App() {
         pendingToMe: pendingToMe.length
       })
       
-      setConversations(demoData.conversations)
-      setChatRequests(allChatRequests)
-      setMessages(demoData.messages)
-      
-      console.log('✅ KV data saved successfully')
-      
-      if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
-        toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
-          description: 'Check Messages and Requests tabs',
-          duration: 4000
-        })
-      } else {
-        toast.info('No compatible users found for demo data', {
-          description: 'Adjust your profile preferences or refresh users to generate data',
-          duration: 5000
-        })
-      }
+      setTimeout(() => {
+        setConversations(demoData.conversations)
+        setChatRequests(allChatRequests)
+        setMessages(demoData.messages)
+        
+        console.log('✅ KV data saved successfully')
+        
+        if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
+          toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
+            description: 'Check Messages and Requests tabs',
+            duration: 4000
+          })
+        } else {
+          toast.info('No compatible users found for demo data', {
+            description: 'Adjust your profile preferences or refresh users to generate data',
+            duration: 5000
+          })
+        }
+      }, 100)
     } else {
+      hasInitializedDemoData.current = true
       console.log('✅ Demo data already exists, skipping generation')
     }
-  }, [myProfile, demoUsers])
+  }, [myProfile, demoUsers, conversations, chatRequests])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
