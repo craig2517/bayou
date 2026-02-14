@@ -33,7 +33,6 @@ function App() {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [showDebug, setShowDebug] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const dataGeneratedRef = useRef(false)
   const [kvInitialized, setKvInitialized] = useState(false)
@@ -587,14 +586,6 @@ function App() {
                 <span className="text-red-600 drop-shadow-sm">Here</span>
                 <span className="text-yellow-500 drop-shadow-sm">o</span>
               </h1>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDebug(!showDebug)}
-                className="text-xs opacity-50 hover:opacity-100"
-              >
-                {showDebug ? 'Hide' : 'Debug'}
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Badge 
@@ -680,77 +671,6 @@ function App() {
           </div>
         </div>
       </header>
-
-      {showDebug && (
-        <div className="bg-yellow-50 border-b-2 border-yellow-200 p-4">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-sm">🐛 Debug Panel</h3>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRefreshUsers}
-                  disabled={isRefreshing}
-                  className="h-7 text-xs"
-                >
-                  🔄 Refresh Users
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleClearAllData}
-                  disabled={!myProfile || isGenerating}
-                  className="h-7 text-xs bg-yellow-600 hover:bg-yellow-700"
-                >
-                  {isGenerating ? '⏳...' : '⚡ Force Generate'}
-                </Button>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs font-mono">
-              <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Profile</div>
-                <div>{myProfile ? '✅' : '❌'}</div>
-                {myProfile && (
-                  <>
-                    <div className="text-yellow-700 truncate">{myProfile.name}</div>
-                    <div className="text-yellow-600 text-[10px]">{myProfile.gender}, {myProfile.age}</div>
-                  </>
-                )}
-              </div>
-              
-              <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Conversations</div>
-                <div className="text-2xl font-bold text-yellow-900">{activeConversations.length}</div>
-                <div className="text-[10px] text-yellow-600">KV: {Array.isArray(conversations) ? conversations.length : 0}</div>
-              </div>
-              
-              <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Requests</div>
-                <div className="text-2xl font-bold text-yellow-900">{pendingIncomingRequests.length}</div>
-                <div className="text-[10px] text-yellow-600">Total: {Array.isArray(chatRequests) ? chatRequests.length : 0}</div>
-              </div>
-              
-              <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Messages</div>
-                <div className="text-2xl font-bold text-yellow-900">{messages && typeof messages === 'object' ? Object.keys(messages).length : 0}</div>
-                <div className="text-[10px] text-yellow-600">convos</div>
-              </div>
-              
-              <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Status</div>
-                <div className="text-[10px] text-yellow-700">
-                  {dataGeneratedRef.current ? '✅ Generated' : '❌ Not Generated'}
-                </div>
-                <div className="text-[10px] text-yellow-700">
-                  Demo: {demoUsers.length} users
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
