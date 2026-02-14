@@ -485,7 +485,7 @@ export function generateDemoConversationsAndMessages(
 ) {
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
-    if (!user.isActive || !user.locationSharingEnabled) return false
+    if (!user.isActive) return false
     
     const distance = calculateDistance(
       myProfile.location.lat,
@@ -494,7 +494,7 @@ export function generateDemoConversationsAndMessages(
       user.location.lng
     )
     
-    if (distance > 1) return false
+    if (distance > 1.5) return false
     
     const userReceivesList = user.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
@@ -513,6 +513,25 @@ export function generateDemoConversationsAndMessages(
   console.log('🔍 ELIGIBLE USERS FOR CONVERSATIONS:', {
     count: eligibleUsers.length,
     requestedCount: conversationCount,
+    myProfile: {
+      id: myProfile.id,
+      gender: myProfile.gender,
+      age: myProfile.age,
+      receiveFrom: myProfile.receiveMessagesFrom,
+      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
+      location: myProfile.location
+    },
+    totalDemoUsers: demoUsers.length,
+    filterBreakdown: {
+      afterSelfFilter: demoUsers.filter(u => u.id !== myProfile.id).length,
+      afterActiveFilter: demoUsers.filter(u => u.id !== myProfile.id && u.isActive).length,
+      afterDistanceFilter: demoUsers.filter(u => {
+        if (u.id === myProfile.id || !u.isActive) return false
+        const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
+        return dist <= 1.5
+      }).length,
+      finalEligible: eligibleUsers.length
+    },
     first10: eligibleUsers.slice(0, 10).map(u => ({
       name: u.name,
       gender: u.gender,
@@ -520,7 +539,13 @@ export function generateDemoConversationsAndMessages(
       distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
       receiveFrom: u.receiveMessagesFrom,
       ageRange: [u.ageRangeMin, u.ageRangeMax],
-      requireApproval: u.requireApproval
+      requireApproval: u.requireApproval,
+      checks: {
+        theyAcceptMyGender: u.receiveMessagesFrom.includes(myProfile.gender),
+        myAgeInTheirRange: u.ageRangeMin <= myProfile.age && u.ageRangeMax >= myProfile.age,
+        iAcceptTheirGender: myProfile.receiveMessagesFrom.includes(u.gender),
+        theirAgeInMyRange: myProfile.ageRangeMin <= u.age && myProfile.ageRangeMax >= u.age
+      }
     }))
   })
 
@@ -605,7 +630,7 @@ export function generateAdditionalChatRequests(
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
     if (existingRequestUserIds.includes(user.id)) return false
-    if (!user.isActive || !user.locationSharingEnabled) return false
+    if (!user.isActive) return false
     
     const distance = calculateDistance(
       myProfile.location.lat,
@@ -614,7 +639,7 @@ export function generateAdditionalChatRequests(
       user.location.lng
     )
     
-    if (distance > 1) return false
+    if (distance > 1.5) return false
     
     const userReceivesList = user.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
@@ -673,7 +698,20 @@ export function generateAdditionalChatRequests(
       gender: myProfile.gender,
       age: myProfile.age,
       receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
+      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
+      location: myProfile.location
+    },
+    totalDemoUsers: demoUsers.length,
+    filterBreakdown: {
+      afterSelfFilter: demoUsers.filter(u => u.id !== myProfile.id).length,
+      afterExistingFilter: demoUsers.filter(u => u.id !== myProfile.id && !existingRequestUserIds.includes(u.id)).length,
+      afterActiveFilter: demoUsers.filter(u => u.id !== myProfile.id && !existingRequestUserIds.includes(u.id) && u.isActive).length,
+      afterDistanceFilter: demoUsers.filter(u => {
+        if (u.id === myProfile.id || existingRequestUserIds.includes(u.id) || !u.isActive) return false
+        const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
+        return dist <= 1.5
+      }).length,
+      finalEligible: eligibleUsers.length
     },
     sampleRequestsToMe: requestsToMe.slice(0, 3).map(r => {
       const user = demoUsers.find(u => u.id === r.fromUserId)
@@ -700,7 +738,13 @@ export function generateAdditionalChatRequests(
       distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
       gender: u.gender,
       age: u.age,
-      requiresApproval: u.requireApproval
+      requiresApproval: u.requireApproval,
+      checks: {
+        theyAcceptMyGender: u.receiveMessagesFrom.includes(myProfile.gender),
+        myAgeInTheirRange: u.ageRangeMin <= myProfile.age && u.ageRangeMax >= myProfile.age,
+        iAcceptTheirGender: myProfile.receiveMessagesFrom.includes(u.gender),
+        theirAgeInMyRange: myProfile.ageRangeMin <= u.age && myProfile.ageRangeMax >= u.age
+      }
     }))
   })
   

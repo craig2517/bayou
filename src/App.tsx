@@ -35,14 +35,26 @@ function App() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const hasInitializedDemoData = useRef(false)
   const [isGeneratingDemoData, setIsGeneratingDemoData] = useState(false)
+  const [kvLoaded, setKvLoaded] = useState(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
   }
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setKvLoaded(true)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
     if (!myProfile) {
       setShowProfileDialog(true)
+      return
+    }
+
+    if (!kvLoaded) {
       return
     }
 
@@ -66,7 +78,8 @@ function App() {
       conversationsCount: conversations?.length || 0,
       requestsCount: chatRequests?.length || 0,
       pendingRequestsToMe: (chatRequests || []).filter(req => req.status === 'pending' && req.toUserId === myProfile.id).length,
-      shouldGenerate: !hasAnyData
+      shouldGenerate: !hasAnyData,
+      kvLoaded
     })
     
     if (!hasAnyData) {
@@ -108,9 +121,9 @@ function App() {
       setTimeout(() => {
         setIsGeneratingDemoData(false)
         
-        const pendingToMe = pendingRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+        const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
         
-        if (demoData.conversations.length > 0 || pendingRequests.length > 0) {
+        if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
           toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
             description: 'Check Messages and Requests tabs',
             duration: 3500
@@ -126,7 +139,7 @@ function App() {
       console.log('✅ Demo data already exists, skipping generation')
       hasInitializedDemoData.current = true
     }
-  }, [myProfile, conversations, chatRequests])
+  }, [myProfile, demoUsers, kvLoaded])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -435,10 +448,6 @@ function App() {
       console.log('🔄 Force regenerating demo data after clear...')
       const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 20)
       
-      setConversations(demoData.conversations)
-      setChatRequests(demoData.chatRequests)
-      setMessages(demoData.messages)
-      
       const existingUserIds = [
         ...demoData.conversations.flatMap(c => c.participants),
         ...demoData.chatRequests.map(r => r.fromUserId),
@@ -447,20 +456,24 @@ function App() {
       const uniqueExistingUserIds = [...new Set(existingUserIds)]
       const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 30)
       
-      if (additionalRequests.length > 0) {
-        setChatRequests(current => [...(current || []), ...additionalRequests])
-      }
+      const allRequests = [...demoData.chatRequests, ...additionalRequests]
+      
+      setConversations(demoData.conversations)
+      setChatRequests(allRequests)
+      setMessages(demoData.messages)
       
       hasInitializedDemoData.current = true
       
-      if (demoData.conversations.length > 0 || additionalRequests.length > 0) {
+      const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      
+      if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
         toast.success('Demo data regenerated!', {
-          description: `${demoData.conversations.length} conversations and ${additionalRequests.length} requests created`,
+          description: `${demoData.conversations.length} conversations and ${pendingToMe.length} requests created`,
           duration: 4000
         })
       } else {
         toast.error('No compatible users found', {
-          description: 'Try adjusting your profile preferences',
+          description: 'Try adjusting your profile preferences or refreshing users',
           duration: 3000
         })
       }
@@ -615,19 +628,20 @@ function App() {
                   </Badge>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem onClick={handleClearAllData} className="cursor-pointer">
+                    <ArrowsClockwise size={16} className="mr-2" />
+                    Force Generate Demo Data
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleGenerateMoreDemoData} className="cursor-pointer">
                     <ChatCircle size={16} className="mr-2" />
-                    Generate More Data
+                    Add More Conversations
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleGeneratePendingRequests} className="cursor-pointer">
                     <User size={16} className="mr-2" />
-                    Generate Pending Requests
+                    Add More Requests
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleClearAllData} className="cursor-pointer">
-                    <ArrowsClockwise size={16} className="mr-2" />
-                    Clear & Regenerate All
-                  </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => {
                       hasInitializedDemoData.current = false
@@ -643,7 +657,7 @@ function App() {
                     className="cursor-pointer text-destructive focus:text-destructive"
                   >
                     <Trash size={16} className="mr-2" />
-                    Clear All Data
+                    Clear All & Reload
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
