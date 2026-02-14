@@ -43,76 +43,35 @@ function App() {
   }
 
   useEffect(() => {
-    console.log('📡 STATE UPDATE: Conversations -', {
-      isArray: Array.isArray(conversations),
-      count: Array.isArray(conversations) ? conversations.length : 'invalid',
-      type: typeof conversations,
-      sample: Array.isArray(conversations) ? conversations.slice(0, 2).map(c => ({ id: c.id, participants: c.participants })) : null
-    })
-  }, [conversations])
-
-  useEffect(() => {
-    console.log('📡 STATE UPDATE: Chat Requests -', {
-      isArray: Array.isArray(chatRequests),
-      count: Array.isArray(chatRequests) ? chatRequests.length : 'invalid',
-      type: typeof chatRequests,
-      sample: Array.isArray(chatRequests) ? chatRequests.slice(0, 2).map(r => ({ id: r.id, status: r.status, from: r.fromUserId, to: r.toUserId })) : null
-    })
-  }, [chatRequests])
-
-  useEffect(() => {
-    console.log('📡 STATE UPDATE: Messages -', {
-      isObject: messages && typeof messages === 'object',
-      keys: messages && typeof messages === 'object' ? Object.keys(messages).length : 'invalid',
-      type: typeof messages,
-      conversationIds: messages && typeof messages === 'object' ? Object.keys(messages).slice(0, 3) : null
-    })
-  }, [messages])
-
-  useEffect(() => {
     if (!myProfile) {
       setShowProfileDialog(true)
-      return
-    }
-
-    if (isInitializing.current) {
-      console.log('⏳ Already initializing, skipping...')
-      return
-    }
-
-    if (hasInitializedDemoData.current) {
-      console.log('⏭️ Already initialized, skipping')
       return
     }
 
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     
-    console.log('🔄 DEMO DATA INITIALIZATION CHECK:', {
-      hasProfile: !!myProfile,
-      profileId: myProfile.id,
-      hasInitialized: hasInitializedDemoData.current,
-      isInitializing: isInitializing.current,
-      conversationsCount: conversationArray.length,
-      requestsCount: requestArray.length,
-      demoUsersCount: demoUsers.length
-    })
-
-    if (conversationArray.length > 0 || requestArray.length > 0) {
-      console.log('✅ Data already exists, marking as initialized')
+    const hasData = conversationArray.length > 0 || requestArray.length > 0
+    
+    if (hasData && !hasInitializedDemoData.current) {
+      console.log('✅ Existing data detected on load')
       hasInitializedDemoData.current = true
       return
     }
 
-    console.log('🎬 GENERATING DEMO DATA...')
+    if (hasInitializedDemoData.current || isInitializing.current) {
+      return
+    }
+
+    console.log('🎬 AUTO-GENERATING DEMO DATA ON PROFILE CREATE')
     isInitializing.current = true
     
-    const generateData = async () => {
+    setTimeout(() => {
       try {
         const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
         
         if (demoData.conversations.length === 0) {
-          console.warn('⚠️ No conversations generated - checking eligibility')
+          console.warn('⚠️ No conversations generated')
           hasInitializedDemoData.current = true
           isInitializing.current = false
           toast.error('No compatible users found', {
@@ -132,75 +91,42 @@ function App() {
         const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
         const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
         
-        console.log('✅ Demo data generated:', {
+        console.log('💾 SAVING TO KV:', {
           conversations: demoData.conversations.length,
-          totalRequests: allChatRequests.length,
-          pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length
+          requests: allChatRequests.length,
+          messages: Object.keys(demoData.messages).length
         })
         
-        console.log('💾 Setting conversations...', demoData.conversations)
         setConversations(demoData.conversations)
-        console.log('💾 Setting chat requests...', allChatRequests)
         setChatRequests(allChatRequests)
-        console.log('💾 Setting messages...', Object.keys(demoData.messages))
         setMessages(demoData.messages)
-        
-        console.log('✅ All data saved to KV storage')
         
         hasInitializedDemoData.current = true
         isInitializing.current = false
         
         const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
         
-        toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
+        toast.success(`${demoData.conversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
           description: 'Check Messages and Requests tabs',
           duration: 4000
         })
       } catch (error) {
-        console.error('❌ Error generating demo data:', error)
+        console.error('❌ Error:', error)
         hasInitializedDemoData.current = false
         isInitializing.current = false
-        toast.error('Failed to generate demo data', {
-          description: 'Check console for details',
-          duration: 4000
-        })
+        toast.error('Failed to generate demo data')
       }
-    }
-    
-    generateData()
-  }, [myProfile, demoUsers])
+    }, 100)
+  }, [myProfile?.id])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
   const nearbyUsers = useMemo(() => {
-    if (!myProfile) {
-      console.log('❌ No profile exists yet')
-      return []
-    }
-    
-    console.log('==================== NEARBY USERS CALCULATION ====================')
-    console.log('👤 MY PROFILE:', {
-      id: myProfile.id,
-      location: myProfile.location,
-      name: myProfile.name,
-      gender: myProfile.gender,
-      age: myProfile.age,
-      receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
-      locationSharingEnabled: myProfile.locationSharingEnabled
-    })
+    if (!myProfile) return []
     
     const eligibleDemoUsers = demoUsers.filter(user => 
       user.id !== myProfile.id && user.isActive && user.locationSharingEnabled
     )
-    
-    console.log('📊 ELIGIBLE USERS:', {
-      totalDemoUsers: demoUsers.length,
-      afterFiltering: eligibleDemoUsers.length,
-      removedByMyId: demoUsers.filter(u => u.id === myProfile.id).length,
-      removedByInactive: demoUsers.filter(u => !u.isActive).length,
-      removedByLocationSharing: demoUsers.filter(u => !u.locationSharingEnabled).length
-    })
     
     const allUsersWithDistance = eligibleDemoUsers.map(user => {
       const distance = calculateDistance(
@@ -226,77 +152,21 @@ function App() {
     const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
     const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0])
     
-    console.log('🔍 DISCOVER DEBUG:', {
-      searchRadius: searchRadius[0] + 'km',
-      totalWithDistance: allUsersWithDistance.length,
-      inRadiusCount: inRadiusUsers.length,
-      matchingCount: inRadiusUsers.filter(f => f.canMessage).length,
-      failedMatchReasons: {
-        userDoesntAcceptMe: inRadiusUsers.filter(f => !f.userAcceptsMe).length,
-        userAgeDoesntMatchMe: inRadiusUsers.filter(f => !f.userAgeMatchesMe).length,
-        iDontAcceptUser: inRadiusUsers.filter(f => !f.iAcceptUser).length,
-        myAgeDoesntMatchUser: inRadiusUsers.filter(f => !f.myAgeMatchesUser).length
-      },
-      closest10: sortedByDistance.slice(0, 10).map(item => ({
-        name: item.user.name,
-        distance: item.distance.toFixed(4) + 'km',
-        inRadius: item.distance <= searchRadius[0],
-        gender: item.user.gender,
-        age: item.user.age,
-        userAgeRange: [item.user.ageRangeMin, item.user.ageRangeMax],
-        userReceives: item.user.receiveMessagesFrom,
-        checks: {
-          userAcceptsMe: item.userAcceptsMe,
-          userAgeMatchesMe: item.userAgeMatchesMe,
-          iAcceptUser: item.iAcceptUser,
-          myAgeMatchesUser: item.myAgeMatchesUser,
-          canMessage: item.canMessage
-        }
-      }))
-    })
-    console.log('==================================================================')
-    
     return inRadiusUsers
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-    if (!myProfile) {
-      console.log('🔍 PENDING REQUESTS: No profile', { 
-        hasProfile: !!myProfile, 
-        chatRequestsRaw: chatRequests, 
-        chatRequestsType: typeof chatRequests,
-        chatRequestsIsArray: Array.isArray(chatRequests),
-        chatRequestsCount: requestArray.length 
-      })
-      return []
-    }
+    if (!myProfile) return []
+    
     const filtered = requestArray.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
-    console.log('🔍 PENDING INCOMING REQUESTS:', {
-      myProfileId: myProfile.id,
-      chatRequestsRaw: chatRequests,
-      chatRequestsType: typeof chatRequests,
-      chatRequestsIsArray: Array.isArray(chatRequests),
-      totalChatRequests: requestArray.length,
+    
+    console.log('🔍 PENDING REQUESTS:', {
+      total: requestArray.length,
       pendingToMe: filtered.length,
-      allPending: requestArray.filter(r => r.status === 'pending').length,
-      requestsBreakdown: {
-        toMe: requestArray.filter(r => r.toUserId === myProfile.id).length,
-        fromMe: requestArray.filter(r => r.fromUserId === myProfile.id).length,
-        accepted: requestArray.filter(r => r.status === 'accepted').length,
-        pending: requestArray.filter(r => r.status === 'pending').length,
-        declined: requestArray.filter(r => r.status === 'declined').length
-      },
-      sampleRequests: requestArray.slice(0, 5).map(r => ({
-        id: r.id,
-        from: r.fromUserId,
-        to: r.toUserId,
-        status: r.status,
-        isToMe: r.toUserId === myProfile.id,
-        isPending: r.status === 'pending',
-        matches: r.toUserId === myProfile.id && r.status === 'pending'
-      }))
+      myId: myProfile.id
     })
+    
     return filtered
   }, [chatRequests, myProfile])
 
@@ -305,45 +175,29 @@ function App() {
     
     const newProfile: UserProfile = {
       ...profileData,
-      id: myProfile?.id || `user-current`,
+      id: myProfile?.id || `user-current-${Date.now()}`,
       location: myProfile?.location || getRandomLocationNearCenter(),
       isActive: true,
       lastActive: Date.now()
     }
     
-    console.log('💾 SAVED PROFILE:', {
-      profile: newProfile,
-      isNewProfile,
-      totalDemoUsers: demoUsers.length,
-      location: newProfile.location,
-      receiveMessagesFrom: newProfile.receiveMessagesFrom,
-      ageRange: [newProfile.ageRangeMin, newProfile.ageRangeMax]
-    })
+    console.log('💾 SAVING PROFILE:', newProfile)
     
     if (isNewProfile) {
       hasInitializedDemoData.current = false
+      isInitializing.current = false
     }
     
     setMyProfile(newProfile)
     setShowProfileDialog(false)
     
     if (isNewProfile) {
-      console.log('🆕 NEW PROFILE CREATED - Demo data will be generated')
-      if (profileData.locationSharingEnabled) {
-        toast.success('Profile saved! You are now discoverable nearby.', {
-          description: 'Generating demo conversations and requests...',
-          duration: 4000
-        })
-        setTimeout(() => setSelectedTab('messages'), 1500)
-      } else {
-        toast.success('Profile saved! You are hidden from Discover.')
-      }
+      toast.success('Profile created! Generating demo data...', {
+        duration: 3000
+      })
+      setTimeout(() => setSelectedTab('messages'), 2000)
     } else {
-      if (profileData.locationSharingEnabled) {
-        toast.success('Profile saved! You are now discoverable nearby.')
-      } else {
-        toast.success('Profile saved! You are hidden from Discover.')
-      }
+      toast.success('Profile updated!')
     }
   }
 
@@ -501,153 +355,55 @@ function App() {
     }, 500)
   }
 
-  const handleClearAllData = async () => {
+  const handleClearAllData = () => {
     if (!myProfile) {
-      toast.error('No profile exists', {
-        description: 'Create a profile first before generating demo data',
-        duration: 3000
-      })
+      toast.error('Create a profile first')
       return
     }
     
     setIsGenerating(true)
     
-    try {
-      console.log('🔄 FORCE REGENERATING DEMO DATA...')
-      console.log('📋 MY PROFILE BEFORE GENERATION:', {
-        id: myProfile.id,
-        name: myProfile.name,
-        gender: myProfile.gender,
-        age: myProfile.age,
-        receiveMessagesFrom: myProfile.receiveMessagesFrom,
-        ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
-        location: myProfile.location,
-        locationSharingEnabled: myProfile.locationSharingEnabled,
-        requireApproval: myProfile.requireApproval
-      })
-      console.log('📋 DEMO USERS AVAILABLE:', demoUsers.length)
-      
-      const eligibleForConvCheck = demoUsers.filter(user => {
-        if (user.id === myProfile.id) return false
-        if (!user.isActive) return false
+    setTimeout(() => {
+      try {
+        console.log('🔄 FORCE REGENERATING...')
         
-        const distance = calculateDistance(
-          myProfile.location.lat,
-          myProfile.location.lng,
-          user.location.lat,
-          user.location.lng
-        )
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
         
-        if (distance > 10) return false
+        if (demoData.conversations.length === 0) {
+          setIsGenerating(false)
+          toast.error('No compatible users - adjust preferences')
+          return
+        }
         
-        const userReceivesList = user.receiveMessagesFrom || []
-        const myReceivesList = myProfile.receiveMessagesFrom || []
+        const existingUserIds = [
+          ...demoData.conversations.flatMap(c => c.participants),
+          ...demoData.chatRequests.map(r => r.fromUserId),
+          ...demoData.chatRequests.map(r => r.toUserId)
+        ].filter(id => id !== myProfile.id)
         
-        const userAcceptsMyGender = userReceivesList.includes(myProfile.gender)
-        const myAgeInTheirRange = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
-        const iAcceptTheirGender = myReceivesList.includes(user.gender)
-        const theirAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, [...new Set(existingUserIds)], 25)
+        const allRequests = [...demoData.chatRequests, ...pendingRequests]
         
-        return userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange
-      })
-      
-      console.log('🔍 ELIGIBLE USERS PRE-CHECK:', eligibleForConvCheck.length)
-      
-      if (eligibleForConvCheck.length === 0) {
+        setConversations(demoData.conversations)
+        setChatRequests(allRequests)
+        setMessages(demoData.messages)
+        
+        hasInitializedDemoData.current = true
         setIsGenerating(false)
-        toast.error('No compatible users found!', {
-          description: `Out of ${demoUsers.length} users, none match your preferences. Try: 1) Refreshing users, 2) Accepting all genders, or 3) Expanding age range`,
-          duration: 8000
+        
+        const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+        
+        toast.success(`✅ ${demoData.conversations.length} conversations, ${pendingToMe.length} requests!`, {
+          duration: 4000
         })
         
-        console.log('❌ FAILURE ANALYSIS:', {
-          totalUsers: demoUsers.length,
-          afterSelfFilter: demoUsers.filter(u => u.id !== myProfile.id).length,
-          afterActiveFilter: demoUsers.filter(u => u.id !== myProfile.id && u.isActive).length,
-          afterDistanceFilter: demoUsers.filter(u => {
-            if (u.id === myProfile.id || !u.isActive) return false
-            const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
-            return dist <= 10
-          }).length,
-          eligibleFinal: eligibleForConvCheck.length
-        })
-        return
-      }
-      
-      hasInitializedDemoData.current = false
-      isInitializing.current = false
-      
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-      
-      console.log('📊 Generated data result:', {
-        conversations: demoData.conversations.length,
-        chatRequests: demoData.chatRequests.length,
-        messages: Object.keys(demoData.messages).length
-      })
-      
-      if (demoData.conversations.length === 0) {
+        setTimeout(() => setSelectedTab('messages'), 1000)
+      } catch (error) {
+        console.error('❌ Error:', error)
         setIsGenerating(false)
-        toast.error('Generation failed', {
-          description: `${eligibleForConvCheck.length} eligible users found but no conversations created. Check console for details.`,
-          duration: 5000
-        })
-        return
+        toast.error('Generation failed')
       }
-      
-      const existingUserIds = [
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id)
-      const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-      
-      const allRequests = [...demoData.chatRequests, ...additionalRequests]
-      
-      console.log('💾 SETTING STATE WITH:', {
-        conversations: demoData.conversations.length,
-        totalRequests: allRequests.length,
-        messageKeys: Object.keys(demoData.messages).length
-      })
-      
-      console.log('💾 Setting conversations...', demoData.conversations)
-      setConversations(demoData.conversations)
-      console.log('💾 Setting chat requests...', allRequests)
-      setChatRequests(allRequests)
-      console.log('💾 Setting messages...', Object.keys(demoData.messages))
-      setMessages(demoData.messages)
-      
-      const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      
-      console.log('✅ Force regeneration complete:', {
-        conversations: demoData.conversations.length,
-        totalRequests: allRequests.length,
-        pendingToMe: pendingToMe.length
-      })
-      
-      hasInitializedDemoData.current = true
-      setIsGenerating(false)
-      
-      if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
-        toast.success('✅ Demo data generated successfully!', {
-          description: `${demoData.conversations.length} conversations, ${allRequests.length} total requests (${pendingToMe.length} pending to you)`,
-          duration: 6000
-        })
-        
-        setTimeout(() => {
-          setSelectedTab('messages')
-        }, 1000)
-      }
-    } catch (error) {
-      console.error('❌ Error in handleClearAllData:', error)
-      setIsGenerating(false)
-      hasInitializedDemoData.current = false
-      isInitializing.current = false
-      toast.error('Failed to generate demo data', {
-        description: 'Check console for details',
-        duration: 4000
-      })
-    }
+    }, 100)
   }
 
   const handleGenerateMoreDemoData = async () => {
@@ -775,13 +531,7 @@ function App() {
   const activeConversations = useMemo(() => {
     const conversationArray = Array.isArray(conversations) ? conversations : []
     if (!myProfile) return []
-    console.log('💬 ACTIVE CONVERSATIONS CALC:', {
-      conversationsRaw: conversations,
-      conversationsType: typeof conversations,
-      conversationsIsArray: Array.isArray(conversations),
-      conversationsArray: conversationArray.length,
-      myProfileId: myProfile.id
-    })
+    
     const active = conversationArray
       .filter(conv => conv.participants.includes(myProfile.id))
       .map(conv => {
@@ -795,14 +545,12 @@ function App() {
         const bTime = b.lastMessage?.timestamp || 0
         return bTime - aTime
       })
-    console.log('💬 ACTIVE CONVERSATIONS RESULT:', {
-      count: active.length,
-      sample: active.slice(0, 3).map(c => ({
-        id: c.id,
-        otherUser: c.otherUser?.name,
-        hasLastMessage: !!c.lastMessage
-      }))
+    
+    console.log('💬 ACTIVE CONVERSATIONS:', {
+      total: conversationArray.length,
+      active: active.length
     })
+    
     return active
   }, [conversations, myProfile, demoUsers])
 
@@ -925,7 +673,7 @@ function App() {
         <div className="bg-yellow-50 border-b-2 border-yellow-200 p-4">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-sm">🐛 Debug Panel - Data Generation Analysis</h3>
+              <h3 className="font-bold text-sm">🐛 Debug Panel</h3>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -943,73 +691,39 @@ function App() {
                   disabled={!myProfile || isGenerating}
                   className="h-7 text-xs bg-yellow-600 hover:bg-yellow-700"
                 >
-                  {isGenerating ? '⏳ Generating...' : '⚡ Force Generate Demo Data'}
+                  {isGenerating ? '⏳...' : '⚡ Force Generate'}
                 </Button>
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-xs font-mono mb-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Profile Status</div>
-                <div>{myProfile ? '✅ Created' : '❌ None'}</div>
+                <div className="font-bold text-yellow-800 mb-1">Profile</div>
+                <div>{myProfile ? '✅' : '❌'}</div>
                 {myProfile && (
                   <>
-                    <div className="text-yellow-700 truncate font-semibold">{myProfile.name}</div>
-                    <div className="text-yellow-600">{myProfile.gender}, {myProfile.age}y</div>
-                    <div className="text-yellow-600 text-[10px]">Receives: {myProfile.receiveMessagesFrom.join(', ')}</div>
-                    <div className="text-yellow-600 text-[10px]">Age: {myProfile.ageRangeMin}-{myProfile.ageRangeMax}</div>
+                    <div className="text-yellow-700 truncate">{myProfile.name}</div>
+                    <div className="text-yellow-600 text-[10px]">{myProfile.gender}, {myProfile.age}</div>
                   </>
                 )}
               </div>
               
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
                 <div className="font-bold text-yellow-800 mb-1">Conversations</div>
-                <div className="text-lg font-bold text-yellow-900">{Array.isArray(conversations) ? conversations.length : 0}</div>
-                <div className="text-yellow-600">Active: {activeConversations.length}</div>
-                <div className="text-yellow-600 text-[10px]">Type: {typeof conversations}</div>
+                <div className="text-2xl font-bold text-yellow-900">{activeConversations.length}</div>
               </div>
               
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Chat Requests</div>
-                <div className="text-lg font-bold text-yellow-900">{Array.isArray(chatRequests) ? chatRequests.length : 0}</div>
-                <div className="text-yellow-600">Pending: {pendingIncomingRequests.length}</div>
-                <div className="text-yellow-600 text-[10px]">To Me: {pendingIncomingRequests.length}</div>
+                <div className="font-bold text-yellow-800 mb-1">Requests</div>
+                <div className="text-2xl font-bold text-yellow-900">{pendingIncomingRequests.length}</div>
               </div>
               
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Messages</div>
-                <div className="text-lg font-bold text-yellow-900">{messages ? Object.keys(messages).length : 0}</div>
-                <div className="text-yellow-600">Total: {messages ? Object.values(messages).flat().length : 0}</div>
-                <div className="text-yellow-600 text-[10px]">Type: {typeof messages}</div>
+                <div className="font-bold text-yellow-800 mb-1">Status</div>
+                <div className="text-[10px] text-yellow-700">
+                  {hasInitializedDemoData.current ? '✅ Ready' : '⏳ Pending'}
+                </div>
               </div>
-              
-              <div className="bg-white/60 p-2 rounded border border-yellow-300">
-                <div className="font-bold text-yellow-800 mb-1">Demo Users</div>
-                <div className="text-lg font-bold text-yellow-900">{demoUsers.length}</div>
-                <div className="text-yellow-600 text-[10px]">Init: {hasInitializedDemoData.current ? '✅' : '❌'} / Initializing: {isInitializing.current ? '⏳' : '✅'}</div>
-                {myProfile && (
-                  <>
-                    <div className="text-yellow-600 text-[10px] mt-1">
-                      Eligible: {demoUsers.filter(user => {
-                        if (user.id === myProfile.id || !user.isActive) return false
-                        const distance = calculateDistance(myProfile.location.lat, myProfile.location.lng, user.location.lat, user.location.lng)
-                        if (distance > 10) return false
-                        const userReceivesList = user.receiveMessagesFrom || []
-                        const myReceivesList = myProfile.receiveMessagesFrom || []
-                        return userReceivesList.includes(myProfile.gender) && user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age && myReceivesList.includes(user.gender) && myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
-                      }).length}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            <div className="text-xs text-yellow-800 bg-white/40 p-2 rounded border border-yellow-300">
-              <span className="font-bold">💡 Tip:</span> If no data is generating, try: 
-              <span className="font-semibold ml-1">1) Edit Profile → Accept all genders & expand age range (18-100)</span>, 
-              <span className="font-semibold ml-1">2) Click Refresh Users</span>, then 
-              <span className="font-semibold ml-1">3) Force Generate Demo Data</span>. 
-              Check browser console (F12) for detailed logs.
             </div>
           </div>
         </div>
