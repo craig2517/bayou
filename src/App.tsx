@@ -20,11 +20,11 @@ import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
 function App() {
-  const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v2', null)
+  const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v4', null)
   const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(2000))
-  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v3', [])
-  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v3', [])
-  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v3', {})
+  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v4', [])
+  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v4', [])
+  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v4', {})
   const [searchRadius, setSearchRadius] = useState([0.8])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -35,29 +35,25 @@ function App() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showDebug, setShowDebug] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [kvLoaded, setKvLoaded] = useState(false)
-  const hasInitializedDemoData = useRef(false)
-  const initializationTriggered = useRef(false)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setKvLoaded(true)
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [])
+  const dataGeneratedRef = useRef(false)
+  const [kvInitialized, setKvInitialized] = useState(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
   }
 
   useEffect(() => {
-    if (!myProfile || !kvLoaded) {
-      hasInitializedDemoData.current = false
-      initializationTriggered.current = false
+    const timer = setTimeout(() => setKvInitialized(true), 50)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!kvInitialized || !myProfile) {
       return
     }
 
-    if (initializationTriggered.current) {
+    if (dataGeneratedRef.current) {
+      console.log('⏭️ Already generated, skipping')
       return
     }
 
@@ -67,76 +63,57 @@ function App() {
     const hasData = conversationArray.length > 0 || requestArray.length > 0
     
     if (hasData) {
-      console.log('✅ Existing data detected, skipping auto-generation:', {
+      console.log('✅ Existing data detected:', {
         conversations: conversationArray.length,
         requests: requestArray.length
       })
-      hasInitializedDemoData.current = true
-      initializationTriggered.current = true
+      dataGeneratedRef.current = true
       return
     }
 
-    console.log('🎬 AUTO-GENERATING DEMO DATA ON PROFILE CREATE', {
-      profile: myProfile,
-      demoUsersCount: demoUsers.length
-    })
-    initializationTriggered.current = true
+    console.log('🎬 Generating demo data for new profile...')
+    dataGeneratedRef.current = true
     
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-    
-    console.log('📊 DEMO DATA GENERATION RESULT:', {
-      conversations: demoData.conversations.length,
-      chatRequests: demoData.chatRequests.length,
-      messages: Object.keys(demoData.messages).length
-    })
-    
-    if (demoData.conversations.length === 0) {
-      console.warn('⚠️ No conversations generated - this could be a matching issue')
-      hasInitializedDemoData.current = true
-      toast.error('No compatible users found', {
-        description: 'Click Force Generate in Debug menu or adjust preferences',
-        duration: 6000
+    setTimeout(() => {
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      
+      if (demoData.conversations.length === 0) {
+        console.warn('⚠️ No conversations generated')
+        toast.error('No compatible users found', {
+          description: 'Use Debug menu to Force Generate',
+          duration: 6000
+        })
+        return
+      }
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== myProfile.id)
+      const uniqueExistingUserIds = [...new Set(existingUserIds)]
+      
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+      
+      setConversations(demoData.conversations)
+      setChatRequests(allChatRequests)
+      setMessages(demoData.messages)
+      
+      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      
+      console.log('✅ Demo data saved:', {
+        conversations: demoData.conversations.length,
+        requests: allChatRequests.length,
+        pendingToMe: pendingToMe.length
       })
-      return
-    }
-    
-    const existingUserIds = [
-      ...demoData.conversations.flatMap(c => c.participants),
-      ...demoData.chatRequests.map(r => r.fromUserId),
-      ...demoData.chatRequests.map(r => r.toUserId)
-    ].filter(id => id !== myProfile.id)
-    const uniqueExistingUserIds = [...new Set(existingUserIds)]
-    
-    const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-    const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-    
-    console.log('💾 SAVING TO KV:', {
-      conversations: demoData.conversations.length,
-      requests: allChatRequests.length,
-      messages: Object.keys(demoData.messages).length
-    })
-    
-    setConversations(demoData.conversations)
-    setChatRequests(allChatRequests)
-    setMessages(demoData.messages)
-    
-    hasInitializedDemoData.current = true
-    
-    const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-    
-    console.log('✅ DEMO DATA SUCCESSFULLY SAVED TO KV STORE:', {
-      conversationsInState: demoData.conversations.length,
-      requestsInState: allChatRequests.length,
-      messagesInState: Object.keys(demoData.messages).length,
-      pendingRequestsToMe: pendingToMe.length,
-      initializationComplete: hasInitializedDemoData.current
-    })
-    
-    toast.success(`${demoData.conversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
-      description: 'Check Messages and Requests tabs',
-      duration: 4000
-    })
-  }, [myProfile, kvLoaded])
+      
+      toast.success(`${demoData.conversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
+        description: 'Check Messages and Requests tabs',
+        duration: 4000
+      })
+    }, 100)
+  }, [kvInitialized, myProfile])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -210,14 +187,10 @@ function App() {
       lastActive: Date.now()
     }
     
-    console.log('💾 SAVING PROFILE:', {
-      isNewProfile,
-      profile: newProfile
-    })
+    console.log('💾 Saving profile:', { isNewProfile })
     
     if (isNewProfile) {
-      hasInitializedDemoData.current = false
-      initializationTriggered.current = false
+      dataGeneratedRef.current = false
       setChatRequests([])
       setConversations([])
       setMessages({})
@@ -396,10 +369,9 @@ function App() {
       return
     }
     
-    console.log('🔄 FORCE REGENERATING - Resetting all flags and data...')
+    console.log('🔄 Force regenerating demo data...')
     
-    hasInitializedDemoData.current = false
-    initializationTriggered.current = false
+    dataGeneratedRef.current = false
     
     setChatRequests([])
     setConversations([])
@@ -429,8 +401,7 @@ function App() {
       setChatRequests(allRequests)
       setMessages(demoData.messages)
       
-      hasInitializedDemoData.current = true
-      initializationTriggered.current = true
+      dataGeneratedRef.current = true
       setIsGenerating(false)
       
       const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
@@ -655,8 +626,7 @@ function App() {
                   <DropdownMenuItem 
                     onClick={async () => {
                       console.log('🗑️ Clearing all data and reloading...')
-                      hasInitializedDemoData.current = false
-                      initializationTriggered.current = false
+                      dataGeneratedRef.current = false
                       setChatRequests([])
                       setConversations([])
                       setMessages({})
@@ -771,10 +741,10 @@ function App() {
               <div className="bg-white/60 p-2 rounded border border-yellow-300">
                 <div className="font-bold text-yellow-800 mb-1">Status</div>
                 <div className="text-[10px] text-yellow-700">
-                  {kvLoaded ? '📦 Loaded' : '⏳ Loading'}
+                  {dataGeneratedRef.current ? '✅ Generated' : '❌ Not Generated'}
                 </div>
                 <div className="text-[10px] text-yellow-700">
-                  {hasInitializedDemoData.current ? '✅ Init' : '❌ Not Init'}
+                  Demo: {demoUsers.length} users
                 </div>
               </div>
             </div>
