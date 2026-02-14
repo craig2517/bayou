@@ -104,32 +104,24 @@ function App() {
       })
       
       console.log('📦 Setting all KV data...')
-      setConversations(demoData.conversations)
-      setChatRequests(allChatRequests)
-      setMessages(demoData.messages)
       
-      setTimeout(() => {
-        const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      
+      if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
+        setConversations(demoData.conversations)
+        setChatRequests(allChatRequests)
+        setMessages(demoData.messages)
         
-        console.log('📊 VERIFICATION - Data should be in KV now:', {
-          conversationsSet: demoData.conversations.length,
-          requestsSet: allChatRequests.length,
-          messagesSet: Object.keys(demoData.messages).length,
-          pendingToMe: pendingToMe.length
+        toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
+          description: 'Check Messages and Requests tabs',
+          duration: 4000
         })
-        
-        if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
-          toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
-            description: 'Check Messages and Requests tabs',
-            duration: 4000
-          })
-        } else {
-          toast.error('No compatible users found for demo data', {
-            description: 'Try adjusting your profile preferences or use Demo Mode menu',
-            duration: 5000
-          })
-        }
-      }, 500)
+      } else {
+        toast.error('No compatible users found for demo data', {
+          description: 'Adjust your profile preferences to match more users',
+          duration: 5000
+        })
+      }
     } else {
       console.log('✅ Demo data already exists, skipping generation')
       hasInitializedDemoData.current = true

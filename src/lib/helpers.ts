@@ -494,7 +494,7 @@ export function generateDemoConversationsAndMessages(
       user.location.lng
     )
     
-    if (distance > 5) return false
+    if (distance > 10) return false
     
     const userReceivesList = user.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
@@ -528,7 +528,7 @@ export function generateDemoConversationsAndMessages(
       afterDistanceFilter: demoUsers.filter(u => {
         if (u.id === myProfile.id || !u.isActive) return false
         const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
-        return dist <= 5
+        return dist <= 10
       }).length,
       finalEligible: eligibleUsers.length
     },
@@ -639,7 +639,7 @@ export function generateAdditionalChatRequests(
       user.location.lng
     )
     
-    if (distance > 5) return false
+    if (distance > 10) return false
     
     const userReceivesList = user.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
@@ -709,7 +709,7 @@ export function generateAdditionalChatRequests(
       afterDistanceFilter: demoUsers.filter(u => {
         if (u.id === myProfile.id || existingRequestUserIds.includes(u.id) || !u.isActive) return false
         const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
-        return dist <= 5
+        return dist <= 10
       }).length,
       finalEligible: eligibleUsers.length
     },
