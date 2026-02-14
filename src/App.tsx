@@ -138,16 +138,14 @@ function App() {
           pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length
         })
         
-        console.log('💾 Setting conversations...')
-        await setConversations(demoData.conversations)
-        console.log('💾 Setting chat requests...')
-        await setChatRequests(allChatRequests)
-        console.log('💾 Setting messages...')
-        await setMessages(demoData.messages)
+        console.log('💾 Setting conversations...', demoData.conversations)
+        setConversations(demoData.conversations)
+        console.log('💾 Setting chat requests...', allChatRequests)
+        setChatRequests(allChatRequests)
+        console.log('💾 Setting messages...', Object.keys(demoData.messages))
+        setMessages(demoData.messages)
         
         console.log('✅ All data saved to KV storage')
-        
-        await new Promise(resolve => setTimeout(resolve, 500))
         
         hasInitializedDemoData.current = true
         isInitializing.current = false
@@ -170,7 +168,7 @@ function App() {
     }
     
     generateData()
-  }, [myProfile, conversations, chatRequests, demoUsers, setConversations, setChatRequests, setMessages])
+  }, [myProfile, demoUsers])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -612,14 +610,12 @@ function App() {
         messageKeys: Object.keys(demoData.messages).length
       })
       
-      console.log('💾 Setting conversations...')
-      await setConversations(demoData.conversations)
-      console.log('💾 Setting chat requests...')
-      await setChatRequests(allRequests)
-      console.log('💾 Setting messages...')
-      await setMessages(demoData.messages)
-      
-      await new Promise(resolve => setTimeout(resolve, 500))
+      console.log('💾 Setting conversations...', demoData.conversations)
+      setConversations(demoData.conversations)
+      console.log('💾 Setting chat requests...', allRequests)
+      setChatRequests(allRequests)
+      console.log('💾 Setting messages...', Object.keys(demoData.messages))
+      setMessages(demoData.messages)
       
       const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
       
@@ -677,15 +673,15 @@ function App() {
     const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 10)
     
     if (demoData.conversations.length > 0) {
-      await setConversations(current => {
+      setConversations(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...demoData.conversations]
       })
-      await setChatRequests(current => {
+      setChatRequests(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...demoData.chatRequests]
       })
-      await setMessages(current => {
+      setMessages(current => {
         const currentObj = current && typeof current === 'object' ? current : {}
         return { ...currentObj, ...demoData.messages }
       })
@@ -703,7 +699,7 @@ function App() {
     const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 20)
     
     if (additionalRequests.length > 0) {
-      await setChatRequests(current => {
+      setChatRequests(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...additionalRequests]
       })
@@ -734,7 +730,7 @@ function App() {
     const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
     
     if (newRequests.length > 0) {
-      await setChatRequests(current => {
+      setChatRequests(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...newRequests]
       })
@@ -871,9 +867,9 @@ function App() {
                       console.log('🗑️ Clearing all data and reloading...')
                       hasInitializedDemoData.current = false
                       isInitializing.current = false
-                      await setChatRequests([])
-                      await setConversations([])
-                      await setMessages({})
+                      setChatRequests([])
+                      setConversations([])
+                      setMessages({})
                       toast.success('All data cleared!', {
                         description: 'Reloading page...',
                         duration: 1500
