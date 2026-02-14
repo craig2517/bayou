@@ -44,7 +44,6 @@ function App() {
 
   useEffect(() => {
     if (!myProfile) {
-      setShowProfileDialog(true)
       hasInitializedDemoData.current = false
       isInitializing.current = false
       return
