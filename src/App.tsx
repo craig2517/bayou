@@ -107,7 +107,7 @@ function App() {
     console.log('🎬 GENERATING DEMO DATA...')
     isInitializing.current = true
     
-    setTimeout(async () => {
+    const generateData = async () => {
       try {
         const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
         
@@ -139,11 +139,11 @@ function App() {
         })
         
         console.log('💾 Setting conversations...')
-        setConversations(() => demoData.conversations)
+        await setConversations(demoData.conversations)
         console.log('💾 Setting chat requests...')
-        setChatRequests(() => allChatRequests)
+        await setChatRequests(allChatRequests)
         console.log('💾 Setting messages...')
-        setMessages(() => demoData.messages)
+        await setMessages(demoData.messages)
         
         console.log('✅ All data saved to KV storage')
         
@@ -167,8 +167,10 @@ function App() {
           duration: 4000
         })
       }
-    }, 100)
-  }, [myProfile, setConversations, setChatRequests, setMessages])
+    }
+    
+    generateData()
+  }, [myProfile, conversations, chatRequests, demoUsers, setConversations, setChatRequests, setMessages])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -611,11 +613,11 @@ function App() {
       })
       
       console.log('💾 Setting conversations...')
-      setConversations(() => demoData.conversations)
+      await setConversations(demoData.conversations)
       console.log('💾 Setting chat requests...')
-      setChatRequests(() => allRequests)
+      await setChatRequests(allRequests)
       console.log('💾 Setting messages...')
-      setMessages(() => demoData.messages)
+      await setMessages(demoData.messages)
       
       await new Promise(resolve => setTimeout(resolve, 500))
       
