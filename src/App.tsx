@@ -33,6 +33,7 @@ function App() {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showDebug, setShowDebug] = useState(false)
   const hasInitializedDemoData = useRef(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
@@ -49,18 +50,22 @@ function App() {
       return
     }
 
-    const hasConversations = conversations && conversations.length > 0
-    const hasAnyRequests = chatRequests && chatRequests.length > 0
+    const conversationArray = conversations || []
+    const requestArray = chatRequests || []
+    const hasConversations = conversationArray.length > 0
+    const hasAnyRequests = requestArray.length > 0
     
     const hasAnyData = hasConversations || hasAnyRequests
     
     console.log('🔄 INIT DEMO DATA CHECK:', {
       hasProfile: !!myProfile,
       profileId: myProfile?.id,
+      conversationsRaw: conversations,
+      requestsRaw: chatRequests,
       hasConversations,
-      conversationsCount: conversations?.length || 0,
+      conversationsCount: conversationArray.length,
       hasAnyRequests,
-      requestsCount: chatRequests?.length || 0,
+      requestsCount: requestArray.length,
       hasAnyData,
       hasInitialized: hasInitializedDemoData.current,
       demoUsersCount: demoUsers.length
@@ -81,6 +86,12 @@ function App() {
       hasInitializedDemoData.current = true
       
       const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      
+      console.log('📊 Generated conversations result:', {
+        conversationsLength: demoData.conversations.length,
+        requestsLength: demoData.chatRequests.length,
+        messagesKeys: Object.keys(demoData.messages).length
+      })
       
       const existingUserIds = [
         ...demoData.conversations.flatMap(c => c.participants),
@@ -107,16 +118,26 @@ function App() {
       
       const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
       
+      console.log('💾 About to save:', {
+        conversationsToSave: demoData.conversations.length,
+        requestsToSave: allChatRequests.length,
+        messagesToSave: Object.keys(demoData.messages).length,
+        pendingToMe: pendingToMe.length
+      })
+      
       if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
         setConversations(demoData.conversations)
         setChatRequests(allChatRequests)
         setMessages(demoData.messages)
+        
+        console.log('✅ KV data saved successfully')
         
         toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
           description: 'Check Messages and Requests tabs',
           duration: 4000
         })
       } else {
+        console.log('⚠️ No data to save - no eligible users found')
         toast.error('No compatible users found for demo data', {
           description: 'Adjust your profile preferences to match more users',
           duration: 5000
@@ -218,24 +239,26 @@ function App() {
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
-    if (!myProfile || !chatRequests) {
-      console.log('🔍 PENDING REQUESTS: No profile or no chat requests', { hasProfile: !!myProfile, chatRequestsCount: chatRequests?.length || 0 })
+    const requestArray = chatRequests || []
+    if (!myProfile) {
+      console.log('🔍 PENDING REQUESTS: No profile', { hasProfile: !!myProfile, chatRequestsRaw: chatRequests, chatRequestsCount: requestArray.length })
       return []
     }
-    const filtered = chatRequests.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
+    const filtered = requestArray.filter(req => req.toUserId === myProfile.id && req.status === 'pending')
     console.log('🔍 PENDING INCOMING REQUESTS:', {
       myProfileId: myProfile.id,
-      totalChatRequests: chatRequests.length,
+      chatRequestsRaw: chatRequests,
+      totalChatRequests: requestArray.length,
       pendingToMe: filtered.length,
-      allPending: chatRequests.filter(r => r.status === 'pending').length,
+      allPending: requestArray.filter(r => r.status === 'pending').length,
       requestsBreakdown: {
-        toMe: chatRequests.filter(r => r.toUserId === myProfile.id).length,
-        fromMe: chatRequests.filter(r => r.fromUserId === myProfile.id).length,
-        accepted: chatRequests.filter(r => r.status === 'accepted').length,
-        pending: chatRequests.filter(r => r.status === 'pending').length,
-        declined: chatRequests.filter(r => r.status === 'declined').length
+        toMe: requestArray.filter(r => r.toUserId === myProfile.id).length,
+        fromMe: requestArray.filter(r => r.fromUserId === myProfile.id).length,
+        accepted: requestArray.filter(r => r.status === 'accepted').length,
+        pending: requestArray.filter(r => r.status === 'pending').length,
+        declined: requestArray.filter(r => r.status === 'declined').length
       },
-      sampleRequests: chatRequests.slice(0, 5).map(r => ({
+      sampleRequests: requestArray.slice(0, 5).map(r => ({
         id: r.id,
         from: r.fromUserId,
         to: r.toUserId,
@@ -271,16 +294,23 @@ function App() {
     setMyProfile(newProfile)
     setShowProfileDialog(false)
     
-    if (isNewProfile && profileData.locationSharingEnabled) {
-      toast.success('Profile saved! You are now discoverable nearby.', {
-        description: 'Demo conversations and requests have been added',
-        duration: 4000
-      })
-      setTimeout(() => setSelectedTab('messages'), 1000)
-    } else if (profileData.locationSharingEnabled) {
-      toast.success('Profile saved! You are now discoverable nearby.')
+    if (isNewProfile) {
+      console.log('🆕 NEW PROFILE CREATED - Demo data will be generated')
+      if (profileData.locationSharingEnabled) {
+        toast.success('Profile saved! You are now discoverable nearby.', {
+          description: 'Generating demo conversations and requests...',
+          duration: 4000
+        })
+        setTimeout(() => setSelectedTab('messages'), 1500)
+      } else {
+        toast.success('Profile saved! You are hidden from Discover.')
+      }
     } else {
-      toast.success('Profile saved! You are hidden from Discover.')
+      if (profileData.locationSharingEnabled) {
+        toast.success('Profile saved! You are now discoverable nearby.')
+      } else {
+        toast.success('Profile saved! You are hidden from Discover.')
+      }
     }
   }
 
@@ -563,8 +593,14 @@ function App() {
   }
 
   const activeConversations = useMemo(() => {
-    if (!myProfile || !conversations) return []
-    return conversations
+    const conversationArray = conversations || []
+    if (!myProfile) return []
+    console.log('💬 ACTIVE CONVERSATIONS CALC:', {
+      conversationsRaw: conversations,
+      conversationsArray: conversationArray.length,
+      myProfileId: myProfile.id
+    })
+    const active = conversationArray
       .filter(conv => conv.participants.includes(myProfile.id))
       .map(conv => {
         const otherUserId = conv.participants.find(id => id !== myProfile.id)
@@ -577,6 +613,15 @@ function App() {
         const bTime = b.lastMessage?.timestamp || 0
         return bTime - aTime
       })
+    console.log('💬 ACTIVE CONVERSATIONS RESULT:', {
+      count: active.length,
+      sample: active.slice(0, 3).map(c => ({
+        id: c.id,
+        otherUser: c.otherUser?.name,
+        hasLastMessage: !!c.lastMessage
+      }))
+    })
+    return active
   }, [conversations, myProfile, demoUsers])
 
   const currentConversation = activeConversations.find(c => c.id === selectedConversation)
@@ -599,6 +644,14 @@ function App() {
                 <span className="text-red-600 drop-shadow-sm">Here</span>
                 <span className="text-yellow-500 drop-shadow-sm">o</span>
               </h1>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDebug(!showDebug)}
+                className="text-xs opacity-50 hover:opacity-100"
+              >
+                {showDebug ? 'Hide' : 'Debug'}
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Badge 
@@ -684,6 +737,40 @@ function App() {
           </div>
         </div>
       </header>
+
+      {showDebug && (
+        <div className="bg-yellow-50 border-b-2 border-yellow-200 p-4">
+          <div className="container mx-auto px-4 sm:px-6">
+            <h3 className="font-bold text-sm mb-2">Debug Panel</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
+              <div>
+                <div className="font-bold text-yellow-800">Profile:</div>
+                <div>{myProfile ? '✅ Created' : '❌ None'}</div>
+                {myProfile && <div className="text-yellow-700">{myProfile.id}</div>}
+              </div>
+              <div>
+                <div className="font-bold text-yellow-800">Conversations:</div>
+                <div>Raw: {conversations === null ? 'null' : conversations === undefined ? 'undefined' : conversations.length}</div>
+                <div>Active: {activeConversations.length}</div>
+              </div>
+              <div>
+                <div className="font-bold text-yellow-800">Chat Requests:</div>
+                <div>Raw: {chatRequests === null ? 'null' : chatRequests === undefined ? 'undefined' : chatRequests?.length || 0}</div>
+                <div>Pending: {pendingIncomingRequests.length}</div>
+              </div>
+              <div>
+                <div className="font-bold text-yellow-800">Messages:</div>
+                <div>Keys: {messages ? Object.keys(messages).length : 'null/undefined'}</div>
+                <div>Total: {messages ? Object.values(messages).flat().length : 0}</div>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-yellow-800">
+              Init: {hasInitializedDemoData.current ? '✅ Yes' : '❌ No'} | 
+              Demo Users: {demoUsers.length}
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
