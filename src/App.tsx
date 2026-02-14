@@ -43,15 +43,30 @@ function App() {
   }
 
   useEffect(() => {
-    console.log('📡 STATE: Conversations -', Array.isArray(conversations) ? conversations.length : 'invalid')
+    console.log('📡 STATE UPDATE: Conversations -', {
+      isArray: Array.isArray(conversations),
+      count: Array.isArray(conversations) ? conversations.length : 'invalid',
+      type: typeof conversations,
+      sample: Array.isArray(conversations) ? conversations.slice(0, 2).map(c => ({ id: c.id, participants: c.participants })) : null
+    })
   }, [conversations])
 
   useEffect(() => {
-    console.log('📡 STATE: Chat Requests -', Array.isArray(chatRequests) ? chatRequests.length : 'invalid')
+    console.log('📡 STATE UPDATE: Chat Requests -', {
+      isArray: Array.isArray(chatRequests),
+      count: Array.isArray(chatRequests) ? chatRequests.length : 'invalid',
+      type: typeof chatRequests,
+      sample: Array.isArray(chatRequests) ? chatRequests.slice(0, 2).map(r => ({ id: r.id, status: r.status, from: r.fromUserId, to: r.toUserId })) : null
+    })
   }, [chatRequests])
 
   useEffect(() => {
-    console.log('📡 STATE: Messages -', messages && typeof messages === 'object' ? Object.keys(messages).length : 'invalid')
+    console.log('📡 STATE UPDATE: Messages -', {
+      isObject: messages && typeof messages === 'object',
+      keys: messages && typeof messages === 'object' ? Object.keys(messages).length : 'invalid',
+      type: typeof messages,
+      conversationIds: messages && typeof messages === 'object' ? Object.keys(messages).slice(0, 3) : null
+    })
   }, [messages])
 
   useEffect(() => {
@@ -93,52 +108,67 @@ function App() {
     isInitializing.current = true
     
     setTimeout(async () => {
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-      
-      if (demoData.conversations.length === 0) {
-        console.warn('⚠️ No conversations generated - checking eligibility')
+      try {
+        const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+        
+        if (demoData.conversations.length === 0) {
+          console.warn('⚠️ No conversations generated - checking eligibility')
+          hasInitializedDemoData.current = true
+          isInitializing.current = false
+          toast.error('No compatible users found', {
+            description: 'Try adjusting your profile preferences',
+            duration: 4000
+          })
+          return
+        }
+        
+        const existingUserIds = [
+          ...demoData.conversations.flatMap(c => c.participants),
+          ...demoData.chatRequests.map(r => r.fromUserId),
+          ...demoData.chatRequests.map(r => r.toUserId)
+        ].filter(id => id !== myProfile.id)
+        const uniqueExistingUserIds = [...new Set(existingUserIds)]
+        
+        const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+        const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+        
+        console.log('✅ Demo data generated:', {
+          conversations: demoData.conversations.length,
+          totalRequests: allChatRequests.length,
+          pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length
+        })
+        
+        console.log('💾 Setting conversations...')
+        setConversations(() => demoData.conversations)
+        console.log('💾 Setting chat requests...')
+        setChatRequests(() => allChatRequests)
+        console.log('💾 Setting messages...')
+        setMessages(() => demoData.messages)
+        
+        console.log('✅ All data saved to KV storage')
+        
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
         hasInitializedDemoData.current = true
         isInitializing.current = false
-        toast.error('No compatible users found', {
-          description: 'Try adjusting your profile preferences',
+        
+        const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+        
+        toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
+          description: 'Check Messages and Requests tabs',
           duration: 4000
         })
-        return
+      } catch (error) {
+        console.error('❌ Error generating demo data:', error)
+        hasInitializedDemoData.current = false
+        isInitializing.current = false
+        toast.error('Failed to generate demo data', {
+          description: 'Check console for details',
+          duration: 4000
+        })
       }
-      
-      const existingUserIds = [
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id)
-      const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-      
-      console.log('✅ Demo data generated:', {
-        conversations: demoData.conversations.length,
-        totalRequests: allChatRequests.length,
-        pendingToMe: allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending').length
-      })
-      
-      await Promise.all([
-        setConversations(demoData.conversations),
-        setChatRequests(allChatRequests),
-        setMessages(demoData.messages)
-      ])
-      
-      hasInitializedDemoData.current = true
-      isInitializing.current = false
-      
-      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      
-      toast.success(`Demo data loaded: ${demoData.conversations.length} conversations and ${pendingToMe.length} requests!`, {
-        description: 'Check Messages and Requests tabs',
-        duration: 4000
-      })
     }, 100)
-  }, [myProfile])
+  }, [myProfile, setConversations, setChatRequests, setMessages])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -482,131 +512,147 @@ function App() {
     
     setIsGenerating(true)
     
-    console.log('🔄 FORCE REGENERATING DEMO DATA...')
-    console.log('📋 MY PROFILE BEFORE GENERATION:', {
-      id: myProfile.id,
-      name: myProfile.name,
-      gender: myProfile.gender,
-      age: myProfile.age,
-      receiveMessagesFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
-      location: myProfile.location,
-      locationSharingEnabled: myProfile.locationSharingEnabled,
-      requireApproval: myProfile.requireApproval
-    })
-    console.log('📋 DEMO USERS AVAILABLE:', demoUsers.length)
-    
-    const eligibleForConvCheck = demoUsers.filter(user => {
-      if (user.id === myProfile.id) return false
-      if (!user.isActive) return false
+    try {
+      console.log('🔄 FORCE REGENERATING DEMO DATA...')
+      console.log('📋 MY PROFILE BEFORE GENERATION:', {
+        id: myProfile.id,
+        name: myProfile.name,
+        gender: myProfile.gender,
+        age: myProfile.age,
+        receiveMessagesFrom: myProfile.receiveMessagesFrom,
+        ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
+        location: myProfile.location,
+        locationSharingEnabled: myProfile.locationSharingEnabled,
+        requireApproval: myProfile.requireApproval
+      })
+      console.log('📋 DEMO USERS AVAILABLE:', demoUsers.length)
       
-      const distance = calculateDistance(
-        myProfile.location.lat,
-        myProfile.location.lng,
-        user.location.lat,
-        user.location.lng
-      )
+      const eligibleForConvCheck = demoUsers.filter(user => {
+        if (user.id === myProfile.id) return false
+        if (!user.isActive) return false
+        
+        const distance = calculateDistance(
+          myProfile.location.lat,
+          myProfile.location.lng,
+          user.location.lat,
+          user.location.lng
+        )
+        
+        if (distance > 10) return false
+        
+        const userReceivesList = user.receiveMessagesFrom || []
+        const myReceivesList = myProfile.receiveMessagesFrom || []
+        
+        const userAcceptsMyGender = userReceivesList.includes(myProfile.gender)
+        const myAgeInTheirRange = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
+        const iAcceptTheirGender = myReceivesList.includes(user.gender)
+        const theirAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+        
+        return userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange
+      })
       
-      if (distance > 10) return false
+      console.log('🔍 ELIGIBLE USERS PRE-CHECK:', eligibleForConvCheck.length)
       
-      const userReceivesList = user.receiveMessagesFrom || []
-      const myReceivesList = myProfile.receiveMessagesFrom || []
+      if (eligibleForConvCheck.length === 0) {
+        setIsGenerating(false)
+        toast.error('No compatible users found!', {
+          description: `Out of ${demoUsers.length} users, none match your preferences. Try: 1) Refreshing users, 2) Accepting all genders, or 3) Expanding age range`,
+          duration: 8000
+        })
+        
+        console.log('❌ FAILURE ANALYSIS:', {
+          totalUsers: demoUsers.length,
+          afterSelfFilter: demoUsers.filter(u => u.id !== myProfile.id).length,
+          afterActiveFilter: demoUsers.filter(u => u.id !== myProfile.id && u.isActive).length,
+          afterDistanceFilter: demoUsers.filter(u => {
+            if (u.id === myProfile.id || !u.isActive) return false
+            const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
+            return dist <= 10
+          }).length,
+          eligibleFinal: eligibleForConvCheck.length
+        })
+        return
+      }
       
-      const userAcceptsMyGender = userReceivesList.includes(myProfile.gender)
-      const myAgeInTheirRange = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
-      const iAcceptTheirGender = myReceivesList.includes(user.gender)
-      const theirAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+      hasInitializedDemoData.current = false
+      isInitializing.current = false
       
-      return userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange
-    })
-    
-    console.log('🔍 ELIGIBLE USERS PRE-CHECK:', eligibleForConvCheck.length)
-    
-    if (eligibleForConvCheck.length === 0) {
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      
+      console.log('📊 Generated data result:', {
+        conversations: demoData.conversations.length,
+        chatRequests: demoData.chatRequests.length,
+        messages: Object.keys(demoData.messages).length
+      })
+      
+      if (demoData.conversations.length === 0) {
+        setIsGenerating(false)
+        toast.error('Generation failed', {
+          description: `${eligibleForConvCheck.length} eligible users found but no conversations created. Check console for details.`,
+          duration: 5000
+        })
+        return
+      }
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== myProfile.id)
+      const uniqueExistingUserIds = [...new Set(existingUserIds)]
+      const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+      
+      const allRequests = [...demoData.chatRequests, ...additionalRequests]
+      
+      console.log('💾 SETTING STATE WITH:', {
+        conversations: demoData.conversations.length,
+        totalRequests: allRequests.length,
+        messageKeys: Object.keys(demoData.messages).length
+      })
+      
+      console.log('💾 Setting conversations...')
+      setConversations(() => demoData.conversations)
+      console.log('💾 Setting chat requests...')
+      setChatRequests(() => allRequests)
+      console.log('💾 Setting messages...')
+      setMessages(() => demoData.messages)
+      
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      
+      console.log('✅ Force regeneration complete:', {
+        conversations: demoData.conversations.length,
+        totalRequests: allRequests.length,
+        pendingToMe: pendingToMe.length
+      })
+      
+      hasInitializedDemoData.current = true
       setIsGenerating(false)
-      toast.error('No compatible users found!', {
-        description: `Out of ${demoUsers.length} users, none match your preferences. Try: 1) Refreshing users, 2) Accepting all genders, or 3) Expanding age range`,
-        duration: 8000
-      })
       
-      console.log('❌ FAILURE ANALYSIS:', {
-        totalUsers: demoUsers.length,
-        afterSelfFilter: demoUsers.filter(u => u.id !== myProfile.id).length,
-        afterActiveFilter: demoUsers.filter(u => u.id !== myProfile.id && u.isActive).length,
-        afterDistanceFilter: demoUsers.filter(u => {
-          if (u.id === myProfile.id || !u.isActive) return false
-          const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
-          return dist <= 10
-        }).length,
-        eligibleFinal: eligibleForConvCheck.length
-      })
-      return
-    }
-    
-    hasInitializedDemoData.current = false
-    isInitializing.current = false
-    
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-    
-    console.log('📊 Generated data result:', {
-      conversations: demoData.conversations.length,
-      chatRequests: demoData.chatRequests.length,
-      messages: Object.keys(demoData.messages).length
-    })
-    
-    if (demoData.conversations.length === 0) {
+      if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
+        toast.success('✅ Demo data generated successfully!', {
+          description: `${demoData.conversations.length} conversations, ${allRequests.length} total requests (${pendingToMe.length} pending to you)`,
+          duration: 6000
+        })
+        
+        setTimeout(() => {
+          setSelectedTab('messages')
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('❌ Error in handleClearAllData:', error)
       setIsGenerating(false)
-      toast.error('Generation failed', {
-        description: `${eligibleForConvCheck.length} eligible users found but no conversations created. Check console for details.`,
-        duration: 5000
+      hasInitializedDemoData.current = false
+      isInitializing.current = false
+      toast.error('Failed to generate demo data', {
+        description: 'Check console for details',
+        duration: 4000
       })
-      return
-    }
-    
-    const existingUserIds = [
-      ...demoData.conversations.flatMap(c => c.participants),
-      ...demoData.chatRequests.map(r => r.fromUserId),
-      ...demoData.chatRequests.map(r => r.toUserId)
-    ].filter(id => id !== myProfile.id)
-    const uniqueExistingUserIds = [...new Set(existingUserIds)]
-    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-    
-    const allRequests = [...demoData.chatRequests, ...additionalRequests]
-    
-    console.log('💾 SETTING STATE WITH:', {
-      conversations: demoData.conversations.length,
-      totalRequests: allRequests.length,
-      messageKeys: Object.keys(demoData.messages).length
-    })
-    
-    await setConversations(demoData.conversations)
-    await setChatRequests(allRequests)
-    await setMessages(demoData.messages)
-    
-    const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-    
-    console.log('✅ Force regeneration complete:', {
-      conversations: demoData.conversations.length,
-      totalRequests: allRequests.length,
-      pendingToMe: pendingToMe.length
-    })
-    
-    hasInitializedDemoData.current = true
-    setIsGenerating(false)
-    
-    if (demoData.conversations.length > 0 || pendingToMe.length > 0) {
-      toast.success('✅ Demo data generated successfully!', {
-        description: `${demoData.conversations.length} conversations, ${allRequests.length} total requests (${pendingToMe.length} pending to you)`,
-        duration: 6000
-      })
-      
-      setTimeout(() => {
-        setSelectedTab('messages')
-      }, 1000)
     }
   }
 
-  const handleGenerateMoreDemoData = () => {
+  const handleGenerateMoreDemoData = async () => {
     if (!myProfile) return
     
     const conversationArray = Array.isArray(conversations) ? conversations : []
@@ -629,15 +675,15 @@ function App() {
     const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 10)
     
     if (demoData.conversations.length > 0) {
-      setConversations(current => {
+      await setConversations(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...demoData.conversations]
       })
-      setChatRequests(current => {
+      await setChatRequests(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...demoData.chatRequests]
       })
-      setMessages(current => {
+      await setMessages(current => {
         const currentObj = current && typeof current === 'object' ? current : {}
         return { ...currentObj, ...demoData.messages }
       })
@@ -655,7 +701,7 @@ function App() {
     const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 20)
     
     if (additionalRequests.length > 0) {
-      setChatRequests(current => {
+      await setChatRequests(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...additionalRequests]
       })
@@ -669,7 +715,7 @@ function App() {
     }
   }
 
-  const handleGeneratePendingRequests = () => {
+  const handleGeneratePendingRequests = async () => {
     if (!myProfile) return
     
     const conversationArray = Array.isArray(conversations) ? conversations : []
@@ -686,7 +732,7 @@ function App() {
     const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
     
     if (newRequests.length > 0) {
-      setChatRequests(current => {
+      await setChatRequests(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...newRequests]
       })
