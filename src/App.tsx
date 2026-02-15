@@ -686,7 +686,7 @@ function App() {
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight select-none">
                 <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">Here</span>
-                <span className="bg-gradient-to-br from-yellow-400 to-accent bg-clip-text text-transparent drop-shadow-sm">o</span>
+                <span className="text-yellow-400 drop-shadow-sm">o</span>
               </h1>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
