@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -19,11 +19,11 @@ import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
 function App() {
-  const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v4', null)
-  const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(1000))
-  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v4', [])
-  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v4', [])
-  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v4', {})
+  const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v5', null)
+  const [demoUsers, setDemoUsers] = useState<UserProfile[]>([])
+  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v5', [])
+  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v5', [])
+  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v5', {})
   const [searchRadius, setSearchRadius] = useState([0.8])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -32,74 +32,77 @@ function App() {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const dataGeneratedRef = useRef(false)
-  const initialLoadCompleteRef = useRef(false)
+  const initializedRef = useRef(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
   }
 
   useEffect(() => {
-    if (!myProfile) return
-    if (dataGeneratedRef.current || initialLoadCompleteRef.current) return
+    if (initializedRef.current) return
+    
+    initializedRef.current = true
+    const newUsers = generateDemoUsers(1000)
+    setDemoUsers(newUsers)
+  }, [])
 
+  const generateSampleData = useCallback((profile: UserProfile, users: UserProfile[]) => {
+    const demoData = generateDemoConversationsAndMessages(profile, users, 20)
+    
+    if (demoData.conversations.length === 0) {
+      toast.error('No compatible users found', {
+        description: 'Try adjusting your profile preferences',
+        duration: 5000
+      })
+      return
+    }
+    
+    const existingUserIds = [
+      ...demoData.conversations.flatMap(c => c.participants),
+      ...demoData.chatRequests.map(r => r.fromUserId),
+      ...demoData.chatRequests.map(r => r.toUserId)
+    ].filter(id => id !== profile.id)
+    
+    const uniqueExistingUserIds = [...new Set(existingUserIds)]
+    const pendingRequests = generateAdditionalChatRequests(profile, users, uniqueExistingUserIds, 40)
+    const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+    
+    const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
+    const newConversations = autoAcceptedRequests.map(request => {
+      const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+      return {
+        id: conversationId,
+        participants: [request.fromUserId, request.toUserId] as [string, string],
+        unreadCount: 0
+      }
+    })
+    
+    setConversations([...demoData.conversations, ...newConversations])
+    setChatRequests(allChatRequests)
+    setMessages(demoData.messages)
+    
+    const pendingToMe = allChatRequests.filter(r => r.toUserId === profile.id && r.status === 'pending')
+    
+    toast.success(`✨ ${demoData.conversations.length + newConversations.length} conversations & ${pendingToMe.length} requests loaded!`, {
+      description: 'Check Messages and Requests tabs',
+      duration: 4000
+    })
+  }, [setConversations, setChatRequests, setMessages])
+
+  useEffect(() => {
+    if (!myProfile || demoUsers.length === 0) return
+    
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     
-    if (conversationArray.length > 0 || requestArray.length > 0) {
-      dataGeneratedRef.current = true
-      initialLoadCompleteRef.current = true
-      return
-    }
-
-    dataGeneratedRef.current = true
-    initialLoadCompleteRef.current = true
+    if (conversationArray.length > 0 || requestArray.length > 0) return
     
     const timer = setTimeout(() => {
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 20)
-      
-      if (demoData.conversations.length === 0) {
-        toast.error('No compatible users found', {
-          description: 'Try adjusting your profile preferences',
-          duration: 5000
-        })
-        return
-      }
-      
-      const existingUserIds = [
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id)
-      
-      const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 40)
-      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-      
-      const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
-      const newConversations = autoAcceptedRequests.map(request => {
-        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
-        return {
-          id: conversationId,
-          participants: [request.fromUserId, request.toUserId] as [string, string],
-          unreadCount: 0
-        }
-      })
-      
-      setConversations([...demoData.conversations, ...newConversations])
-      setChatRequests(allChatRequests)
-      setMessages(demoData.messages)
-      
-      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      
-      toast.success(`✨ ${demoData.conversations.length + newConversations.length} conversations & ${pendingToMe.length} requests loaded!`, {
-        description: 'Check Messages and Requests tabs',
-        duration: 4000
-      })
+      generateSampleData(myProfile, demoUsers)
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [myProfile, demoUsers, conversations, chatRequests])
+  }, [myProfile, demoUsers, conversations, chatRequests, generateSampleData])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -178,8 +181,6 @@ function App() {
     }
     
     if (isNewProfile) {
-      dataGeneratedRef.current = false
-      initialLoadCompleteRef.current = false
       setChatRequests([])
       setConversations([])
       setMessages({})
@@ -192,11 +193,14 @@ function App() {
       )
       
       if (pendingRequests.length > 0) {
-        const updatedRequests = requestArray.map(req => 
-          req && req.toUserId === newProfile.id && req.status === 'pending'
-            ? { ...req, status: 'accepted' as const }
-            : req
-        )
+        setChatRequests(current => {
+          const currentArray = Array.isArray(current) ? current : []
+          return currentArray.map(req => 
+            req && req.toUserId === newProfile.id && req.status === 'pending'
+              ? { ...req, status: 'accepted' as const }
+              : req
+          )
+        })
         
         const newConversations = pendingRequests.map(request => {
           const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
@@ -206,8 +210,6 @@ function App() {
             unreadCount: 0
           }
         })
-        
-        setChatRequests(updatedRequests)
         
         setConversations(current => {
           const currentArray = Array.isArray(current) ? current : []
@@ -230,7 +232,12 @@ function App() {
       toast.success('✨ Profile created! Generating demo data...', {
         duration: 3000
       })
-      setTimeout(() => setSelectedTab('messages'), 3500)
+      if (demoUsers.length > 0) {
+        setTimeout(() => {
+          generateSampleData(newProfile, demoUsers)
+          setSelectedTab('messages')
+        }, 500)
+      }
     } else {
       toast.success('✅ Profile updated!')
     }
@@ -413,8 +420,6 @@ function App() {
     }
 
     setIsRefreshing(true)
-    dataGeneratedRef.current = false
-    initialLoadCompleteRef.current = false
     
     setChatRequests([])
     setConversations([])
@@ -433,8 +438,6 @@ function App() {
           description: 'Try adjusting your profile preferences',
           duration: 5000
         })
-        dataGeneratedRef.current = true
-        initialLoadCompleteRef.current = true
         return
       }
       
@@ -464,8 +467,6 @@ function App() {
       
       const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
       
-      dataGeneratedRef.current = true
-      initialLoadCompleteRef.current = true
       setIsRefreshing(false)
       
       toast.success(`✨ All data refreshed!`, {
