@@ -122,14 +122,14 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     const angle = Math.random() * 2 * Math.PI
     
     let radiusKm: number
-    if (i < count * 0.4) {
-      radiusKm = Math.random() * 0.4
-    } else if (i < count * 0.7) {
-      radiusKm = 0.4 + Math.random() * 0.5
-    } else if (i < count * 0.85) {
-      radiusKm = 0.9 + Math.random() * 0.6
+    if (i < count * 0.5) {
+      radiusKm = Math.random() * 0.5
+    } else if (i < count * 0.75) {
+      radiusKm = 0.5 + Math.random() * 0.6
+    } else if (i < count * 0.90) {
+      radiusKm = 1.1 + Math.random() * 0.7
     } else {
-      radiusKm = 1.5 + Math.random() * 1.0
+      radiusKm = 1.8 + Math.random() * 1.0
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
@@ -141,18 +141,18 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     const name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
     
-    const capturedAt = Date.now() - Math.floor(Math.random() * 18 * 60 * 60 * 1000)
+    const capturedAt = Date.now() - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
     
     const allGenders = ['Male', 'Female', 'Non-binary', 'Other']
     const genderPreferenceRandom = Math.random()
     let receiveFrom: string[]
     
-    if (genderPreferenceRandom < 0.65) {
+    if (genderPreferenceRandom < 0.70) {
       receiveFrom = allGenders
-    } else if (genderPreferenceRandom < 0.80) {
+    } else if (genderPreferenceRandom < 0.85) {
       const numToSelect = Math.floor(Math.random() * 2) + 2
       receiveFrom = allGenders.sort(() => Math.random() - 0.5).slice(0, numToSelect)
-    } else if (genderPreferenceRandom < 0.90) {
+    } else if (genderPreferenceRandom < 0.92) {
       receiveFrom = [allGenders[Math.floor(Math.random() * allGenders.length)]]
     } else {
       const numToSelect = Math.floor(Math.random() * 3) + 1
@@ -161,13 +161,13 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     
     const relationshipPrefRandom = Math.random()
     let relationshipStatusPreference: string[]
-    if (relationshipPrefRandom < 0.60) {
+    if (relationshipPrefRandom < 0.65) {
       relationshipStatusPreference = ['Single', 'Not Single', 'Prefer not to say']
-    } else if (relationshipPrefRandom < 0.78) {
+    } else if (relationshipPrefRandom < 0.80) {
       relationshipStatusPreference = ['Single', 'Prefer not to say']
-    } else if (relationshipPrefRandom < 0.88) {
+    } else if (relationshipPrefRandom < 0.90) {
       relationshipStatusPreference = ['Not Single', 'Prefer not to say']
-    } else if (relationshipPrefRandom < 0.94) {
+    } else if (relationshipPrefRandom < 0.95) {
       relationshipStatusPreference = ['Single']
     } else {
       relationshipStatusPreference = ['Not Single']
@@ -176,13 +176,13 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     const ageRangeRandom = Math.random()
     let minAge: number, maxAge: number
     
-    if (ageRangeRandom < 0.45) {
+    if (ageRangeRandom < 0.50) {
       minAge = Math.max(18, age - 15)
       maxAge = Math.min(100, age + 15)
-    } else if (ageRangeRandom < 0.75) {
+    } else if (ageRangeRandom < 0.80) {
       minAge = Math.max(18, age - 10)
       maxAge = Math.min(100, age + 10)
-    } else if (ageRangeRandom < 0.90) {
+    } else if (ageRangeRandom < 0.93) {
       minAge = Math.max(18, age - 5)
       maxAge = Math.min(100, age + 5)
     } else {
@@ -191,10 +191,10 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     }
     
     const singleRandom = Math.random()
-    const isSingle = singleRandom < 0.48 ? true : singleRandom < 0.78 ? false : undefined
+    const isSingle = singleRandom < 0.50 ? true : singleRandom < 0.80 ? false : undefined
     
-    const showReceiveMessagesFrom = Math.random() > 0.20
-    const showAgeRange = Math.random() > 0.20
+    const showReceiveMessagesFrom = Math.random() > 0.15
+    const showAgeRange = Math.random() > 0.15
     
     users.push({
       id: `user-demo-${i + 1}-${timestamp}`,
@@ -209,7 +209,7 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
       isActive: true,
       lastActive: Date.now() - Math.floor(Math.random() * 7200000),
       locationSharingEnabled: true,
-      requireApproval: Math.random() > 0.40,
+      requireApproval: Math.random() > 0.35,
       isSingle,
       showReceiveMessagesFrom,
       showAgeRange,
@@ -484,12 +484,12 @@ export function generateDemoMessages(
   conversationId: string,
   user1Id: string,
   user2Id: string,
-  messageCount: number = 8
+  messageCount: number = 12
 ) {
   const messages: any[] = []
   const now = Date.now()
   const oneDayMs = 24 * 60 * 60 * 1000
-  const baseTime = now - Math.random() * oneDayMs * 5
+  const baseTime = now - Math.random() * oneDayMs * 7
   
   let currentSender = Math.random() > 0.5 ? user1Id : user2Id
   let timeOffset = 0
@@ -506,16 +506,16 @@ export function generateDemoMessages(
     } else if (i === 3) {
       messageText = ENTHUSIASTIC_REPLIES[Math.floor(Math.random() * ENTHUSIASTIC_REPLIES.length)]
     } else {
-      const allOptions = [...SMALL_TALK, ...CASUAL_RESPONSES, ...FOLLOW_UP_MESSAGES]
+      const allOptions = [...SMALL_TALK, ...CASUAL_RESPONSES, ...FOLLOW_UP_MESSAGES, ...ENTHUSIASTIC_REPLIES]
       messageText = allOptions[Math.floor(Math.random() * allOptions.length)]
     }
     
-    const minGap = 30000
-    const maxGap = Math.random() > 0.7 ? 60 * 60 * 1000 : 20 * 60 * 1000
+    const minGap = 45000
+    const maxGap = Math.random() > 0.6 ? 90 * 60 * 1000 : 30 * 60 * 1000
     timeOffset += Math.floor(Math.random() * (maxGap - minGap)) + minGap
     
     messages.push({
-      id: `msg-demo-${conversationId}-${i}`,
+      id: `msg-demo-${conversationId}-${i}-${Date.now()}`,
       conversationId,
       senderId: currentSender,
       text: messageText,
@@ -531,7 +531,7 @@ export function generateDemoMessages(
 export function generateDemoConversationsAndMessages(
   myProfile: UserProfile,
   demoUsers: UserProfile[],
-  conversationCount: number = 15
+  conversationCount: number = 25
 ) {
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
@@ -545,7 +545,7 @@ export function generateDemoConversationsAndMessages(
       user.location.lng
     )
     
-    if (distance > 20) return false
+    if (distance > 25) return false
     
     return checkFullCompatibility(myProfile, user)
   })
@@ -562,20 +562,20 @@ export function generateDemoConversationsAndMessages(
     return distA - distB
   })
   
-  const nearbyUsers = sortedByDistance.slice(0, Math.ceil(targetCount * 0.6))
-  const remainingUsers = sortedByDistance.slice(Math.ceil(targetCount * 0.6))
+  const nearbyUsers = sortedByDistance.slice(0, Math.ceil(targetCount * 0.7))
+  const remainingUsers = sortedByDistance.slice(Math.ceil(targetCount * 0.7))
   const randomUsers = remainingUsers.sort(() => Math.random() - 0.5).slice(0, targetCount - nearbyUsers.length)
   
-  const selectedUsers = [...nearbyUsers, ...randomUsers]
+  const selectedUsers = [...nearbyUsers, ...randomUsers].slice(0, targetCount)
   
   const conversations: any[] = []
   const chatRequests: any[] = []
   const allMessages: Record<string, any[]> = {}
   
-  selectedUsers.forEach((user) => {
+  selectedUsers.forEach((user, index) => {
     const conversationId = [myProfile.id, user.id].sort().join('-')
     
-    const messageCount = Math.floor(Math.random() * 25) + 8
+    const messageCount = Math.floor(Math.random() * 30) + 10
     const messages = generateDemoMessages(conversationId, myProfile.id, user.id, messageCount)
     
     allMessages[conversationId] = messages
@@ -608,7 +608,7 @@ export function generateAdditionalChatRequests(
   myProfile: UserProfile,
   demoUsers: UserProfile[],
   existingRequestUserIds: string[],
-  count: number = 30
+  count: number = 50
 ) {
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
@@ -623,15 +623,15 @@ export function generateAdditionalChatRequests(
       user.location.lng
     )
     
-    if (distance > 20) return false
+    if (distance > 25) return false
     
     return checkFullCompatibility(myProfile, user)
   })
 
   if (eligibleUsers.length === 0) return []
 
-  const numRequestsToMe = Math.ceil(count * 0.70)
-  const numRequestsFromMe = Math.floor(count * 0.30)
+  const numRequestsToMe = Math.ceil(count * 0.75)
+  const numRequestsFromMe = Math.floor(count * 0.25)
   
   const sortedByDistance = eligibleUsers.sort((a, b) => {
     const distA = calculateDistance(myProfile.location.lat, myProfile.location.lng, a.location.lat, a.location.lng)
@@ -653,7 +653,7 @@ export function generateAdditionalChatRequests(
     fromUserId: user.id,
     toUserId: myProfile.id,
     status: myProfile.requireApproval ? ('pending' as const) : ('accepted' as const),
-    timestamp: Date.now() - Math.floor(Math.random() * 10800000)
+    timestamp: Date.now() - Math.floor(Math.random() * 14400000)
   }))
   
   const requestsFromMe = selectedUsersForRequestsFromMe.map((user, index) => ({
@@ -661,7 +661,7 @@ export function generateAdditionalChatRequests(
     fromUserId: myProfile.id,
     toUserId: user.id,
     status: user.requireApproval ? ('pending' as const) : ('accepted' as const),
-    timestamp: Date.now() - Math.floor(Math.random() * 10800000)
+    timestamp: Date.now() - Math.floor(Math.random() * 14400000)
   }))
   
   return [...requestsToMe, ...requestsFromMe]

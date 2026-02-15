@@ -45,48 +45,70 @@ function App() {
     const newUsers = generateDemoUsers(1000)
     setDemoUsers(newUsers)
   }, [])
+  
+  useEffect(() => {
+    if (!myProfile) return
+    
+    if (myProfile.locationSharingEnabled) {
+      const updated = { ...myProfile, isActive: true, lastActive: Date.now() }
+      if (JSON.stringify(updated) !== JSON.stringify(myProfile)) {
+        setMyProfile(updated)
+      }
+    }
+  }, [myProfile, setMyProfile])
 
   const generateSampleData = useCallback((profile: UserProfile, users: UserProfile[]) => {
-    const demoData = generateDemoConversationsAndMessages(profile, users, 20)
-    
-    if (demoData.conversations.length === 0) {
-      toast.error('No compatible users found', {
-        description: 'Try adjusting your profile preferences',
-        duration: 5000
-      })
-      return
-    }
-    
-    const existingUserIds = [
-      ...demoData.conversations.flatMap(c => c.participants),
-      ...demoData.chatRequests.map(r => r.fromUserId),
-      ...demoData.chatRequests.map(r => r.toUserId)
-    ].filter(id => id !== profile.id)
-    
-    const uniqueExistingUserIds = [...new Set(existingUserIds)]
-    const pendingRequests = generateAdditionalChatRequests(profile, users, uniqueExistingUserIds, 40)
-    const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-    
-    const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
-    const newConversations = autoAcceptedRequests.map(request => {
-      const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
-      return {
-        id: conversationId,
-        participants: [request.fromUserId, request.toUserId] as [string, string],
-        unreadCount: 0
+    try {
+      const demoData = generateDemoConversationsAndMessages(profile, users, 25)
+      
+      if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
+        toast.error('No compatible users found', {
+          description: 'Try adjusting your profile preferences',
+          duration: 5000
+        })
+        return
       }
-    })
-    
-    setConversations([...demoData.conversations, ...newConversations])
-    setChatRequests(allChatRequests)
-    setMessages(demoData.messages)
-    
-    const pendingToMe = allChatRequests.filter(r => r.toUserId === profile.id && r.status === 'pending')
-    
-    toast.success(`✨ ${demoData.conversations.length + newConversations.length} conversations & ${pendingToMe.length} requests loaded!`, {
-      description: 'Check Messages and Requests tabs',
-      duration: 4000
-    })
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== profile.id)
+      
+      const uniqueExistingUserIds = [...new Set(existingUserIds)]
+      const pendingRequests = generateAdditionalChatRequests(profile, users, uniqueExistingUserIds, 50)
+      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+      
+      const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
+      const newConversations = autoAcceptedRequests.map(request => {
+        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+        return {
+          id: conversationId,
+          participants: [request.fromUserId, request.toUserId] as [string, string],
+          unreadCount: 0
+        }
+      })
+      
+      const allConversations = [...demoData.conversations, ...newConversations]
+      
+      setConversations(allConversations)
+      setChatRequests(allChatRequests)
+      setMessages(demoData.messages)
+      
+      const pendingToMe = allChatRequests.filter(r => r.toUserId === profile.id && r.status === 'pending')
+      const totalConversations = allConversations.length
+      
+      toast.success(`✨ Demo data loaded successfully!`, {
+        description: `${totalConversations} conversations & ${pendingToMe.length} requests ready`,
+        duration: 4000
+      })
+    } catch (error) {
+      console.error('Error generating sample data:', error)
+      toast.error('Error generating demo data', {
+        description: 'Please try refreshing',
+        duration: 3000
+      })
+    }
   }, [setConversations, setChatRequests, setMessages])
 
   useEffect(() => {
@@ -109,62 +131,72 @@ function App() {
   const nearbyUsers = useMemo(() => {
     if (!myProfile) return []
     
-    const eligibleDemoUsers = demoUsers.filter(user => 
-      user.id !== myProfile.id && user.isActive && user.locationSharingEnabled
-    )
-    
-    const allUsersWithDistance = eligibleDemoUsers.map(user => {
-      const distance = calculateDistance(
-        myProfile.location.lat,
-        myProfile.location.lng,
-        user.location.lat,
-        user.location.lng
+    try {
+      const eligibleDemoUsers = demoUsers.filter(user => 
+        user.id !== myProfile.id && user.isActive && user.locationSharingEnabled
       )
       
-      const userReceivesList = user.receiveMessagesFrom || []
-      const myReceivesList = myProfile.receiveMessagesFrom || []
+      const allUsersWithDistance = eligibleDemoUsers.map(user => {
+        const distance = calculateDistance(
+          myProfile.location.lat,
+          myProfile.location.lng,
+          user.location.lat,
+          user.location.lng
+        )
+        
+        const userReceivesList = user.receiveMessagesFrom || []
+        const myReceivesList = myProfile.receiveMessagesFrom || []
+        
+        const userAcceptsMe = userReceivesList.includes(myProfile.gender)
+        const userAgeMatchesMe = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
+        const iAcceptUser = myReceivesList.includes(user.gender)
+        const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+        
+        const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+        const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+        
+        const getEffectiveStatus = (isSingle: boolean | undefined): string => {
+          if (isSingle === undefined) return 'Prefer not to say'
+          return isSingle ? 'Single' : 'Not Single'
+        }
+        
+        const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
+        const userEffectiveStatus = getEffectiveStatus(user.isSingle)
+        
+        const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Prefer not to say') || userRelationshipPrefs.includes(myEffectiveStatus)
+        const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Prefer not to say') || myRelationshipPrefs.includes(userEffectiveStatus)
+        
+        const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
+        
+        return { user, distance, canMessage, userAcceptsMe, userAgeMatchesMe, iAcceptUser, myAgeMatchesUser }
+      })
       
-      const userAcceptsMe = userReceivesList.includes(myProfile.gender)
-      const userAgeMatchesMe = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
-      const iAcceptUser = myReceivesList.includes(user.gender)
-      const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+      const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
+      const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0] && item.canMessage)
       
-      const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
-      const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
-      
-      const getEffectiveStatus = (isSingle: boolean | undefined): string => {
-        if (isSingle === undefined) return 'Prefer not to say'
-        return isSingle ? 'Single' : 'Not Single'
-      }
-      
-      const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
-      const userEffectiveStatus = getEffectiveStatus(user.isSingle)
-      
-      const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Prefer not to say') || userRelationshipPrefs.includes(myEffectiveStatus)
-      const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Prefer not to say') || myRelationshipPrefs.includes(userEffectiveStatus)
-      
-      const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
-      
-      return { user, distance, canMessage, userAcceptsMe, userAgeMatchesMe, iAcceptUser, myAgeMatchesUser }
-    })
-    
-    const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
-    const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0] && item.canMessage)
-    
-    return inRadiusUsers
+      return inRadiusUsers
+    } catch (error) {
+      console.error('Error calculating nearby users:', error)
+      return []
+    }
   }, [myProfile, demoUsers, searchRadius])
 
   const pendingIncomingRequests = useMemo(() => {
-    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-    if (!myProfile) return []
-    
-    if (!myProfile.requireApproval) return []
-    
-    return requestArray.filter(req => 
-      req && 
-      req.toUserId === myProfile.id && 
-      req.status === 'pending'
-    )
+    try {
+      const requestArray = Array.isArray(chatRequests) ? chatRequests : []
+      if (!myProfile) return []
+      
+      if (!myProfile.requireApproval) return []
+      
+      return requestArray.filter(req => 
+        req && 
+        req.toUserId === myProfile.id && 
+        req.status === 'pending'
+      )
+    } catch (error) {
+      console.error('Error calculating pending requests:', error)
+      return []
+    }
   }, [chatRequests, myProfile])
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
@@ -430,49 +462,60 @@ function App() {
     setDemoUsers(newUsers)
     
     setTimeout(() => {
-      const demoData = generateDemoConversationsAndMessages(myProfile, newUsers, 20)
-      
-      if (demoData.conversations.length === 0) {
-        setIsRefreshing(false)
-        toast.error('No compatible users found', {
-          description: 'Try adjusting your profile preferences',
-          duration: 5000
-        })
-        return
-      }
-      
-      const existingUserIds = [
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id)
-      
-      const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      const pendingRequests = generateAdditionalChatRequests(myProfile, newUsers, uniqueExistingUserIds, 40)
-      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-      
-      const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
-      const newConversations = autoAcceptedRequests.map(request => {
-        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
-        return {
-          id: conversationId,
-          participants: [request.fromUserId, request.toUserId] as [string, string],
-          unreadCount: 0
+      try {
+        const demoData = generateDemoConversationsAndMessages(myProfile, newUsers, 25)
+        
+        if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
+          setIsRefreshing(false)
+          toast.error('No compatible users found', {
+            description: 'Try adjusting your profile preferences',
+            duration: 5000
+          })
+          return
         }
-      })
-      
-      setConversations([...demoData.conversations, ...newConversations])
-      setChatRequests(allChatRequests)
-      setMessages(demoData.messages)
-      
-      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      
-      setIsRefreshing(false)
-      
-      toast.success(`✨ All data refreshed!`, {
-        description: `${demoData.conversations.length + newConversations.length} conversations, ${pendingToMe.length} requests & ${newUsers.length} users`,
-        duration: 4000
-      })
+        
+        const existingUserIds = [
+          ...demoData.conversations.flatMap(c => c.participants),
+          ...demoData.chatRequests.map(r => r.fromUserId),
+          ...demoData.chatRequests.map(r => r.toUserId)
+        ].filter(id => id !== myProfile.id)
+        
+        const uniqueExistingUserIds = [...new Set(existingUserIds)]
+        const pendingRequests = generateAdditionalChatRequests(myProfile, newUsers, uniqueExistingUserIds, 50)
+        const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+        
+        const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
+        const newConversations = autoAcceptedRequests.map(request => {
+          const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+          return {
+            id: conversationId,
+            participants: [request.fromUserId, request.toUserId] as [string, string],
+            unreadCount: 0
+          }
+        })
+        
+        const allConversations = [...demoData.conversations, ...newConversations]
+        
+        setConversations(allConversations)
+        setChatRequests(allChatRequests)
+        setMessages(demoData.messages)
+        
+        const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+        
+        setIsRefreshing(false)
+        
+        toast.success(`✨ All data refreshed!`, {
+          description: `${allConversations.length} conversations, ${pendingToMe.length} requests & ${newUsers.length} users`,
+          duration: 4000
+        })
+      } catch (error) {
+        console.error('Error refreshing data:', error)
+        setIsRefreshing(false)
+        toast.error('Error refreshing data', {
+          description: 'Please try again',
+          duration: 3000
+        })
+      }
     }, 500)
   }
 
@@ -504,22 +547,27 @@ function App() {
   }
 
   const activeConversations = useMemo(() => {
-    const conversationArray = Array.isArray(conversations) ? conversations : []
-    if (!myProfile) return []
-    
-    return conversationArray
-      .filter(conv => conv && Array.isArray(conv.participants) && conv.participants.includes(myProfile.id))
-      .map(conv => {
-        const otherUserId = conv.participants.find(id => id !== myProfile.id)
-        const otherUser = demoUsers.find(u => u.id === otherUserId)
-        return { ...conv, otherUser: otherUser || null }
-      })
-      .filter(conv => conv.otherUser !== null)
-      .sort((a, b) => {
-        const aTime = a.lastMessage?.timestamp || 0
-        const bTime = b.lastMessage?.timestamp || 0
-        return bTime - aTime
-      })
+    try {
+      const conversationArray = Array.isArray(conversations) ? conversations : []
+      if (!myProfile) return []
+      
+      return conversationArray
+        .filter(conv => conv && Array.isArray(conv.participants) && conv.participants.includes(myProfile.id))
+        .map(conv => {
+          const otherUserId = conv.participants.find(id => id !== myProfile.id)
+          const otherUser = demoUsers.find(u => u.id === otherUserId)
+          return { ...conv, otherUser: otherUser || null }
+        })
+        .filter(conv => conv.otherUser !== null)
+        .sort((a, b) => {
+          const aTime = a.lastMessage?.timestamp || 0
+          const bTime = b.lastMessage?.timestamp || 0
+          return bTime - aTime
+        })
+    } catch (error) {
+      console.error('Error calculating active conversations:', error)
+      return []
+    }
   }, [conversations, myProfile, demoUsers])
 
   const currentConversation = activeConversations.find(c => c.id === selectedConversation)
