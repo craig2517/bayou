@@ -96,15 +96,15 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const shuffledGenders = [...allGenders].sort(() => Math.random() - 0.5)
     const receiveFrom = shuffledGenders.slice(0, numGendersToReceive)
     
-    const allRelationshipStatuses = ['Single', 'Not Single', 'Any']
+    const allRelationshipStatuses = ['Single', 'Not Single', 'Prefer not to say']
     const relationshipPrefRandom = Math.random()
     let relationshipStatusPreference: string[]
     if (relationshipPrefRandom < 0.5) {
-      relationshipStatusPreference = ['Single', 'Not Single', 'Any']
+      relationshipStatusPreference = ['Single', 'Not Single', 'Prefer not to say']
     } else if (relationshipPrefRandom < 0.75) {
-      relationshipStatusPreference = ['Single', 'Any']
+      relationshipStatusPreference = ['Single', 'Prefer not to say']
     } else if (relationshipPrefRandom < 0.85) {
-      relationshipStatusPreference = ['Not Single', 'Any']
+      relationshipStatusPreference = ['Not Single', 'Prefer not to say']
     } else if (relationshipPrefRandom < 0.95) {
       relationshipStatusPreference = ['Single']
     } else {

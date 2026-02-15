@@ -139,19 +139,19 @@ function App() {
       const iAcceptUser = myReceivesList.includes(user.gender)
       const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
       
-      const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
-      const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+      const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+      const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
       
       const getEffectiveStatus = (isSingle: boolean | undefined): string => {
-        if (isSingle === undefined) return 'Any'
+        if (isSingle === undefined) return 'Prefer not to say'
         return isSingle ? 'Single' : 'Not Single'
       }
       
       const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
       const userEffectiveStatus = getEffectiveStatus(user.isSingle)
       
-      const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
-      const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
+      const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Prefer not to say') || userRelationshipPrefs.includes(myEffectiveStatus)
+      const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Prefer not to say') || myRelationshipPrefs.includes(userEffectiveStatus)
       
       const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
       
@@ -231,19 +231,19 @@ function App() {
     const userReceivesList = toUser.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
     
-    const userRelationshipPrefs = toUser.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
-    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    const userRelationshipPrefs = toUser.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
     
     const getEffectiveStatus = (isSingle: boolean | undefined): string => {
-      if (isSingle === undefined) return 'Any'
+      if (isSingle === undefined) return 'Prefer not to say'
       return isSingle ? 'Single' : 'Not Single'
     }
     
     const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
     const userEffectiveStatus = getEffectiveStatus(toUser.isSingle)
     
-    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
-    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
+    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Prefer not to say') || userRelationshipPrefs.includes(myEffectiveStatus)
+    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Prefer not to say') || myRelationshipPrefs.includes(userEffectiveStatus)
 
     const canMessage = 
       userReceivesList.includes(myProfile.gender) &&
