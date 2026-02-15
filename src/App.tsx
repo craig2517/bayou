@@ -42,7 +42,8 @@ function App() {
   }
 
   useEffect(() => {
-    if (!myProfile || dataGeneratedRef.current || initialLoadCompleteRef.current) return
+    if (!myProfile) return
+    if (dataGeneratedRef.current || initialLoadCompleteRef.current) return
 
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
@@ -74,7 +75,7 @@ function App() {
       ].filter(id => id !== myProfile.id)
       
       const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 30)
       const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
       
       const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
@@ -87,20 +88,20 @@ function App() {
         }
       })
       
-      setConversations((current) => [...demoData.conversations, ...newConversations])
-      setChatRequests((current) => allChatRequests)
-      setMessages((current) => demoData.messages)
+      setConversations([...demoData.conversations, ...newConversations])
+      setChatRequests(allChatRequests)
+      setMessages(demoData.messages)
       
       const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
       
-      toast.success(`${demoData.conversations.length + newConversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
+      toast.success(`✨ ${demoData.conversations.length + newConversations.length} conversations & ${pendingToMe.length} requests loaded!`, {
         description: 'Check Messages and Requests tabs',
         duration: 4000
       })
-    }, 300)
+    }, 500)
 
     return () => clearTimeout(timer)
-  }, [myProfile, demoUsers])
+  }, [myProfile, demoUsers, conversations, chatRequests])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -181,9 +182,9 @@ function App() {
     if (isNewProfile) {
       dataGeneratedRef.current = false
       initialLoadCompleteRef.current = false
-      setChatRequests((current) => [])
-      setConversations((current) => [])
-      setMessages((current) => ({}))
+      setChatRequests([])
+      setConversations([])
+      setMessages({})
     }
     
     if (!isNewProfile && wasRequiringApproval && !nowRequiresApproval) {
@@ -217,7 +218,7 @@ function App() {
           return [...currentArray, ...uniqueNewConvs]
         })
         
-        toast.success(`${pendingRequests.length} pending request${pendingRequests.length > 1 ? 's' : ''} auto-approved!`, {
+        toast.success(`✅ ${pendingRequests.length} pending request${pendingRequests.length > 1 ? 's' : ''} auto-approved!`, {
           description: 'All pending requests are now active conversations',
           duration: 4000
         })
@@ -228,18 +229,18 @@ function App() {
     setShowProfileDialog(false)
     
     if (isNewProfile) {
-      toast.success('Profile created! Generating demo data...', {
+      toast.success('✨ Profile created! Generating demo data...', {
         duration: 3000
       })
-      setTimeout(() => setSelectedTab('messages'), 3000)
+      setTimeout(() => setSelectedTab('messages'), 3500)
     } else {
-      toast.success('Profile updated!')
+      toast.success('✅ Profile updated!')
     }
   }
 
   const handleSendChatRequest = (toUser: UserProfile) => {
     if (!myProfile) {
-      toast.error('Please complete your profile first')
+      toast.error('❌ Please complete your profile first')
       return
     }
 
@@ -271,7 +272,7 @@ function App() {
       iAcceptUserRelationshipStatus
 
     if (!canMessage) {
-      toast.error('Your preferences do not match with this user')
+      toast.error('❌ Your preferences do not match with this user')
       return
     }
 
@@ -289,7 +290,7 @@ function App() {
         setSelectedTab('messages')
         return
       }
-      toast.info('Request already sent')
+      toast.info('ℹ️ Request already sent')
       return
     }
 
@@ -321,7 +322,7 @@ function App() {
 
       setSelectedConversation(conversationId)
       setSelectedTab('messages')
-      toast.success(`You can now message ${toUser.name}!`)
+      toast.success(`✅ You can now message ${toUser.name}!`)
       return
     }
 
@@ -338,7 +339,7 @@ function App() {
       return [...currentArray, newRequest]
     })
     setPendingRequestUser(toUser)
-    toast.success(`Chat request sent to ${toUser.name}!`)
+    toast.success(`✅ Chat request sent to ${toUser.name}!`)
   }
 
   const handleAcceptRequest = (request: ChatRequest) => {
@@ -365,7 +366,7 @@ function App() {
       return currentArray
     })
 
-    toast.success('Chat request accepted!')
+    toast.success('✅ Chat request accepted!')
   }
 
   const handleDeclineRequest = (request: ChatRequest) => {
@@ -373,7 +374,7 @@ function App() {
       const currentArray = Array.isArray(current) ? current : []
       return currentArray.map(req => (req.id === request.id ? { ...req, status: 'declined' as const } : req))
     })
-    toast.info('Request declined')
+    toast.info('ℹ️ Request declined')
   }
 
   const handleViewUserProfile = (user: UserProfile, distance?: number) => {
@@ -403,7 +404,7 @@ function App() {
       
       setDemoUsers(refreshedUsers)
       setIsRefreshing(false)
-      toast.success('Nearby users refreshed!')
+      toast.success('✅ Nearby users refreshed!')
     }, 500)
   }
 
@@ -416,9 +417,9 @@ function App() {
     dataGeneratedRef.current = false
     initialLoadCompleteRef.current = false
     
-    setChatRequests((current) => [])
-    setConversations((current) => [])
-    setMessages((current) => ({}))
+    setChatRequests([])
+    setConversations([])
+    setMessages({})
     
     setIsGenerating(true)
     
@@ -437,7 +438,7 @@ function App() {
         ...demoData.chatRequests.map(r => r.toUserId)
       ].filter(id => id !== myProfile.id)
       
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, [...new Set(existingUserIds)], 25)
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, [...new Set(existingUserIds)], 30)
       const allRequests = [...demoData.chatRequests, ...pendingRequests]
       
       const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
@@ -450,9 +451,9 @@ function App() {
         }
       })
       
-      setConversations((current) => [...demoData.conversations, ...newConversations])
-      setChatRequests((current) => allRequests)
-      setMessages((current) => demoData.messages)
+      setConversations([...demoData.conversations, ...newConversations])
+      setChatRequests(allRequests)
+      setMessages(demoData.messages)
       
       dataGeneratedRef.current = true
       initialLoadCompleteRef.current = true
@@ -465,7 +466,7 @@ function App() {
       })
       
       setTimeout(() => setSelectedTab('messages'), 1000)
-    }, 300)
+    }, 500)
   }
 
   const handleGenerateMoreDemoData = async () => {
@@ -498,7 +499,7 @@ function App() {
         return { ...currentObj, ...demoData.messages }
       })
       
-      toast.success(`Added ${demoData.conversations.length} new conversations!`)
+      toast.success(`✅ Added ${demoData.conversations.length} new conversations!`)
     }
     
     const newExistingIds = [
@@ -509,7 +510,7 @@ function App() {
     ].filter(id => id !== myProfile.id)
     
     const finalUniqueIds = [...new Set(newExistingIds)]
-    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 20)
+    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 25)
     
     if (additionalRequests.length > 0) {
       const autoAcceptedRequests = additionalRequests.filter(r => r.status === 'accepted')
@@ -538,16 +539,16 @@ function App() {
       const acceptedCount = additionalRequests.filter(r => r.status === 'accepted').length
       
       if (pendingCount > 0 && acceptedCount > 0) {
-        toast.success(`${acceptedCount} new conversations and ${pendingCount} new requests!`)
+        toast.success(`✨ ${acceptedCount} new conversations & ${pendingCount} new requests!`)
       } else if (pendingCount > 0) {
-        toast.success(`${pendingCount} new message requests!`)
+        toast.success(`✨ ${pendingCount} new message requests!`)
       } else if (acceptedCount > 0) {
-        toast.success(`${acceptedCount} new conversations!`)
+        toast.success(`✨ ${acceptedCount} new conversations!`)
       }
     }
     
     if (demoData.conversations.length === 0 && additionalRequests.length === 0) {
-      toast.error('No more eligible users available')
+      toast.error('❌ No more eligible users available')
     }
   }
 
@@ -565,7 +566,7 @@ function App() {
     
     const uniqueExistingUserIds = [...new Set(existingUserIds)]
     
-    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
+    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
     
     if (newRequests.length > 0) {
       const autoAcceptedRequests = newRequests.filter(r => r.status === 'accepted')
@@ -594,23 +595,23 @@ function App() {
       const acceptedCount = newRequests.filter(r => r.status === 'accepted').length
       
       if (pendingCount > 0 && acceptedCount > 0) {
-        toast.success(`Generated ${acceptedCount} conversations and ${pendingCount} requests!`, {
+        toast.success(`✨ Generated ${acceptedCount} conversations & ${pendingCount} requests!`, {
           description: 'Check the Messages and Requests tabs',
           duration: 3000
         })
       } else if (pendingCount > 0) {
-        toast.success(`Generated ${pendingCount} new pending requests!`, {
+        toast.success(`✨ Generated ${pendingCount} new pending requests!`, {
           description: 'Check the Requests tab',
           duration: 3000
         })
       } else if (acceptedCount > 0) {
-        toast.success(`Generated ${acceptedCount} new conversations!`, {
+        toast.success(`✨ Generated ${acceptedCount} new conversations!`, {
           description: 'Check the Messages tab',
           duration: 3000
         })
       }
     } else {
-      toast.info('No eligible users available for requests', {
+      toast.info('ℹ️ No eligible users available for requests', {
         description: 'Try refreshing users or adjusting your profile preferences'
       })
     }
@@ -720,16 +721,16 @@ function App() {
                     onClick={async () => {
                       dataGeneratedRef.current = false
                       initialLoadCompleteRef.current = false
-                      setChatRequests((current) => [])
-                      setConversations((current) => [])
-                      setMessages((current) => ({}))
-                      toast.success('All data cleared!', {
+                      setChatRequests([])
+                      setConversations([])
+                      setMessages({})
+                      toast.success('✅ All data cleared!', {
                         description: 'Reloading page...',
                         duration: 1500
                       })
                       setTimeout(() => {
                         window.location.reload()
-                      }, 1000)
+                      }, 1500)
                     }} 
                     className="cursor-pointer text-destructive focus:text-destructive"
                   >
