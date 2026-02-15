@@ -7,9 +7,8 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { Toaster } from '@/components/ui/sonner'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Trash } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -33,7 +32,6 @@ function App() {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
   const dataGeneratedRef = useRef(false)
   const initialLoadCompleteRef = useRef(false)
 
@@ -58,7 +56,7 @@ function App() {
     initialLoadCompleteRef.current = true
     
     const timer = setTimeout(() => {
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 20)
       
       if (demoData.conversations.length === 0) {
         toast.error('No compatible users found', {
@@ -75,7 +73,7 @@ function App() {
       ].filter(id => id !== myProfile.id)
       
       const uniqueExistingUserIds = [...new Set(existingUserIds)]
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 30)
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 40)
       const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
       
       const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
@@ -408,215 +406,6 @@ function App() {
     }, 500)
   }
 
-  const handleClearAllData = () => {
-    if (!myProfile) {
-      toast.error('Create a profile first')
-      return
-    }
-    
-    dataGeneratedRef.current = false
-    initialLoadCompleteRef.current = false
-    
-    setChatRequests([])
-    setConversations([])
-    setMessages({})
-    
-    setIsGenerating(true)
-    
-    setTimeout(() => {
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
-      
-      if (demoData.conversations.length === 0) {
-        setIsGenerating(false)
-        toast.error('No compatible users - adjust preferences')
-        return
-      }
-      
-      const existingUserIds = [
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id)
-      
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, [...new Set(existingUserIds)], 30)
-      const allRequests = [...demoData.chatRequests, ...pendingRequests]
-      
-      const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
-      const newConversations = autoAcceptedRequests.map(request => {
-        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
-        return {
-          id: conversationId,
-          participants: [request.fromUserId, request.toUserId] as [string, string],
-          unreadCount: 0
-        }
-      })
-      
-      setConversations([...demoData.conversations, ...newConversations])
-      setChatRequests(allRequests)
-      setMessages(demoData.messages)
-      
-      dataGeneratedRef.current = true
-      initialLoadCompleteRef.current = true
-      setIsGenerating(false)
-      
-      const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      
-      toast.success(`✅ ${demoData.conversations.length + newConversations.length} conversations, ${pendingToMe.length} requests!`, {
-        duration: 4000
-      })
-      
-      setTimeout(() => setSelectedTab('messages'), 1000)
-    }, 500)
-  }
-
-  const handleGenerateMoreDemoData = async () => {
-    if (!myProfile) return
-    
-    const conversationArray = Array.isArray(conversations) ? conversations : []
-    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-    
-    const existingUserIds = [
-      ...conversationArray.flatMap(c => c.participants),
-      ...requestArray.map(r => r.fromUserId),
-      ...requestArray.map(r => r.toUserId)
-    ].filter(id => id !== myProfile.id)
-    
-    const uniqueExistingUserIds = [...new Set(existingUserIds)]
-    
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 10)
-    
-    if (demoData.conversations.length > 0) {
-      setConversations(current => {
-        const currentArray = Array.isArray(current) ? current : []
-        return [...currentArray, ...demoData.conversations]
-      })
-      setChatRequests(current => {
-        const currentArray = Array.isArray(current) ? current : []
-        return [...currentArray, ...demoData.chatRequests]
-      })
-      setMessages(current => {
-        const currentObj = current && typeof current === 'object' ? current : {}
-        return { ...currentObj, ...demoData.messages }
-      })
-      
-      toast.success(`✅ Added ${demoData.conversations.length} new conversations!`)
-    }
-    
-    const newExistingIds = [
-      ...uniqueExistingUserIds,
-      ...demoData.conversations.flatMap(c => c.participants),
-      ...demoData.chatRequests.map(r => r.fromUserId),
-      ...demoData.chatRequests.map(r => r.toUserId)
-    ].filter(id => id !== myProfile.id)
-    
-    const finalUniqueIds = [...new Set(newExistingIds)]
-    const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 25)
-    
-    if (additionalRequests.length > 0) {
-      const autoAcceptedRequests = additionalRequests.filter(r => r.status === 'accepted')
-      const newConversations = autoAcceptedRequests.map(request => {
-        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
-        return {
-          id: conversationId,
-          participants: [request.fromUserId, request.toUserId] as [string, string],
-          unreadCount: 0
-        }
-      })
-      
-      if (newConversations.length > 0) {
-        setConversations(current => {
-          const currentArray = Array.isArray(current) ? current : []
-          return [...currentArray, ...newConversations]
-        })
-      }
-      
-      setChatRequests(current => {
-        const currentArray = Array.isArray(current) ? current : []
-        return [...currentArray, ...additionalRequests]
-      })
-      
-      const pendingCount = additionalRequests.filter(r => r.status === 'pending').length
-      const acceptedCount = additionalRequests.filter(r => r.status === 'accepted').length
-      
-      if (pendingCount > 0 && acceptedCount > 0) {
-        toast.success(`✨ ${acceptedCount} new conversations & ${pendingCount} new requests!`)
-      } else if (pendingCount > 0) {
-        toast.success(`✨ ${pendingCount} new message requests!`)
-      } else if (acceptedCount > 0) {
-        toast.success(`✨ ${acceptedCount} new conversations!`)
-      }
-    }
-    
-    if (demoData.conversations.length === 0 && additionalRequests.length === 0) {
-      toast.error('❌ No more eligible users available')
-    }
-  }
-
-  const handleGeneratePendingRequests = async () => {
-    if (!myProfile) return
-    
-    const conversationArray = Array.isArray(conversations) ? conversations : []
-    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-    
-    const existingUserIds = [
-      ...conversationArray.flatMap(c => c.participants),
-      ...requestArray.map(r => r.fromUserId),
-      ...requestArray.map(r => r.toUserId)
-    ].filter(id => id !== myProfile.id)
-    
-    const uniqueExistingUserIds = [...new Set(existingUserIds)]
-    
-    const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
-    
-    if (newRequests.length > 0) {
-      const autoAcceptedRequests = newRequests.filter(r => r.status === 'accepted')
-      const newConversations = autoAcceptedRequests.map(request => {
-        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
-        return {
-          id: conversationId,
-          participants: [request.fromUserId, request.toUserId] as [string, string],
-          unreadCount: 0
-        }
-      })
-      
-      if (newConversations.length > 0) {
-        setConversations(current => {
-          const currentArray = Array.isArray(current) ? current : []
-          return [...currentArray, ...newConversations]
-        })
-      }
-      
-      setChatRequests(current => {
-        const currentArray = Array.isArray(current) ? current : []
-        return [...currentArray, ...newRequests]
-      })
-      
-      const pendingCount = newRequests.filter(r => r.status === 'pending').length
-      const acceptedCount = newRequests.filter(r => r.status === 'accepted').length
-      
-      if (pendingCount > 0 && acceptedCount > 0) {
-        toast.success(`✨ Generated ${acceptedCount} conversations & ${pendingCount} requests!`, {
-          description: 'Check the Messages and Requests tabs',
-          duration: 3000
-        })
-      } else if (pendingCount > 0) {
-        toast.success(`✨ Generated ${pendingCount} new pending requests!`, {
-          description: 'Check the Requests tab',
-          duration: 3000
-        })
-      } else if (acceptedCount > 0) {
-        toast.success(`✨ Generated ${acceptedCount} new conversations!`, {
-          description: 'Check the Messages tab',
-          duration: 3000
-        })
-      }
-    } else {
-      toast.info('ℹ️ No eligible users available for requests', {
-        description: 'Try refreshing users or adjusting your profile preferences'
-      })
-    }
-  }
-
   const handleSendMessage = (conversationId: string, text: string) => {
     if (!myProfile) return
 
@@ -689,56 +478,6 @@ function App() {
                 <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">Here</span>
                 <span className="text-yellow-400 drop-shadow-sm">o</span>
               </h1>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Badge 
-                    variant="secondary" 
-                    className="hidden sm:flex items-center gap-1.5 bg-accent/10 text-accent-foreground border-accent/20 text-xs px-2.5 py-1 cursor-pointer hover:bg-accent/20 hover:shadow-sm transition-all duration-200"
-                  >
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-                    </span>
-                    Demo Mode
-                  </Badge>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuItem onClick={handleClearAllData} className="cursor-pointer">
-                    <ArrowsClockwise size={16} className="mr-2" />
-                    Force Generate Demo Data
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleGenerateMoreDemoData} className="cursor-pointer">
-                    <ChatCircle size={16} className="mr-2" />
-                    Add More Conversations
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleGeneratePendingRequests} className="cursor-pointer">
-                    <User size={16} className="mr-2" />
-                    Add More Requests
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={async () => {
-                      dataGeneratedRef.current = false
-                      initialLoadCompleteRef.current = false
-                      setChatRequests([])
-                      setConversations([])
-                      setMessages({})
-                      toast.success('✅ All data cleared!', {
-                        description: 'Reloading page...',
-                        duration: 1500
-                      })
-                      setTimeout(() => {
-                        window.location.reload()
-                      }, 1500)
-                    }} 
-                    className="cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    <Trash size={16} className="mr-2" />
-                    Clear All & Reload
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
             <div className="flex items-center gap-2.5">
               {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && (
@@ -1082,8 +821,7 @@ function App() {
       <footer className="border-t border-border bg-card/60 backdrop-blur-sm mt-16">
         <div className="container mx-auto px-4 sm:px-6 py-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Here Now, Hereo · 
-            <span className="ml-2 font-medium">Demo Application with {demoUsers.length} simulated users</span>
+            Connect Nearby · Hereo
           </p>
         </div>
       </footer>
