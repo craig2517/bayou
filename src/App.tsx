@@ -679,7 +679,7 @@ function App() {
             <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10 rounded-xl p-5 shadow-sm">
               <h2 className="font-semibold text-lg mb-2 flex items-center gap-2">
                 <MapTrifold size={24} weight="duotone" className="text-primary" />
-                Real-Time Activity Heat Map
+                Social Discovery Heat Map
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Visualize anonymous user density in the area. Brighter colors indicate higher activity. 
@@ -968,7 +968,7 @@ function App() {
       <footer className="border-t border-border bg-card/50 backdrop-blur-sm mt-12">
         <div className="container mx-auto px-4 sm:px-6 py-6 text-center">
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Hereo</span> - Here Now, Hereo · 
+            <span className="font-semibold text-foreground">Hereo</span> · Here Now, Hereo · 
             <span className="ml-2">Demo Application with {demoUsers.length} simulated users</span>
           </p>
         </div>
