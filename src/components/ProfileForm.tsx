@@ -38,6 +38,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   }
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(profile?.locationSharingEnabled ?? true)
   const [requireApproval, setRequireApproval] = useState(profile?.requireApproval ?? true)
+  const [isSingle, setIsSingle] = useState<boolean | undefined>(profile?.isSingle)
   const [profilePicture, setProfilePicture] = useState<{ dataUrl: string; capturedAt: number } | undefined>(
     profile?.profilePicture
   )
@@ -108,6 +109,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
       ageRangeMax: ageRange[1],
       locationSharingEnabled,
       requireApproval,
+      isSingle,
       profilePicture
     })
   }
@@ -220,6 +222,30 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status (Optional)</Label>
+          <Select 
+            value={isSingle === undefined ? 'unspecified' : isSingle ? 'single' : 'not-single'} 
+            onValueChange={(val) => {
+              if (val === 'unspecified') setIsSingle(undefined)
+              else if (val === 'single') setIsSingle(true)
+              else setIsSingle(false)
+            }}
+          >
+            <SelectTrigger id="relationship-status" className="h-11">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unspecified">Prefer not to say</SelectItem>
+              <SelectItem value="single">Single</SelectItem>
+              <SelectItem value="not-single">Not Single</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
+            This will be visible to other users viewing your profile
+          </p>
         </div>
 
         <div className="space-y-3 pt-2">

@@ -99,6 +99,9 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const minAge = Math.max(18, age - 20 - Math.floor(Math.random() * 10))
     const maxAge = Math.min(100, age + 20 + Math.floor(Math.random() * 30))
     
+    const randomValue = Math.random()
+    const isSingle = randomValue < 0.4 ? true : randomValue < 0.7 ? false : undefined
+    
     users.push({
       id: `user-demo-${i + 1}-${timestamp}`,
       name,
@@ -112,6 +115,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       lastActive: Date.now() - Math.floor(Math.random() * 3600000),
       locationSharingEnabled: true,
       requireApproval: i % 3 !== 0,
+      isSingle,
       profilePicture: {
         dataUrl: generateDemoAvatar(name, gender, age, i),
         capturedAt

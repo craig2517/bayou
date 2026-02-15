@@ -84,6 +84,18 @@ export function UserProfileView({ user, distance }: UserProfileViewProps) {
             </div>
           </div>
 
+          {user.isSingle !== undefined && (
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-accent/10 border border-accent/10">
+              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                <Heart className="text-accent" size={22} weight="duotone" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Status</p>
+                <p className="font-semibold text-foreground text-lg mt-0.5">{user.isSingle ? 'Single' : 'Not Single'}</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-accent/10 border border-accent/10">
             <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
               <Heart className="text-accent" size={22} weight="duotone" />

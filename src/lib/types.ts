@@ -14,6 +14,7 @@ export interface UserProfile {
   lastActive: number
   locationSharingEnabled: boolean
   requireApproval: boolean
+  isSingle?: boolean
   profilePicture?: {
     dataUrl: string
     capturedAt: number
