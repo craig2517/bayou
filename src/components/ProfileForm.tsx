@@ -146,40 +146,40 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
     <Card className="p-6 border-0 shadow-none">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-3">
-          <Label className="text-sm font-semibold">Profile Picture</Label>
+          <Label className="text-sm font-semibold text-base">Profile Picture</Label>
           <div className="flex flex-col items-center gap-4">
             {profilePicture && !isExpired ? (
-              <div className="relative">
+              <div className="relative group">
                 <img
                   src={profilePicture.dataUrl}
                   alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-primary/20 shadow-lg"
+                  className="w-36 h-36 rounded-full object-cover border-4 border-primary/30 shadow-xl group-hover:border-primary/50 transition-all duration-200"
                 />
                 <Button
                   type="button"
                   variant="destructive"
                   size="icon"
-                  className="absolute -top-2 -right-2 rounded-full h-8 w-8 shadow-md"
+                  className="absolute -top-2 -right-2 rounded-full h-9 w-9 shadow-lg hover:shadow-xl transition-all"
                   onClick={handleRemovePhoto}
                 >
-                  <Trash size={16} />
+                  <Trash size={16} weight="bold" />
                 </Button>
               </div>
             ) : (
-              <div className="w-32 h-32 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center">
-                <Camera size={40} className="text-muted-foreground" />
+              <div className="w-36 h-36 rounded-full bg-muted/50 border-2 border-dashed border-border flex items-center justify-center hover:bg-muted/70 transition-colors">
+                <Camera size={48} className="text-muted-foreground" weight="duotone" />
               </div>
             )}
             
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-2.5">
               {profilePicture && !isExpired && (
-                <p className="text-xs text-muted-foreground bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-full inline-block">
-                  Expires in {getPhotoTimeRemaining()} hours
+                <p className="text-xs text-muted-foreground bg-accent/10 border border-accent/20 px-3 py-2 rounded-full inline-block font-medium">
+                  ⏱ Expires in {getPhotoTimeRemaining()} hours
                 </p>
               )}
               {isExpired && (
-                <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 px-3 py-1.5 rounded-full inline-block">
-                  Photo expired - take a new one
+                <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 px-3 py-2 rounded-full inline-block font-medium">
+                  ⚠️ Photo expired - take a new one
                 </p>
               )}
               <Button
@@ -187,12 +187,12 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCamera(true)}
-                className="w-full"
+                className="w-full shadow-sm hover:shadow-md transition-all h-11"
               >
-                <Camera className="mr-2" size={18} />
+                <Camera className="mr-2" size={18} weight="duotone" />
                 {profilePicture && !isExpired ? 'Retake Photo' : 'Take Photo'}
               </Button>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Live camera capture only • Photo expires after 24h
               </p>
             </div>
@@ -206,7 +206,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter your name"
-            className="h-11"
+            className="h-11 border-border/60 focus:border-primary transition-colors"
             required
           />
         </div>
@@ -221,7 +221,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             value={age}
             onChange={(e) => setAge(e.target.value)}
             placeholder="Enter your age"
-            className="h-11"
+            className="h-11 border-border/60 focus:border-primary transition-colors"
             required
           />
         </div>
@@ -229,7 +229,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
         <div className="space-y-2">
           <Label htmlFor="gender" className="text-sm font-semibold">Gender</Label>
           <Select value={gender} onValueChange={setGender}>
-            <SelectTrigger id="gender" className="h-11">
+            <SelectTrigger id="gender" className="h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
@@ -252,7 +252,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
               else setIsSingle(false)
             }}
           >
-            <SelectTrigger id="relationship-status" className="h-11">
+            <SelectTrigger id="relationship-status" className="h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
@@ -261,7 +261,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
               <SelectItem value="not-single">Not Single</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
+          <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
             This will be visible to other users viewing your profile
           </p>
         </div>
@@ -270,7 +270,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
           <Label className="text-sm font-semibold">Receive Messages From</Label>
           <div className="grid grid-cols-2 gap-3">
             {GENDERS.filter(g => g !== 'Prefer not to say').map(genderOption => (
-              <div key={genderOption} className="flex items-center space-x-2.5 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
+              <div key={genderOption} className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border hover:bg-muted/40 hover:border-primary/20 transition-all">
                 <Checkbox
                   id={`receive-${genderOption}`}
                   checked={receiveMessagesFrom.includes(genderOption)}
@@ -285,7 +285,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
               </div>
             ))}
           </div>
-          <div className="flex items-center space-x-2.5 p-3 rounded-lg border border-border bg-muted/20">
+          <div className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border bg-muted/30">
             <Checkbox
               id="show-receive-messages"
               checked={showReceiveMessagesFrom}
@@ -311,10 +311,10 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             minStepsBetweenThumbs={1}
             className="w-full"
           />
-          <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
+          <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
             You'll receive messages from users aged {ageRange[0]} to {ageRange[1]}
           </p>
-          <div className="flex items-center space-x-2.5 p-3 rounded-lg border border-border bg-muted/20">
+          <div className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border bg-muted/30">
             <Checkbox
               id="show-age-range"
               checked={showAgeRange}
@@ -331,12 +331,12 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
 
         <div className="space-y-3 pt-2">
           <Label className="text-sm font-semibold">Relationship Status Preference</Label>
-          <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
+          <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
             Choose which relationship statuses you want to receive messages from
           </p>
           <div className="grid grid-cols-2 gap-3">
             {RELATIONSHIP_STATUSES.map(status => (
-              <div key={status} className="flex items-center space-x-2.5 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
+              <div key={status} className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border hover:bg-muted/40 hover:border-primary/20 transition-all">
                 <Checkbox
                   id={`relationship-${status}`}
                   checked={relationshipStatusPreference.includes(status)}
@@ -354,9 +354,9 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
         </div>
 
         <div className="space-y-4 pt-4 border-t-2 border-border">
-          <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+          <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all border-2 border-border">
             <div className="flex items-start gap-3 flex-1">
-              <MapPin className="text-primary mt-1 flex-shrink-0" size={22} weight="fill" />
+              <MapPin className="text-primary mt-1 flex-shrink-0" size={24} weight="fill" />
               <div className="space-y-1">
                 <Label htmlFor="location-sharing" className="cursor-pointer font-semibold text-base">
                   Appear in Discover
@@ -373,14 +373,14 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             />
           </div>
           {!locationSharingEnabled && (
-            <p className="text-sm text-muted-foreground bg-yellow-500/10 border border-yellow-500/20 p-3.5 rounded-lg">
+            <p className="text-sm text-muted-foreground bg-amber-50 border-2 border-amber-200 p-4 rounded-lg leading-relaxed">
               With this disabled, you won't appear in Discover searches, but your anonymized location will still contribute to the heat map.
             </p>
           )}
         </div>
 
         <div className="space-y-4 pt-4 border-t-2 border-border">
-          <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+          <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all border-2 border-border">
             <div className="flex-1">
               <Label htmlFor="require-approval" className="cursor-pointer font-semibold text-base">
                 Require Approval for Messages
@@ -400,7 +400,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
 
         <Button
           type="submit"
-          className="w-full bg-primary hover:bg-primary/90 h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
+          className="w-full bg-primary hover:bg-primary/90 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
           disabled={!isValid}
         >
           Save Profile

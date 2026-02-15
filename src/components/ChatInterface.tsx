@@ -46,26 +46,26 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
   const photoValid = otherUser.profilePicture ? isPhotoValid(otherUser.profilePicture) : false
 
   return (
-    <Card className="flex flex-col h-full border-2 shadow-lg">
-      <div className="p-5 border-b-2 border-border flex items-center gap-3 bg-muted/20">
+    <Card className="flex flex-col h-full border-2 shadow-xl">
+      <div className="p-5 border-b-2 border-border flex items-center gap-3 bg-gradient-to-r from-muted/30 to-muted/10 backdrop-blur-sm">
         {onBack && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="hover:bg-muted -ml-2"
+            className="hover:bg-muted/60 -ml-2 transition-colors"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} weight="bold" />
           </Button>
         )}
         <Avatar 
-          className="w-11 h-11 border-2 border-primary/20 cursor-pointer hover:scale-105 transition-transform shadow-sm"
+          className="w-12 h-12 border-2 border-primary/30 cursor-pointer hover:scale-110 transition-transform duration-200 shadow-md"
           onClick={onViewProfile}
         >
           {photoValid && otherUser.profilePicture && (
             <AvatarImage src={otherUser.profilePicture.dataUrl} alt={otherUser.name} />
           )}
-          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
+          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-base">
             {otherUserInitials}
           </AvatarFallback>
         </Avatar>
@@ -74,17 +74,17 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
           onClick={onViewProfile}
         >
           <h3 className="font-semibold text-foreground text-base">{otherUser.name}</h3>
-          <p className="text-sm text-muted-foreground">{otherUser.age} • {otherUser.gender}</p>
+          <p className="text-sm text-muted-foreground font-medium">{otherUser.age} • {otherUser.gender}</p>
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-5" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              <ChatCircle className="mx-auto mb-3" size={48} weight="duotone" />
-              <p className="font-medium">Start the conversation!</p>
-              <p className="text-sm mt-1">Send a message to break the ice.</p>
+            <div className="text-center text-muted-foreground py-16">
+              <ChatCircle className="mx-auto mb-4" size={56} weight="duotone" />
+              <p className="font-semibold text-lg text-foreground mb-2">Start the conversation!</p>
+              <p className="text-sm">Send a message to break the ice.</p>
             </div>
           ) : (
             messages.map(message => {
@@ -95,14 +95,14 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
                   className={`flex ${isSent ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                 >
                   <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${
+                    className={`max-w-[75%] rounded-2xl px-4 py-3.5 shadow-md ${
                       isSent
-                        ? 'bg-primary text-primary-foreground rounded-br-md'
-                        : 'bg-muted text-foreground rounded-bl-md border border-border'
+                        ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-br-md'
+                        : 'bg-muted text-foreground rounded-bl-md border-2 border-border'
                     }`}
                   >
-                    <p className="text-sm leading-relaxed break-words">{message.text}</p>
-                    <p className={`text-xs mt-1.5 ${isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                    <p className="text-sm leading-relaxed break-words font-medium">{message.text}</p>
+                    <p className={`text-xs mt-2 font-medium ${isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                       {new Date(message.timestamp).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit'
@@ -116,20 +116,20 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSubmit} className="p-5 border-t-2 border-border bg-muted/20">
-        <div className="flex gap-2.5">
+      <form onSubmit={handleSubmit} className="p-5 border-t-2 border-border bg-gradient-to-r from-muted/30 to-muted/10 backdrop-blur-sm">
+        <div className="flex gap-3">
           <Input
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 h-11"
+            className="flex-1 h-12 border-border/60 focus:border-primary transition-colors text-base"
           />
           <Button
             type="submit"
             disabled={!messageText.trim()}
-            className="bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all h-11 px-5"
+            className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-200 h-12 px-6"
           >
-            <PaperPlaneTilt weight="fill" size={20} />
+            <PaperPlaneTilt weight="fill" size={22} />
           </Button>
         </div>
       </form>
