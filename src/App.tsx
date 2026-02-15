@@ -968,7 +968,7 @@ function App() {
       <footer className="border-t border-border bg-card/50 backdrop-blur-sm mt-12">
         <div className="container mx-auto px-4 sm:px-6 py-6 text-center">
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Hereo</span> · Here Now, Hereo · 
+            Here Now, Hereo · 
             <span className="ml-2">Demo Application with {demoUsers.length} simulated users</span>
           </p>
         </div>
