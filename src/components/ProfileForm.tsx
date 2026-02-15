@@ -18,6 +18,7 @@ interface ProfileFormProps {
 }
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
+const RELATIONSHIP_STATUSES = ['Single', 'Not Single', 'Any']
 
 export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
@@ -25,6 +26,9 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const [gender, setGender] = useState(profile?.gender || '')
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
     profile?.receiveMessagesFrom || ['Male', 'Female', 'Non-binary', 'Other']
+  )
+  const [relationshipStatusPreference, setRelationshipStatusPreference] = useState<string[]>(
+    profile?.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
   )
   const [ageRange, setAgeRange] = useState([
     profile?.ageRangeMin || 18,
@@ -81,6 +85,14 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
     }
   }
 
+  const handleRelationshipStatusCheckbox = (status: string, checked: boolean) => {
+    if (checked) {
+      setRelationshipStatusPreference(prev => [...prev, status])
+    } else {
+      setRelationshipStatusPreference(prev => prev.filter(s => s !== status))
+    }
+  }
+
   const handleCapturePhoto = (dataUrl: string) => {
     setProfilePicture({
       dataUrl,
@@ -98,7 +110,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
     e.preventDefault()
     
     const parsedAge = parseInt(age)
-    if (!name || !age || !gender || receiveMessagesFrom.length === 0 || isNaN(parsedAge) || parsedAge < 18 || parsedAge > 100) {
+    if (!name || !age || !gender || receiveMessagesFrom.length === 0 || relationshipStatusPreference.length === 0 || isNaN(parsedAge) || parsedAge < 18 || parsedAge > 100) {
       return
     }
 
@@ -107,6 +119,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
       age: parsedAge,
       gender,
       receiveMessagesFrom,
+      relationshipStatusPreference,
       ageRangeMin: ageRange[0],
       ageRangeMax: ageRange[1],
       locationSharingEnabled,
@@ -118,7 +131,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
     })
   }
 
-  const isValid = name && age && gender && receiveMessagesFrom.length > 0 && !isNaN(parseInt(age)) && parseInt(age) >= 18 && parseInt(age) <= 100
+  const isValid = name && age && gender && receiveMessagesFrom.length > 0 && relationshipStatusPreference.length > 0 && !isNaN(parseInt(age)) && parseInt(age) >= 18 && parseInt(age) <= 100
 
   const getPhotoTimeRemaining = () => {
     if (!profilePicture) return null
@@ -283,6 +296,30 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             >
               Display this on my profile for others to see
             </Label>
+          </div>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <Label className="text-sm font-semibold">Relationship Status Preference</Label>
+          <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
+            Choose which relationship statuses you want to receive messages from
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {RELATIONSHIP_STATUSES.map(status => (
+              <div key={status} className="flex items-center space-x-2.5 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
+                <Checkbox
+                  id={`relationship-${status}`}
+                  checked={relationshipStatusPreference.includes(status)}
+                  onCheckedChange={(checked) => handleRelationshipStatusCheckbox(status, checked as boolean)}
+                />
+                <Label
+                  htmlFor={`relationship-${status}`}
+                  className="text-sm font-normal cursor-pointer flex-1"
+                >
+                  {status}
+                </Label>
+              </div>
+            ))}
           </div>
         </div>
 

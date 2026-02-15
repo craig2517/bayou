@@ -4,6 +4,7 @@ export interface UserProfile {
   age: number
   gender: string
   receiveMessagesFrom: string[]
+  relationshipStatusPreference: string[]
   ageRangeMin: number
   ageRangeMax: number
   location: {

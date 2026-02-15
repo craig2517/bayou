@@ -20,18 +20,18 @@ This is a focused MVP with core features: heat map visualization, user profiles,
 - **Success criteria**: Heat map renders with realistic density patterns, no exact user locations visible, smooth interaction
 
 ### User Profile Management
-- **Functionality**: Create and edit profile with name, age, gender, sexual orientation, and real-time location sharing toggle
-- **Purpose**: Allows users to present themselves, control their privacy, and manage location visibility
+- **Functionality**: Create and edit profile with name, age, gender, relationship status (optional), gender preferences, relationship status preferences, age range preferences, and real-time location sharing toggle
+- **Purpose**: Allows users to present themselves, control their privacy, manage location visibility, and define their messaging preferences including filtering by relationship status
 - **Trigger**: Profile button in navigation or automatic prompt for first-time users
-- **Progression**: Click profile → View/edit form → Enter details → Toggle location sharing on/off → Save → Profile stored persistently
-- **Success criteria**: Profile persists across sessions, all fields editable, data validates appropriately, location sharing toggle controls visibility in discovery and heat map
+- **Progression**: Click profile → View/edit form → Enter details → Set relationship status (Single/Not Single/Prefer not to say) → Choose genders to receive messages from → Choose relationship statuses to receive messages from (Single/Not Single/Any) → Set age range preferences → Toggle location sharing on/off → Save → Profile stored persistently
+- **Success criteria**: Profile persists across sessions, all fields editable, data validates appropriately, location sharing toggle controls visibility in discovery and heat map, relationship status preferences properly filter matches
 
 ### Proximity Search
-- **Functionality**: Browse list of nearby active users with distance estimates and configurable search radius
-- **Purpose**: Enables intentional discovery of people in the surrounding area
+- **Functionality**: Browse list of nearby active users with distance estimates and configurable search radius, filtered by mutual preference matching including relationship status
+- **Purpose**: Enables intentional discovery of people in the surrounding area who match all preference criteria
 - **Trigger**: Navigate to "Discover" tab or section
-- **Progression**: Open discovery → Set radius filter → View user cards with approximate distance → Click user for more details → Option to initiate chat
-- **Success criteria**: Users appear sorted by distance, radius filter works, distances are approximate (not exact coordinates)
+- **Progression**: Open discovery → Set radius filter → View user cards with approximate distance (filtered by gender preferences, age range preferences, AND relationship status preferences) → Click user for more details → Option to initiate chat
+- **Success criteria**: Users appear sorted by distance, radius filter works, distances are approximate (not exact coordinates), only mutually compatible users are shown (matching on gender, age range, AND relationship status)
 
 ### Mutual Opt-In Messaging
 - **Functionality**: Send/receive chat requests and engage in simple text conversations

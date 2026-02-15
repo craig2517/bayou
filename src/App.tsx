@@ -139,7 +139,21 @@ function App() {
       const iAcceptUser = myReceivesList.includes(user.gender)
       const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
       
-      const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser
+      const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+      const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+      
+      const getEffectiveStatus = (isSingle: boolean | undefined): string => {
+        if (isSingle === undefined) return 'Any'
+        return isSingle ? 'Single' : 'Not Single'
+      }
+      
+      const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
+      const userEffectiveStatus = getEffectiveStatus(user.isSingle)
+      
+      const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
+      const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
+      
+      const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
       
       return { user, distance, canMessage, userAcceptsMe, userAgeMatchesMe, iAcceptUser, myAgeMatchesUser }
     })
@@ -216,6 +230,20 @@ function App() {
 
     const userReceivesList = toUser.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
+    
+    const userRelationshipPrefs = toUser.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    
+    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
+      if (isSingle === undefined) return 'Any'
+      return isSingle ? 'Single' : 'Not Single'
+    }
+    
+    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
+    const userEffectiveStatus = getEffectiveStatus(toUser.isSingle)
+    
+    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
+    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
 
     const canMessage = 
       userReceivesList.includes(myProfile.gender) &&
@@ -223,7 +251,9 @@ function App() {
       toUser.ageRangeMax >= myProfile.age &&
       myReceivesList.includes(toUser.gender) &&
       myProfile.ageRangeMin <= toUser.age &&
-      myProfile.ageRangeMax >= toUser.age
+      myProfile.ageRangeMax >= toUser.age &&
+      userAcceptsMyRelationshipStatus &&
+      iAcceptUserRelationshipStatus
 
     if (!canMessage) {
       toast.error('Your preferences do not match with this user')

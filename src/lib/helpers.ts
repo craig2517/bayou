@@ -96,6 +96,21 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const shuffledGenders = [...allGenders].sort(() => Math.random() - 0.5)
     const receiveFrom = shuffledGenders.slice(0, numGendersToReceive)
     
+    const allRelationshipStatuses = ['Single', 'Not Single', 'Any']
+    const relationshipPrefRandom = Math.random()
+    let relationshipStatusPreference: string[]
+    if (relationshipPrefRandom < 0.5) {
+      relationshipStatusPreference = ['Single', 'Not Single', 'Any']
+    } else if (relationshipPrefRandom < 0.75) {
+      relationshipStatusPreference = ['Single', 'Any']
+    } else if (relationshipPrefRandom < 0.85) {
+      relationshipStatusPreference = ['Not Single', 'Any']
+    } else if (relationshipPrefRandom < 0.95) {
+      relationshipStatusPreference = ['Single']
+    } else {
+      relationshipStatusPreference = ['Not Single']
+    }
+    
     const minAge = Math.max(18, age - 20 - Math.floor(Math.random() * 10))
     const maxAge = Math.min(100, age + 20 + Math.floor(Math.random() * 30))
     
@@ -111,6 +126,7 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       age,
       gender,
       receiveMessagesFrom: receiveFrom,
+      relationshipStatusPreference,
       ageRangeMin: minAge,
       ageRangeMax: Math.min(maxAge, 100),
       location: { lat, lng },
@@ -270,13 +286,29 @@ export function generateInitialChatRequests(
     const userReceivesList = user.receiveMessagesFrom || []
     const myReceivesList = myProfile.receiveMessagesFrom || []
     
+    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    
+    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
+      if (isSingle === undefined) return 'Any'
+      return isSingle ? 'Single' : 'Not Single'
+    }
+    
+    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
+    const userEffectiveStatus = getEffectiveStatus(user.isSingle)
+    
+    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
+    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
+    
     const canMessage = 
       userReceivesList.includes(myProfile.gender) &&
       user.ageRangeMin <= myProfile.age &&
       user.ageRangeMax >= myProfile.age &&
       myReceivesList.includes(user.gender) &&
       myProfile.ageRangeMin <= user.age &&
-      myProfile.ageRangeMax >= user.age
+      myProfile.ageRangeMax >= user.age &&
+      userAcceptsMyRelationshipStatus &&
+      iAcceptUserRelationshipStatus
     
     return canMessage
   })
@@ -527,7 +559,21 @@ export function generateDemoConversationsAndMessages(
     const iAcceptTheirGender = myReceivesList.includes(user.gender)
     const theirAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
     
-    const canMessage = userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange
+    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    
+    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
+      if (isSingle === undefined) return 'Any'
+      return isSingle ? 'Single' : 'Not Single'
+    }
+    
+    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
+    const userEffectiveStatus = getEffectiveStatus(user.isSingle)
+    
+    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
+    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
+    
+    const canMessage = userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
     
     return canMessage
   })
@@ -718,7 +764,21 @@ export function generateAdditionalChatRequests(
     const iAcceptTheirGender = myReceivesList.includes(user.gender)
     const theirAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
     
-    const canMessage = userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange
+    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
+    
+    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
+      if (isSingle === undefined) return 'Any'
+      return isSingle ? 'Single' : 'Not Single'
+    }
+    
+    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
+    const userEffectiveStatus = getEffectiveStatus(user.isSingle)
+    
+    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
+    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
+    
+    const canMessage = userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
     
     return canMessage
   })
