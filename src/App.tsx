@@ -14,16 +14,16 @@ import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
 import { ChatInterface } from '@/components/ChatInterface'
 import { UserProfileView } from '@/components/UserProfileView'
-import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, generateInitialChatRequests, getRandomLocationNearCenter, isPhotoValid, CENTER_LAT, CENTER_LNG, generateDemoConversationsAndMessages, generateAdditionalChatRequests } from '@/lib/helpers'
+import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, getRandomLocationNearCenter, isPhotoValid, generateDemoConversationsAndMessages, generateAdditionalChatRequests } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
 
 function App() {
-  const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v5', null)
+  const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v6', null)
   const [demoUsers, setDemoUsers] = useState<UserProfile[]>([])
-  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v5', [])
-  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v5', [])
-  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v5', {})
+  const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v6', [])
+  const [conversations, setConversations] = useKV<Conversation[]>('conversations-v6', [])
+  const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v6', {})
   const [searchRadius, setSearchRadius] = useState([0.8])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -33,6 +33,7 @@ function App() {
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const initializedRef = useRef(false)
+  const dataGeneratedRef = useRef(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
@@ -61,6 +62,11 @@ function App() {
 
   const generateSampleData = useCallback((profile: UserProfile, users: UserProfile[]) => {
     try {
+      if (!profile || !Array.isArray(users) || users.length === 0) {
+        console.error('Invalid parameters for generateSampleData')
+        return
+      }
+
       const demoData = generateDemoConversationsAndMessages(profile, users, 25)
       
       if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
@@ -97,6 +103,8 @@ function App() {
       setChatRequests(allChatRequests)
       setMessages(demoData.messages)
       
+      dataGeneratedRef.current = true
+      
       const pendingToMe = allChatRequests.filter(r => r.toUserId === profile.id && r.status === 'pending')
       const totalConversations = allConversations.length
       
@@ -114,12 +122,15 @@ function App() {
   }, [setConversations, setChatRequests, setMessages])
 
   useEffect(() => {
-    if (!myProfile || demoUsers.length === 0) return
+    if (!myProfile || demoUsers.length === 0 || dataGeneratedRef.current) return
     
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     
-    if (conversationArray.length > 0 || requestArray.length > 0) return
+    if (conversationArray.length > 0 || requestArray.length > 0) {
+      dataGeneratedRef.current = true
+      return
+    }
     
     const timer = setTimeout(() => {
       generateSampleData(myProfile, demoUsers)
@@ -128,14 +139,19 @@ function App() {
     return () => clearTimeout(timer)
   }, [myProfile, demoUsers, conversations, chatRequests, generateSampleData])
 
-  const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
+  const heatMapData = useMemo(() => {
+    if (!Array.isArray(demoUsers) || demoUsers.length === 0) {
+      return []
+    }
+    return generateHeatMapData(demoUsers)
+  }, [demoUsers])
 
   const nearbyUsers = useMemo(() => {
-    if (!myProfile) return []
+    if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) return []
     
     try {
       const eligibleDemoUsers = demoUsers.filter(user => 
-        user.id !== myProfile.id && user.isActive && user.locationSharingEnabled
+        user && user.id !== myProfile.id && user.isActive && user.locationSharingEnabled
       )
       
       const allUsersWithDistance = eligibleDemoUsers.map(user => {
@@ -170,7 +186,7 @@ function App() {
         
         const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
         
-        return { user, distance, canMessage, userAcceptsMe, userAgeMatchesMe, iAcceptUser, myAgeMatchesUser }
+        return { user, distance, canMessage }
       })
       
       const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
@@ -218,6 +234,7 @@ function App() {
       setChatRequests([])
       setConversations([])
       setMessages({})
+      dataGeneratedRef.current = false
     }
     
     if (!isNewProfile && wasRequiringApproval && !nowRequiresApproval) {
@@ -263,6 +280,7 @@ function App() {
     setShowProfileDialog(false)
     
     if (isNewProfile) {
+      dataGeneratedRef.current = false
       toast.success('✨ Profile created! Generating demo data...', {
         duration: 3000
       })
@@ -454,6 +472,7 @@ function App() {
     }
 
     setIsRefreshing(true)
+    dataGeneratedRef.current = false
     
     setChatRequests([])
     setConversations([])
@@ -469,6 +488,7 @@ function App() {
         
         if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
           setIsRefreshing(false)
+          dataGeneratedRef.current = false
           toast.error('No compatible users found', {
             description: 'Try adjusting your profile preferences',
             duration: 5000
@@ -501,6 +521,7 @@ function App() {
         setConversations(allConversations)
         setChatRequests(allChatRequests)
         setMessages(demoData.messages)
+        dataGeneratedRef.current = true
         
         const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
         
@@ -513,6 +534,7 @@ function App() {
       } catch (error) {
         console.error('Error refreshing data:', error)
         setIsRefreshing(false)
+        dataGeneratedRef.current = false
         toast.error('Error refreshing data', {
           description: 'Please try again',
           duration: 3000

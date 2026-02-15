@@ -118,6 +118,8 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
   const users: UserProfile[] = []
   const timestamp = Date.now()
   
+  const usedNames = new Set<string>()
+  
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
     
@@ -139,9 +141,16 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     const lng = CENTER_LNG + lngOffset
     const age = 18 + Math.floor(Math.random() * 63)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
-    const name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
     
-    const capturedAt = Date.now() - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
+    let name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
+    let nameAttempts = 0
+    while (usedNames.has(`${name}-${i % 10}`) && nameAttempts < 10) {
+      name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
+      nameAttempts++
+    }
+    usedNames.add(`${name}-${i % 10}`)
+    
+    const capturedAt = timestamp - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
     
     const allGenders = ['Male', 'Female', 'Non-binary']
     const genderPreferenceRandom = Math.random()
@@ -256,8 +265,18 @@ export function fuzzLocation(lat: number, lng: number, radiusKm: number = 0.5): 
 }
 
 export function generateHeatMapData(users: UserProfile[]): HeatMapPoint[] {
+  if (!Array.isArray(users) || users.length === 0) {
+    console.warn('No users provided for heat map')
+    return []
+  }
+
   const heatPoints: HeatMapPoint[] = []
-  const activeUsers = users.filter(u => u.isActive)
+  const activeUsers = users.filter(u => u && u.isActive && u.locationSharingEnabled)
+  
+  if (activeUsers.length === 0) {
+    console.warn('No active users for heat map')
+    return []
+  }
   
   const locationClusters: Map<string, { lat: number; lng: number; count: number }> = new Map()
   
@@ -285,6 +304,8 @@ export function generateHeatMapData(users: UserProfile[]): HeatMapPoint[] {
       intensity: Math.min(normalizedIntensity * 1.2 + 0.3, 1)
     })
   })
+  
+  console.log(`Generated ${heatPoints.length} heat map points from ${activeUsers.length} active users`)
   
   return heatPoints
 }
@@ -533,6 +554,11 @@ export function generateDemoConversationsAndMessages(
   demoUsers: UserProfile[],
   conversationCount: number = 25
 ) {
+  if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) {
+    console.error('Invalid parameters for generateDemoConversationsAndMessages')
+    return { conversations: [], chatRequests: [], messages: {} }
+  }
+
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
     if (!user.isActive) return false
@@ -553,6 +579,7 @@ export function generateDemoConversationsAndMessages(
   const targetCount = Math.min(conversationCount, eligibleUsers.length)
   
   if (targetCount === 0) {
+    console.warn('No eligible users found for conversations')
     return { conversations: [], chatRequests: [], messages: {} }
   }
   
@@ -567,6 +594,8 @@ export function generateDemoConversationsAndMessages(
   const randomUsers = remainingUsers.sort(() => Math.random() - 0.5).slice(0, targetCount - nearbyUsers.length)
   
   const selectedUsers = [...nearbyUsers, ...randomUsers].slice(0, targetCount)
+  
+  console.log(`Generating ${selectedUsers.length} conversations for ${myProfile.name}`)
   
   const conversations: any[] = []
   const chatRequests: any[] = []
@@ -593,13 +622,15 @@ export function generateDemoConversationsAndMessages(
     const whoReceived = whoInitiated === myProfile.id ? user.id : myProfile.id
     
     chatRequests.push({
-      id: `demo-req-${conversationId}`,
+      id: `demo-req-${conversationId}-${index}`,
       fromUserId: whoInitiated,
       toUserId: whoReceived,
       status: 'accepted' as const,
       timestamp: messages[0].timestamp - 60000
     })
   })
+  
+  console.log(`Generated ${conversations.length} conversations, ${chatRequests.length} requests, ${Object.keys(allMessages).length} message threads`)
   
   return { conversations, chatRequests, messages: allMessages }
 }
@@ -610,6 +641,11 @@ export function generateAdditionalChatRequests(
   existingRequestUserIds: string[],
   count: number = 50
 ) {
+  if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) {
+    console.error('Invalid parameters for generateAdditionalChatRequests')
+    return []
+  }
+
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
     if (existingRequestUserIds.includes(user.id)) return false
@@ -628,7 +664,10 @@ export function generateAdditionalChatRequests(
     return checkFullCompatibility(myProfile, user)
   })
 
-  if (eligibleUsers.length === 0) return []
+  if (eligibleUsers.length === 0) {
+    console.warn('No eligible users found for additional requests')
+    return []
+  }
 
   const numRequestsToMe = Math.ceil(count * 0.75)
   const numRequestsFromMe = Math.floor(count * 0.25)
@@ -663,6 +702,8 @@ export function generateAdditionalChatRequests(
     status: user.requireApproval ? ('pending' as const) : ('accepted' as const),
     timestamp: Date.now() - Math.floor(Math.random() * 14400000)
   }))
+  
+  console.log(`Generated ${requestsToMe.length} requests to me, ${requestsFromMe.length} requests from me`)
   
   return [...requestsToMe, ...requestsFromMe]
 }
