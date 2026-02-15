@@ -419,6 +419,7 @@ function App() {
     setChatRequests([])
     setConversations([])
     setMessages({})
+    setSelectedConversation(null)
     
     const newUsers = generateDemoUsers(1000)
     setDemoUsers(newUsers)
@@ -432,6 +433,8 @@ function App() {
           description: 'Try adjusting your profile preferences',
           duration: 5000
         })
+        dataGeneratedRef.current = true
+        initialLoadCompleteRef.current = true
         return
       }
       
@@ -465,8 +468,8 @@ function App() {
       initialLoadCompleteRef.current = true
       setIsRefreshing(false)
       
-      toast.success(`✨ ${demoData.conversations.length + newConversations.length} conversations & ${pendingToMe.length} requests loaded!`, {
-        description: 'Sample data refreshed successfully',
+      toast.success(`✨ All data refreshed!`, {
+        description: `${demoData.conversations.length + newConversations.length} conversations, ${pendingToMe.length} requests & ${newUsers.length} users`,
         duration: 4000
       })
     }, 500)
