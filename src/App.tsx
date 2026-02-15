@@ -21,7 +21,7 @@ import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/type
 
 function App() {
   const [myProfile, setMyProfile] = useKV<UserProfile | null>('my-profile-v4', null)
-  const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(2000))
+  const [demoUsers, setDemoUsers] = useState(() => generateDemoUsers(1000))
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v4', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations-v4', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v4', {})
@@ -392,7 +392,7 @@ function App() {
       const existingConvIds = conversationArray.flatMap(conv => conv.participants)
       const protectedUserIds = [...new Set([...existingConvIds, ...existingRequestIds.flat()])]
       
-      const newUsers = generateDemoUsers(2000)
+      const newUsers = generateDemoUsers(1000)
       
       const refreshedUsers = newUsers.map(user => {
         if (protectedUserIds.includes(user.id)) {
@@ -876,25 +876,6 @@ function App() {
                     step={0.1}
                     className="w-full"
                   />
-                </div>
-
-                <div className="bg-card border-2 border-border rounded-2xl p-6 mb-6 shadow-md">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="grid grid-cols-2 sm:flex gap-5 sm:gap-8 w-full sm:w-auto">
-                      <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Total Users</p>
-                        <p className="text-3xl font-bold text-foreground">{demoUsers.length}</p>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Active</p>
-                        <p className="text-3xl font-bold text-accent">{demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length}</p>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Matching Nearby</p>
-                        <p className="text-3xl font-bold text-primary">{nearbyUsers.length}</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 {nearbyUsers.length === 0 ? (
