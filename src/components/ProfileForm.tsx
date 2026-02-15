@@ -329,7 +329,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
           </div>
         </div>
 
-        <div className="space-y-3 pt-2">
+        <div className="space-y-3 pt-2 border-t-2 border-border">
           <Label className="text-sm font-semibold">Relationship Status Preference</Label>
           <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
             Choose which relationship statuses you want to receive messages from

@@ -87,9 +87,9 @@ function App() {
         }
       })
       
-      setConversations([...demoData.conversations, ...newConversations])
-      setChatRequests(allChatRequests)
-      setMessages(demoData.messages)
+      setConversations((current) => [...demoData.conversations, ...newConversations])
+      setChatRequests((current) => allChatRequests)
+      setMessages((current) => demoData.messages)
       
       const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
       
@@ -100,7 +100,7 @@ function App() {
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [myProfile])
+  }, [myProfile, demoUsers])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -181,9 +181,9 @@ function App() {
     if (isNewProfile) {
       dataGeneratedRef.current = false
       initialLoadCompleteRef.current = false
-      setChatRequests([])
-      setConversations([])
-      setMessages({})
+      setChatRequests((current) => [])
+      setConversations((current) => [])
+      setMessages((current) => ({}))
     }
     
     if (!isNewProfile && wasRequiringApproval && !nowRequiresApproval) {
@@ -416,9 +416,9 @@ function App() {
     dataGeneratedRef.current = false
     initialLoadCompleteRef.current = false
     
-    setChatRequests([])
-    setConversations([])
-    setMessages({})
+    setChatRequests((current) => [])
+    setConversations((current) => [])
+    setMessages((current) => ({}))
     
     setIsGenerating(true)
     
@@ -450,9 +450,9 @@ function App() {
         }
       })
       
-      setConversations([...demoData.conversations, ...newConversations])
-      setChatRequests(allRequests)
-      setMessages(demoData.messages)
+      setConversations((current) => [...demoData.conversations, ...newConversations])
+      setChatRequests((current) => allRequests)
+      setMessages((current) => demoData.messages)
       
       dataGeneratedRef.current = true
       initialLoadCompleteRef.current = true
@@ -720,9 +720,9 @@ function App() {
                     onClick={async () => {
                       dataGeneratedRef.current = false
                       initialLoadCompleteRef.current = false
-                      setChatRequests([])
-                      setConversations([])
-                      setMessages({})
+                      setChatRequests((current) => [])
+                      setConversations((current) => [])
+                      setMessages((current) => ({}))
                       toast.success('All data cleared!', {
                         description: 'Reloading page...',
                         duration: 1500

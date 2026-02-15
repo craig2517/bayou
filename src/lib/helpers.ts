@@ -511,6 +511,11 @@ export function generateDemoConversationsAndMessages(
   })
 
   const targetCount = Math.min(conversationCount, eligibleUsers.length)
+  
+  if (targetCount === 0) {
+    return { conversations: [], chatRequests: [], messages: {} }
+  }
+  
   const selectedUsers = eligibleUsers
     .sort(() => Math.random() - 0.5)
     .slice(0, targetCount)
