@@ -591,7 +591,7 @@ export function generateAdditionalChatRequests(
     id: `pending-req-to-me-${Date.now()}-${index}`,
     fromUserId: user.id,
     toUserId: myProfile.id,
-    status: 'pending' as const,
+    status: myProfile.requireApproval ? ('pending' as const) : ('accepted' as const),
     timestamp: Date.now() - Math.floor(Math.random() * 7200000)
   }))
   
@@ -599,7 +599,7 @@ export function generateAdditionalChatRequests(
     id: `pending-req-from-me-${Date.now()}-${index}`,
     fromUserId: myProfile.id,
     toUserId: user.id,
-    status: 'pending' as const,
+    status: user.requireApproval ? ('pending' as const) : ('accepted' as const),
     timestamp: Date.now() - Math.floor(Math.random() * 7200000)
   }))
   

@@ -81,13 +81,24 @@ function App() {
       const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 25)
       const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
       
-      setConversations(demoData.conversations)
+      const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
+      const newConversations = autoAcceptedRequests.map(request => {
+        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+        return {
+          id: conversationId,
+          participants: [request.fromUserId, request.toUserId] as [string, string],
+          unreadCount: 0
+        }
+      })
+      
+      setConversations([...demoData.conversations, ...newConversations])
       setChatRequests(allChatRequests)
       setMessages(demoData.messages)
       
       const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      const acceptedCount = allChatRequests.filter(r => r.status === 'accepted').length
       
-      toast.success(`${demoData.conversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
+      toast.success(`${demoData.conversations.length + newConversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
         description: 'Check Messages and Requests tabs',
         duration: 4000
       })
@@ -147,6 +158,8 @@ function App() {
   const pendingIncomingRequests = useMemo(() => {
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     if (!myProfile) return []
+    
+    if (!myProfile.requireApproval) return []
     
     return requestArray.filter(req => 
       req && 
@@ -388,7 +401,17 @@ function App() {
       const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, [...new Set(existingUserIds)], 25)
       const allRequests = [...demoData.chatRequests, ...pendingRequests]
       
-      setConversations(demoData.conversations)
+      const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
+      const newConversations = autoAcceptedRequests.map(request => {
+        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+        return {
+          id: conversationId,
+          participants: [request.fromUserId, request.toUserId] as [string, string],
+          unreadCount: 0
+        }
+      })
+      
+      setConversations([...demoData.conversations, ...newConversations])
       setChatRequests(allRequests)
       setMessages(demoData.messages)
       
@@ -397,7 +420,7 @@ function App() {
       
       const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
       
-      toast.success(`✅ ${demoData.conversations.length} conversations, ${pendingToMe.length} requests!`, {
+      toast.success(`✅ ${demoData.conversations.length + newConversations.length} conversations, ${pendingToMe.length} requests!`, {
         duration: 4000
       })
       
@@ -449,11 +472,38 @@ function App() {
     const additionalRequests = generateAdditionalChatRequests(myProfile, demoUsers, finalUniqueIds, 20)
     
     if (additionalRequests.length > 0) {
+      const autoAcceptedRequests = additionalRequests.filter(r => r.status === 'accepted')
+      const newConversations = autoAcceptedRequests.map(request => {
+        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+        return {
+          id: conversationId,
+          participants: [request.fromUserId, request.toUserId] as [string, string],
+          unreadCount: 0
+        }
+      })
+      
+      if (newConversations.length > 0) {
+        setConversations(current => {
+          const currentArray = Array.isArray(current) ? current : []
+          return [...currentArray, ...newConversations]
+        })
+      }
+      
       setChatRequests(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...additionalRequests]
       })
-      toast.success(`${additionalRequests.length} new message requests!`)
+      
+      const pendingCount = additionalRequests.filter(r => r.status === 'pending').length
+      const acceptedCount = additionalRequests.filter(r => r.status === 'accepted').length
+      
+      if (pendingCount > 0 && acceptedCount > 0) {
+        toast.success(`${acceptedCount} new conversations and ${pendingCount} new requests!`)
+      } else if (pendingCount > 0) {
+        toast.success(`${pendingCount} new message requests!`)
+      } else if (acceptedCount > 0) {
+        toast.success(`${acceptedCount} new conversations!`)
+      }
     }
     
     if (demoData.conversations.length === 0 && additionalRequests.length === 0) {
@@ -478,14 +528,47 @@ function App() {
     const newRequests = generateAdditionalChatRequests(myProfile, demoUsers, uniqueExistingUserIds, 20)
     
     if (newRequests.length > 0) {
+      const autoAcceptedRequests = newRequests.filter(r => r.status === 'accepted')
+      const newConversations = autoAcceptedRequests.map(request => {
+        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+        return {
+          id: conversationId,
+          participants: [request.fromUserId, request.toUserId] as [string, string],
+          unreadCount: 0
+        }
+      })
+      
+      if (newConversations.length > 0) {
+        setConversations(current => {
+          const currentArray = Array.isArray(current) ? current : []
+          return [...currentArray, ...newConversations]
+        })
+      }
+      
       setChatRequests(current => {
         const currentArray = Array.isArray(current) ? current : []
         return [...currentArray, ...newRequests]
       })
-      toast.success(`Generated ${newRequests.length} new pending requests!`, {
-        description: 'Check the Requests tab',
-        duration: 3000
-      })
+      
+      const pendingCount = newRequests.filter(r => r.status === 'pending').length
+      const acceptedCount = newRequests.filter(r => r.status === 'accepted').length
+      
+      if (pendingCount > 0 && acceptedCount > 0) {
+        toast.success(`Generated ${acceptedCount} conversations and ${pendingCount} requests!`, {
+          description: 'Check the Messages and Requests tabs',
+          duration: 3000
+        })
+      } else if (pendingCount > 0) {
+        toast.success(`Generated ${pendingCount} new pending requests!`, {
+          description: 'Check the Requests tab',
+          duration: 3000
+        })
+      } else if (acceptedCount > 0) {
+        toast.success(`Generated ${acceptedCount} new conversations!`, {
+          description: 'Check the Messages tab',
+          duration: 3000
+        })
+      }
     } else {
       toast.info('No eligible users available for requests', {
         description: 'Try refreshing users or adjusting your profile preferences'
@@ -547,6 +630,12 @@ function App() {
       setSelectedConversation(null)
     }
   }, [selectedConversation, currentConversation])
+
+  useEffect(() => {
+    if (selectedTab === 'requests' && myProfile && !myProfile.requireApproval) {
+      setSelectedTab('messages')
+    }
+  }, [selectedTab, myProfile])
 
   return (
     <div className="min-h-screen bg-background">
@@ -610,7 +699,7 @@ function App() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2.5">
-              {pendingIncomingRequests.length > 0 && (
+              {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && (
                 <Badge variant="destructive" className="animate-pulse shadow-md px-2.5 py-1">
                   {pendingIncomingRequests.length}
                 </Badge>
@@ -646,7 +735,7 @@ function App() {
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-8 h-auto p-1.5 bg-muted/50 shadow-sm">
+          <TabsList className={`grid w-full ${myProfile?.requireApproval ? 'grid-cols-4' : 'grid-cols-3'} mb-8 h-auto p-1.5 bg-muted/50 shadow-sm`}>
             <TabsTrigger value="map" className="flex items-center gap-2 py-2.5 data-[state=active]:shadow-sm">
               <MapTrifold size={20} />
               <span className="hidden sm:inline font-medium">Map</span>
@@ -664,15 +753,17 @@ function App() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="requests" className="flex items-center gap-2 py-2.5 data-[state=active]:shadow-sm">
-              <User size={20} />
-              <span className="hidden sm:inline font-medium">Requests</span>
-              {pendingIncomingRequests.length > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1.5">
-                  {pendingIncomingRequests.length}
-                </Badge>
-              )}
-            </TabsTrigger>
+            {myProfile?.requireApproval && (
+              <TabsTrigger value="requests" className="flex items-center gap-2 py-2.5 data-[state=active]:shadow-sm">
+                <User size={20} />
+                <span className="hidden sm:inline font-medium">Requests</span>
+                {pendingIncomingRequests.length > 0 && (
+                  <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1.5">
+                    {pendingIncomingRequests.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="map" className="space-y-6">
