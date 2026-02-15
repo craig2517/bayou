@@ -17,8 +17,8 @@ interface ProfileFormProps {
   onSave: (profile: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => void
 }
 
-const GENDERS = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
-const GENDERS_SELECTABLE = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
+const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say']
+const GENDERS_SELECTABLE = ['Male', 'Female', 'Non-binary', 'Prefer not to say']
 const RELATIONSHIP_STATUSES = ['Single', 'Not Single', 'Prefer not to say']
 
 export function ProfileForm({ profile, onSave }: ProfileFormProps) {
@@ -26,7 +26,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const [age, setAge] = useState(profile?.age?.toString() || '')
   const [gender, setGender] = useState(profile?.gender || '')
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
-    profile?.receiveMessagesFrom || ['Male', 'Female', 'Non-binary', 'Other']
+    profile?.receiveMessagesFrom || ['Male', 'Female', 'Non-binary']
   )
   const [relationshipStatusPreference, setRelationshipStatusPreference] = useState<string[]>(
     profile?.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']

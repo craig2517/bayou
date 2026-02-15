@@ -30,7 +30,7 @@ const FIRST_NAMES = [
   'Ivy', 'Ruby', 'Sadie', 'Sophie', 'Piper', 'Alice', 'Autumn', 'Rose'
 ]
 
-const GENDERS = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
+const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say']
 
 function getEffectiveRelationshipStatus(isSingle: boolean | undefined): string {
   if (isSingle === undefined) return 'Prefer not to say'
@@ -143,19 +143,19 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     
     const capturedAt = Date.now() - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
     
-    const allGenders = ['Male', 'Female', 'Non-binary', 'Other']
+    const allGenders = ['Male', 'Female', 'Non-binary']
     const genderPreferenceRandom = Math.random()
     let receiveFrom: string[]
     
     if (genderPreferenceRandom < 0.70) {
       receiveFrom = allGenders
     } else if (genderPreferenceRandom < 0.85) {
-      const numToSelect = Math.floor(Math.random() * 2) + 2
+      const numToSelect = Math.floor(Math.random() * 2) + 1
       receiveFrom = allGenders.sort(() => Math.random() - 0.5).slice(0, numToSelect)
     } else if (genderPreferenceRandom < 0.92) {
       receiveFrom = [allGenders[Math.floor(Math.random() * allGenders.length)]]
     } else {
-      const numToSelect = Math.floor(Math.random() * 3) + 1
+      const numToSelect = Math.floor(Math.random() * 2) + 1
       receiveFrom = allGenders.sort(() => Math.random() - 0.5).slice(0, numToSelect)
     }
     
