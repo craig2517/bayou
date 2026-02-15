@@ -18,6 +18,7 @@ interface ProfileFormProps {
 }
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
+const GENDERS_SELECTABLE = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
 const RELATIONSHIP_STATUSES = ['Single', 'Not Single', 'Prefer not to say']
 
 export function ProfileForm({ profile, onSave }: ProfileFormProps) {
@@ -25,7 +26,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
   const [age, setAge] = useState(profile?.age?.toString() || '')
   const [gender, setGender] = useState(profile?.gender || '')
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
-    profile?.receiveMessagesFrom || ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
+    profile?.receiveMessagesFrom || ['Male', 'Female', 'Non-binary', 'Other']
   )
   const [relationshipStatusPreference, setRelationshipStatusPreference] = useState<string[]>(
     profile?.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
@@ -232,7 +233,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
-              {GENDERS.map(g => (
+              {GENDERS_SELECTABLE.map(g => (
                 <SelectItem key={g} value={g}>
                   {g}
                 </SelectItem>
@@ -268,7 +269,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
         <div className="space-y-3 pt-2">
           <Label className="text-sm font-semibold">Receive Messages From</Label>
           <div className="grid grid-cols-2 gap-3">
-            {GENDERS.map(genderOption => (
+            {GENDERS.filter(g => g !== 'Prefer not to say').map(genderOption => (
               <div key={genderOption} className="flex items-center space-x-2.5 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
                 <Checkbox
                   id={`receive-${genderOption}`}

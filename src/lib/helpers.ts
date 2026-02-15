@@ -510,9 +510,10 @@ export function generateDemoConversationsAndMessages(
     return checkFullCompatibility(myProfile, user)
   })
 
+  const targetCount = Math.min(conversationCount, eligibleUsers.length)
   const selectedUsers = eligibleUsers
     .sort(() => Math.random() - 0.5)
-    .slice(0, Math.min(conversationCount, eligibleUsers.length))
+    .slice(0, targetCount)
   
   const conversations: any[] = []
   const chatRequests: any[] = []
@@ -521,7 +522,7 @@ export function generateDemoConversationsAndMessages(
   selectedUsers.forEach((user) => {
     const conversationId = [myProfile.id, user.id].sort().join('-')
     
-    const messageCount = Math.floor(Math.random() * 20) + 10
+    const messageCount = Math.floor(Math.random() * 15) + 8
     const messages = generateDemoMessages(conversationId, myProfile.id, user.id, messageCount)
     
     allMessages[conversationId] = messages
@@ -574,8 +575,10 @@ export function generateAdditionalChatRequests(
     return checkFullCompatibility(myProfile, user)
   })
 
-  const numRequestsToMe = Math.ceil(count * 0.85)
-  const numRequestsFromMe = count - numRequestsToMe
+  if (eligibleUsers.length === 0) return []
+
+  const numRequestsToMe = Math.ceil(count * 0.7)
+  const numRequestsFromMe = Math.floor(count * 0.3)
   
   const selectedUsersForRequestsToMe = eligibleUsers
     .sort(() => Math.random() - 0.5)

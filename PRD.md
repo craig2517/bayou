@@ -20,11 +20,11 @@ This is a focused MVP with core features: heat map visualization, user profiles,
 - **Success criteria**: Heat map renders with realistic density patterns, no exact user locations visible, smooth interaction
 
 ### User Profile Management
-- **Functionality**: Create and edit profile with name, age, gender, relationship status (optional), gender preferences, relationship status preferences, age range preferences, and real-time location sharing toggle
+- **Functionality**: Create and edit profile with name, age, gender (including "Prefer not to say"), relationship status (optional), gender preferences (excludes "Prefer not to say" from message preferences), relationship status preferences, age range preferences, and real-time location sharing toggle
 - **Purpose**: Allows users to present themselves, control their privacy, manage location visibility, and define their messaging preferences including filtering by relationship status
 - **Trigger**: Profile button in navigation or automatic prompt for first-time users
-- **Progression**: Click profile → View/edit form → Enter details → Set relationship status (Single/Not Single/Prefer not to say) → Choose genders to receive messages from → Choose relationship statuses to receive messages from (Single/Not Single/Any) → Set age range preferences → Toggle location sharing on/off → Save → Profile stored persistently
-- **Success criteria**: Profile persists across sessions, all fields editable, data validates appropriately, location sharing toggle controls visibility in discovery and heat map, relationship status preferences properly filter matches
+- **Progression**: Click profile → View/edit form → Enter details → Set relationship status (Single/Not Single/Prefer not to say) → Choose genders to receive messages from (Male/Female/Non-binary/Other, excluding "Prefer not to say") → Choose relationship statuses to receive messages from (Single/Not Single/Prefer not to say) → Set age range preferences → Toggle location sharing on/off → Toggle "Require Approval for Messages" on/off → Save → Profile stored persistently
+- **Success criteria**: Profile persists across sessions, all fields editable, data validates appropriately, location sharing toggle controls visibility in discovery and heat map, relationship status preferences properly filter matches, "Prefer not to say" gender is selectable as user's own gender but not as a filter preference
 
 ### Proximity Search
 - **Functionality**: Browse list of nearby active users with distance estimates and configurable search radius, filtered by mutual preference matching including relationship status
@@ -34,11 +34,11 @@ This is a focused MVP with core features: heat map visualization, user profiles,
 - **Success criteria**: Users appear sorted by distance, radius filter works, distances are approximate (not exact coordinates), only mutually compatible users are shown (matching on gender, age range, AND relationship status)
 
 ### Mutual Opt-In Messaging
-- **Functionality**: Send/receive chat requests and engage in simple text conversations
+- **Functionality**: Send/receive chat requests and engage in simple text conversations with automatic approval option
 - **Purpose**: Facilitates actual connection between interested users
 - **Trigger**: Click "Message" on another user's card
-- **Progression**: Send chat request → Other user accepts → Chat thread opens → Send/receive messages → Messages persist
-- **Success criteria**: Both users must opt in before messaging, conversation history persists, messages appear in real-time feel
+- **Progression**: Send chat request → If recipient has "Require Approval" enabled, they manually accept/decline → If recipient has "Require Approval" disabled, request auto-accepts → Chat thread opens → Send/receive messages → Messages persist
+- **Success criteria**: Both users must opt in before messaging (or automatic approval if setting disabled), conversation history persists, messages appear in real-time feel, switching "Require Approval" from on to off automatically accepts all pending incoming requests
 
 ## Edge Case Handling
 - **Empty states**: When no users nearby, show encouraging empty state with illustration

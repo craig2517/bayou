@@ -35,32 +35,28 @@ function App() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const dataGeneratedRef = useRef(false)
-  const [kvInitialized, setKvInitialized] = useState(false)
+  const initialLoadCompleteRef = useRef(false)
 
   const isProfilePhotoValid = (user: UserProfile | null) => {
     return user?.profilePicture ? isPhotoValid(user.profilePicture) : false
   }
 
   useEffect(() => {
-    const timer = setTimeout(() => setKvInitialized(true), 50)
-    return () => clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
-    if (!kvInitialized || !myProfile) return
-    if (dataGeneratedRef.current) return
+    if (!myProfile || dataGeneratedRef.current || initialLoadCompleteRef.current) return
 
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
     
     if (conversationArray.length > 0 || requestArray.length > 0) {
       dataGeneratedRef.current = true
+      initialLoadCompleteRef.current = true
       return
     }
 
     dataGeneratedRef.current = true
+    initialLoadCompleteRef.current = true
     
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 15)
       
       if (demoData.conversations.length === 0) {
@@ -96,14 +92,15 @@ function App() {
       setMessages(demoData.messages)
       
       const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      const acceptedCount = allChatRequests.filter(r => r.status === 'accepted').length
       
       toast.success(`${demoData.conversations.length + newConversations.length} conversations and ${pendingToMe.length} requests loaded!`, {
         description: 'Check Messages and Requests tabs',
         duration: 4000
       })
-    }, 100)
-  }, [kvInitialized, myProfile, conversations, chatRequests])
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [myProfile])
 
   const heatMapData = useMemo(() => generateHeatMapData(demoUsers), [demoUsers])
 
@@ -183,6 +180,7 @@ function App() {
     
     if (isNewProfile) {
       dataGeneratedRef.current = false
+      initialLoadCompleteRef.current = false
       setChatRequests([])
       setConversations([])
       setMessages({})
@@ -191,18 +189,15 @@ function App() {
     if (!isNewProfile && wasRequiringApproval && !nowRequiresApproval) {
       const requestArray = Array.isArray(chatRequests) ? chatRequests : []
       const pendingRequests = requestArray.filter(
-        req => req.toUserId === newProfile.id && req.status === 'pending'
+        req => req && req.toUserId === newProfile.id && req.status === 'pending'
       )
       
       if (pendingRequests.length > 0) {
-        setChatRequests(current => {
-          const currentArray = Array.isArray(current) ? current : []
-          return currentArray.map(req => 
-            req.toUserId === newProfile.id && req.status === 'pending'
-              ? { ...req, status: 'accepted' as const }
-              : req
-          )
-        })
+        const updatedRequests = requestArray.map(req => 
+          req && req.toUserId === newProfile.id && req.status === 'pending'
+            ? { ...req, status: 'accepted' as const }
+            : req
+        )
         
         const newConversations = pendingRequests.map(request => {
           const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
@@ -213,14 +208,16 @@ function App() {
           }
         })
         
+        setChatRequests(updatedRequests)
+        
         setConversations(current => {
           const currentArray = Array.isArray(current) ? current : []
-          const existingConvIds = currentArray.map(c => c.id)
-          const uniqueNewConvs = newConversations.filter(nc => !existingConvIds.includes(nc.id))
+          const existingConvIds = new Set(currentArray.map(c => c.id))
+          const uniqueNewConvs = newConversations.filter(nc => !existingConvIds.has(nc.id))
           return [...currentArray, ...uniqueNewConvs]
         })
         
-        toast.success(`${pendingRequests.length} pending requests auto-approved!`, {
+        toast.success(`${pendingRequests.length} pending request${pendingRequests.length > 1 ? 's' : ''} auto-approved!`, {
           description: 'All pending requests are now active conversations',
           duration: 4000
         })
@@ -417,6 +414,7 @@ function App() {
     }
     
     dataGeneratedRef.current = false
+    initialLoadCompleteRef.current = false
     
     setChatRequests([])
     setConversations([])
@@ -457,6 +455,7 @@ function App() {
       setMessages(demoData.messages)
       
       dataGeneratedRef.current = true
+      initialLoadCompleteRef.current = true
       setIsGenerating(false)
       
       const pendingToMe = allRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
@@ -720,6 +719,7 @@ function App() {
                   <DropdownMenuItem 
                     onClick={async () => {
                       dataGeneratedRef.current = false
+                      initialLoadCompleteRef.current = false
                       setChatRequests([])
                       setConversations([])
                       setMessages({})
