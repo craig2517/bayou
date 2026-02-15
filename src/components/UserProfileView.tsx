@@ -96,25 +96,29 @@ export function UserProfileView({ user, distance }: UserProfileViewProps) {
             </div>
           )}
 
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-accent/10 border border-accent/10">
-            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-              <Heart className="text-accent" size={22} weight="duotone" />
+          {user.showReceiveMessagesFrom !== false && (
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-accent/10 border border-accent/10">
+              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                <Heart className="text-accent" size={22} weight="duotone" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Looking For</p>
+                <p className="font-semibold text-foreground text-lg mt-0.5">{user.receiveMessagesFrom?.join(', ') || 'Not specified'}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Looking For</p>
-              <p className="font-semibold text-foreground text-lg mt-0.5">{user.receiveMessagesFrom?.join(', ') || 'Not specified'}</p>
-            </div>
-          </div>
+          )}
 
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/10">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Calendar className="text-primary" size={22} weight="duotone" />
+          {user.showAgeRange !== false && (
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/10">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Calendar className="text-primary" size={22} weight="duotone" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Age Preference</p>
+                <p className="font-semibold text-foreground text-lg mt-0.5">{user.ageRangeMin} - {user.ageRangeMax} years</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Age Preference</p>
-              <p className="font-semibold text-foreground text-lg mt-0.5">{user.ageRangeMin} - {user.ageRangeMax} years</p>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </Card>

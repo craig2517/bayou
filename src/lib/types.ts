@@ -15,6 +15,8 @@ export interface UserProfile {
   locationSharingEnabled: boolean
   requireApproval: boolean
   isSingle?: boolean
+  showReceiveMessagesFrom?: boolean
+  showAgeRange?: boolean
   profilePicture?: {
     dataUrl: string
     capturedAt: number

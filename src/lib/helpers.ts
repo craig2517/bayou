@@ -102,6 +102,9 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const randomValue = Math.random()
     const isSingle = randomValue < 0.4 ? true : randomValue < 0.7 ? false : undefined
     
+    const showReceiveMessagesFrom = Math.random() > 0.3
+    const showAgeRange = Math.random() > 0.3
+    
     users.push({
       id: `user-demo-${i + 1}-${timestamp}`,
       name,
@@ -116,6 +119,8 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       locationSharingEnabled: true,
       requireApproval: i % 3 !== 0,
       isSingle,
+      showReceiveMessagesFrom,
+      showAgeRange,
       profilePicture: {
         dataUrl: generateDemoAvatar(name, gender, age, i),
         capturedAt
