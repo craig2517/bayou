@@ -170,6 +170,8 @@ function App() {
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
     const isNewProfile = !myProfile
+    const wasRequiringApproval = myProfile?.requireApproval ?? false
+    const nowRequiresApproval = profileData.requireApproval ?? false
     
     const newProfile: UserProfile = {
       ...profileData,
@@ -184,6 +186,45 @@ function App() {
       setChatRequests([])
       setConversations([])
       setMessages({})
+    }
+    
+    if (!isNewProfile && wasRequiringApproval && !nowRequiresApproval) {
+      const requestArray = Array.isArray(chatRequests) ? chatRequests : []
+      const pendingRequests = requestArray.filter(
+        req => req.toUserId === newProfile.id && req.status === 'pending'
+      )
+      
+      if (pendingRequests.length > 0) {
+        setChatRequests(current => {
+          const currentArray = Array.isArray(current) ? current : []
+          return currentArray.map(req => 
+            req.toUserId === newProfile.id && req.status === 'pending'
+              ? { ...req, status: 'accepted' as const }
+              : req
+          )
+        })
+        
+        const newConversations = pendingRequests.map(request => {
+          const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+          return {
+            id: conversationId,
+            participants: [request.fromUserId, request.toUserId] as [string, string],
+            unreadCount: 0
+          }
+        })
+        
+        setConversations(current => {
+          const currentArray = Array.isArray(current) ? current : []
+          const existingConvIds = currentArray.map(c => c.id)
+          const uniqueNewConvs = newConversations.filter(nc => !existingConvIds.includes(nc.id))
+          return [...currentArray, ...uniqueNewConvs]
+        })
+        
+        toast.success(`${pendingRequests.length} pending requests auto-approved!`, {
+          description: 'All pending requests are now active conversations',
+          duration: 4000
+        })
+      }
     }
     
     setMyProfile(newProfile)
