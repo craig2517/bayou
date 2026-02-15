@@ -19,6 +19,44 @@ const FIRST_NAMES = [
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
 
+function getEffectiveRelationshipStatus(isSingle: boolean | undefined): string {
+  if (isSingle === undefined) return 'Prefer not to say'
+  return isSingle ? 'Single' : 'Not Single'
+}
+
+function checkRelationshipCompatibility(
+  user1: UserProfile,
+  user2: UserProfile
+): boolean {
+  const user1Prefs = user1.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+  const user2Prefs = user2.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+  
+  const user1Status = getEffectiveRelationshipStatus(user1.isSingle)
+  const user2Status = getEffectiveRelationshipStatus(user2.isSingle)
+  
+  const user1AcceptsUser2 = user1Prefs.includes('Prefer not to say') || user1Prefs.includes(user2Status)
+  const user2AcceptsUser1 = user2Prefs.includes('Prefer not to say') || user2Prefs.includes(user1Status)
+  
+  return user1AcceptsUser2 && user2AcceptsUser1
+}
+
+function checkFullCompatibility(user1: UserProfile, user2: UserProfile): boolean {
+  const user1ReceivesList = user1.receiveMessagesFrom || []
+  const user2ReceivesList = user2.receiveMessagesFrom || []
+  
+  const user1AcceptsUser2Gender = user1ReceivesList.includes(user2.gender)
+  const user2AcceptsUser1Gender = user2ReceivesList.includes(user1.gender)
+  
+  const user2AgeInUser1Range = user1.ageRangeMin <= user2.age && user1.ageRangeMax >= user2.age
+  const user1AgeInUser2Range = user2.ageRangeMin <= user1.age && user2.ageRangeMax >= user1.age
+  
+  const relationshipCompatible = checkRelationshipCompatibility(user1, user2)
+  
+  return user1AcceptsUser2Gender && user2AcceptsUser1Gender && 
+         user2AgeInUser1Range && user1AgeInUser2Range && 
+         relationshipCompatible
+}
+
 export function generateDemoAvatar(name: string, gender: string, age: number, seed: number): string {
   const canvas = document.createElement('canvas')
   canvas.width = 200
@@ -44,7 +82,6 @@ export function generateDemoAvatar(name: string, gender: string, age: number, se
   ctx.textBaseline = 'middle'
   ctx.fillText(name[0].toUpperCase(), 100, 100)
   
-  const ageGroup = age < 30 ? 'young' : age < 50 ? 'middle' : 'senior'
   const shapeVariant = (seed % 3)
   
   ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'
@@ -96,7 +133,6 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
     const shuffledGenders = [...allGenders].sort(() => Math.random() - 0.5)
     const receiveFrom = shuffledGenders.slice(0, numGendersToReceive)
     
-    const allRelationshipStatuses = ['Single', 'Not Single', 'Prefer not to say']
     const relationshipPrefRandom = Math.random()
     let relationshipStatusPreference: string[]
     if (relationshipPrefRandom < 0.5) {
@@ -143,34 +179,6 @@ export function generateDemoUsers(count: number = 50): UserProfile[] {
       }
     })
   }
-  
-  const distancesFromCenter = users.map(u => {
-    const dist = calculateDistance(CENTER_LAT, CENTER_LNG, u.location.lat, u.location.lng)
-    return { name: u.name, distance: dist }
-  })
-  
-  console.log('🎲 GENERATED DEMO USERS:', {
-    count: users.length,
-    center: { lat: CENTER_LAT, lng: CENTER_LNG },
-    within100m: distancesFromCenter.filter(d => d.distance <= 0.1).length,
-    within300m: distancesFromCenter.filter(d => d.distance <= 0.3).length,
-    within500m: distancesFromCenter.filter(d => d.distance <= 0.5).length,
-    within800m: distancesFromCenter.filter(d => d.distance <= 0.8).length,
-    within1km: distancesFromCenter.filter(d => d.distance <= 1).length,
-    closestUsers: distancesFromCenter.sort((a, b) => a.distance - b.distance).slice(0, 10),
-    sampleUsers: users.slice(0, 3).map(u => ({
-      id: u.id,
-      name: u.name,
-      age: u.age,
-      gender: u.gender,
-      location: u.location,
-      distance: calculateDistance(CENTER_LAT, CENTER_LNG, u.location.lat, u.location.lng).toFixed(4) + 'km',
-      receiveFrom: u.receiveMessagesFrom,
-      ageRange: [u.ageRangeMin, u.ageRangeMax],
-      isActive: u.isActive,
-      locationSharingEnabled: u.locationSharingEnabled
-    }))
-  })
   
   return users
 }
@@ -283,34 +291,7 @@ export function generateInitialChatRequests(
     
     if (distance > 1) return false
     
-    const userReceivesList = user.receiveMessagesFrom || []
-    const myReceivesList = myProfile.receiveMessagesFrom || []
-    
-    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
-    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
-    
-    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
-      if (isSingle === undefined) return 'Any'
-      return isSingle ? 'Single' : 'Not Single'
-    }
-    
-    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
-    const userEffectiveStatus = getEffectiveStatus(user.isSingle)
-    
-    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
-    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
-    
-    const canMessage = 
-      userReceivesList.includes(myProfile.gender) &&
-      user.ageRangeMin <= myProfile.age &&
-      user.ageRangeMax >= myProfile.age &&
-      myReceivesList.includes(user.gender) &&
-      myProfile.ageRangeMin <= user.age &&
-      myProfile.ageRangeMax >= user.age &&
-      userAcceptsMyRelationshipStatus &&
-      iAcceptUserRelationshipStatus
-    
-    return canMessage
+    return checkFullCompatibility(myProfile, user)
   })
   
   const numRequests = Math.min(count, Math.max(3, Math.floor(eligibleUsers.length * 0.2)))
@@ -318,18 +299,6 @@ export function generateInitialChatRequests(
   const selectedUsers = eligibleUsers
     .sort(() => Math.random() - 0.5)
     .slice(0, numRequests)
-  
-  console.log('🔔 GENERATING INITIAL REQUESTS:', {
-    totalDemoUsers: demoUsers.length,
-    eligibleUsers: eligibleUsers.length,
-    numRequests,
-    myProfile: {
-      gender: myProfile.gender,
-      age: myProfile.age,
-      receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
-    }
-  })
   
   return selectedUsers.map((user, index) => ({
     id: `initial-req-${Date.now()}-${index}`,
@@ -524,19 +493,6 @@ export function generateDemoConversationsAndMessages(
   demoUsers: UserProfile[],
   conversationCount: number = 5
 ) {
-  console.log('🔍 DEBUG CONVERSATION GENERATION - START', {
-    myProfile: {
-      id: myProfile.id,
-      gender: myProfile.gender,
-      age: myProfile.age,
-      receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
-      location: myProfile.location
-    },
-    totalDemoUsers: demoUsers.length,
-    requestedConversations: conversationCount
-  })
-
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
     if (!user.isActive) return false
@@ -551,102 +507,7 @@ export function generateDemoConversationsAndMessages(
     
     if (distance > 10) return false
     
-    const userReceivesList = user.receiveMessagesFrom || []
-    const myReceivesList = myProfile.receiveMessagesFrom || []
-    
-    const userAcceptsMyGender = userReceivesList.includes(myProfile.gender)
-    const myAgeInTheirRange = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
-    const iAcceptTheirGender = myReceivesList.includes(user.gender)
-    const theirAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
-    
-    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
-    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
-    
-    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
-      if (isSingle === undefined) return 'Any'
-      return isSingle ? 'Single' : 'Not Single'
-    }
-    
-    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
-    const userEffectiveStatus = getEffectiveStatus(user.isSingle)
-    
-    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
-    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
-    
-    const canMessage = userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
-    
-    return canMessage
-  })
-  
-  const afterSelf = demoUsers.filter(u => u.id !== myProfile.id)
-  const afterActive = afterSelf.filter(u => u.isActive)
-  const afterLocationSharing = afterActive.filter(u => u.locationSharingEnabled)
-  const afterDistance = afterLocationSharing.filter(u => {
-    const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
-    return dist <= 10
-  })
-  
-  const failedChecks = afterDistance.filter(u => {
-    const userReceivesList = u.receiveMessagesFrom || []
-    const myReceivesList = myProfile.receiveMessagesFrom || []
-    
-    const userAcceptsMyGender = userReceivesList.includes(myProfile.gender)
-    const myAgeInTheirRange = u.ageRangeMin <= myProfile.age && u.ageRangeMax >= myProfile.age
-    const iAcceptTheirGender = myReceivesList.includes(u.gender)
-    const theirAgeInMyRange = myProfile.ageRangeMin <= u.age && myProfile.ageRangeMax >= u.age
-    
-    const passes = userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange
-    return !passes
-  })
-  
-  console.log('🔍 ELIGIBLE USERS FOR CONVERSATIONS - DETAILED:', {
-    count: eligibleUsers.length,
-    requestedCount: conversationCount,
-    myProfile: {
-      id: myProfile.id,
-      gender: myProfile.gender,
-      age: myProfile.age,
-      receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
-      location: myProfile.location
-    },
-    totalDemoUsers: demoUsers.length,
-    filterBreakdown: {
-      afterSelfFilter: afterSelf.length,
-      afterActiveFilter: afterActive.length,
-      afterLocationSharingFilter: afterLocationSharing.length,
-      afterDistanceFilter: afterDistance.length,
-      finalEligible: eligibleUsers.length,
-      failedMatchingChecks: afterDistance.length - eligibleUsers.length
-    },
-    failedMatchesBreakdown: failedChecks.slice(0, 10).map(u => {
-      const userReceivesList = u.receiveMessagesFrom || []
-      const myReceivesList = myProfile.receiveMessagesFrom || []
-      
-      return {
-        name: u.name,
-        gender: u.gender,
-        age: u.age,
-        distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
-        receiveFrom: u.receiveMessagesFrom,
-        ageRange: [u.ageRangeMin, u.ageRangeMax],
-        checks: {
-          theyAcceptMyGender: userReceivesList.includes(myProfile.gender),
-          myAgeInTheirRange: u.ageRangeMin <= myProfile.age && u.ageRangeMax >= myProfile.age,
-          iAcceptTheirGender: myReceivesList.includes(u.gender),
-          theirAgeInMyRange: myProfile.ageRangeMin <= u.age && myProfile.ageRangeMax >= u.age
-        }
-      }
-    }),
-    eligibleSample: eligibleUsers.slice(0, 10).map(u => ({
-      name: u.name,
-      gender: u.gender,
-      age: u.age,
-      distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
-      receiveFrom: u.receiveMessagesFrom,
-      ageRange: [u.ageRangeMin, u.ageRangeMax],
-      requireApproval: u.requireApproval
-    }))
+    return checkFullCompatibility(myProfile, user)
   })
 
   const selectedUsers = eligibleUsers
@@ -657,7 +518,7 @@ export function generateDemoConversationsAndMessages(
   const chatRequests: any[] = []
   const allMessages: Record<string, any[]> = {}
   
-  selectedUsers.forEach((user, index) => {
+  selectedUsers.forEach((user) => {
     const conversationId = [myProfile.id, user.id].sort().join('-')
     
     const messageCount = Math.floor(Math.random() * 20) + 10
@@ -686,38 +547,6 @@ export function generateDemoConversationsAndMessages(
     })
   })
   
-  console.log('💬 GENERATED DEMO CONVERSATIONS:', {
-    conversationCount: conversations.length,
-    totalMessages: Object.values(allMessages).flat().length,
-    eligibleUsers: eligibleUsers.length,
-    attemptedCount: conversationCount,
-    myProfile: {
-      id: myProfile.id,
-      location: myProfile.location,
-      gender: myProfile.gender,
-      age: myProfile.age,
-      receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax]
-    },
-    sampleConversations: conversations.slice(0, 3).map(c => {
-      const otherUserId = c.participants.find((id: string) => id !== myProfile.id)
-      const otherUser = demoUsers.find(u => u.id === otherUserId)
-      return {
-        id: c.id,
-        with: otherUser?.name,
-        messageCount: allMessages[c.id]?.length || 0,
-        lastMessage: c.lastMessage?.text.substring(0, 30) + '...'
-      }
-    }),
-    sampleEligibleUsers: eligibleUsers.slice(0, 5).map(u => ({
-      name: u.name,
-      distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
-      gender: u.gender,
-      age: u.age,
-      requireApproval: u.requireApproval
-    }))
-  })
-  
   return { conversations, chatRequests, messages: allMessages }
 }
 
@@ -727,20 +556,6 @@ export function generateAdditionalChatRequests(
   existingRequestUserIds: string[],
   count: number = 5
 ) {
-  console.log('🔔 DEBUG ADDITIONAL REQUESTS - START', {
-    myProfile: {
-      id: myProfile.id,
-      gender: myProfile.gender,
-      age: myProfile.age,
-      receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
-      location: myProfile.location
-    },
-    totalDemoUsers: demoUsers.length,
-    existingUserIds: existingRequestUserIds.length,
-    requestedCount: count
-  })
-
   const eligibleUsers = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
     if (existingRequestUserIds.includes(user.id)) return false
@@ -756,52 +571,9 @@ export function generateAdditionalChatRequests(
     
     if (distance > 10) return false
     
-    const userReceivesList = user.receiveMessagesFrom || []
-    const myReceivesList = myProfile.receiveMessagesFrom || []
-    
-    const userAcceptsMyGender = userReceivesList.includes(myProfile.gender)
-    const myAgeInTheirRange = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
-    const iAcceptTheirGender = myReceivesList.includes(user.gender)
-    const theirAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
-    
-    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
-    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Any']
-    
-    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
-      if (isSingle === undefined) return 'Any'
-      return isSingle ? 'Single' : 'Not Single'
-    }
-    
-    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
-    const userEffectiveStatus = getEffectiveStatus(user.isSingle)
-    
-    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Any') || userRelationshipPrefs.includes(myEffectiveStatus)
-    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Any') || myRelationshipPrefs.includes(userEffectiveStatus)
-    
-    const canMessage = userAcceptsMyGender && myAgeInTheirRange && iAcceptTheirGender && theirAgeInMyRange && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
-    
-    return canMessage
+    return checkFullCompatibility(myProfile, user)
   })
-  
-  const afterSelf = demoUsers.filter(u => u.id !== myProfile.id)
-  const afterExisting = afterSelf.filter(u => !existingRequestUserIds.includes(u.id))
-  const afterActive = afterExisting.filter(u => u.isActive)
-  const afterLocationSharing = afterActive.filter(u => u.locationSharingEnabled)
-  const afterDistance = afterLocationSharing.filter(u => {
-    const dist = calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng)
-    return dist <= 10
-  })
-  
-  console.log('🔔 ADDITIONAL REQUESTS - FILTER BREAKDOWN:', {
-    afterSelfFilter: afterSelf.length,
-    afterExistingFilter: afterExisting.length,
-    afterActiveFilter: afterActive.length,
-    afterLocationSharingFilter: afterLocationSharing.length,
-    afterDistanceFilter: afterDistance.length,
-    finalEligible: eligibleUsers.length,
-    failedMatchingChecks: afterDistance.length - eligibleUsers.length
-  })
-  
+
   const numRequestsToMe = Math.ceil(count * 0.85)
   const numRequestsFromMe = count - numRequestsToMe
   
@@ -831,57 +603,5 @@ export function generateAdditionalChatRequests(
     timestamp: Date.now() - Math.floor(Math.random() * 7200000)
   }))
   
-  const allRequests = [...requestsToMe, ...requestsFromMe]
-  
-  console.log('🔔 GENERATED ADDITIONAL REQUESTS - COMPLETE:', {
-    totalRequestCount: allRequests.length,
-    requestsToMe: requestsToMe.length,
-    requestsFromMe: requestsFromMe.length,
-    eligibleUsers: eligibleUsers.length,
-    existingRequestUserIds: existingRequestUserIds.length,
-    attemptedCount: count,
-    myProfile: {
-      requireApproval: myProfile.requireApproval,
-      gender: myProfile.gender,
-      age: myProfile.age,
-      receiveFrom: myProfile.receiveMessagesFrom,
-      ageRange: [myProfile.ageRangeMin, myProfile.ageRangeMax],
-      location: myProfile.location
-    },
-    sampleRequestsToMe: requestsToMe.slice(0, 3).map(r => {
-      const user = demoUsers.find(u => u.id === r.fromUserId)
-      return {
-        id: r.id,
-        from: user?.name,
-        fromGender: user?.gender,
-        fromAge: user?.age,
-        theyRequireApproval: user?.requireApproval
-      }
-    }),
-    sampleRequestsFromMe: requestsFromMe.slice(0, 3).map(r => {
-      const user = demoUsers.find(u => u.id === r.toUserId)
-      return {
-        id: r.id,
-        to: user?.name,
-        toGender: user?.gender,
-        toAge: user?.age,
-        theyRequireApproval: user?.requireApproval
-      }
-    }),
-    sampleEligibleUsers: eligibleUsers.slice(0, 5).map(u => ({
-      name: u.name,
-      distance: calculateDistance(myProfile.location.lat, myProfile.location.lng, u.location.lat, u.location.lng).toFixed(4) + 'km',
-      gender: u.gender,
-      age: u.age,
-      requiresApproval: u.requireApproval,
-      checks: {
-        theyAcceptMyGender: u.receiveMessagesFrom.includes(myProfile.gender),
-        myAgeInTheirRange: u.ageRangeMin <= myProfile.age && u.ageRangeMax >= myProfile.age,
-        iAcceptTheirGender: myProfile.receiveMessagesFrom.includes(u.gender),
-        theirAgeInMyRange: myProfile.ageRangeMin <= u.age && myProfile.ageRangeMax >= u.age
-      }
-    }))
-  })
-  
-  return allRequests
+  return [...requestsToMe, ...requestsFromMe]
 }
