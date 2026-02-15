@@ -548,6 +548,7 @@ function App() {
                 <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">Here</span>
                 <span className="text-yellow-400 drop-shadow-sm">o</span>
               </h1>
+              <span className="text-sm font-medium text-foreground hidden sm:inline">Here now, Hereo.</span>
             </div>
             <div className="flex items-center gap-2.5">
               {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && (
@@ -902,7 +903,7 @@ function App() {
       <footer className="border-t border-border bg-card/60 backdrop-blur-sm mt-16">
         <div className="container mx-auto px-4 sm:px-6 py-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Here now, Hereo.
+            Copyright 2026 Undreware LLC
           </p>
         </div>
       </footer>
