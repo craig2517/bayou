@@ -47,15 +47,17 @@ function App() {
   }, [])
   
   useEffect(() => {
-    if (!myProfile) return
+    if (!myProfile || !myProfile.locationSharingEnabled) return
     
-    if (myProfile.locationSharingEnabled) {
-      const updated = { ...myProfile, isActive: true, lastActive: Date.now() }
-      if (JSON.stringify(updated) !== JSON.stringify(myProfile)) {
-        setMyProfile(updated)
-      }
-    }
-  }, [myProfile, setMyProfile])
+    const interval = setInterval(() => {
+      setMyProfile(current => {
+        if (!current) return null
+        return { ...current, isActive: true, lastActive: Date.now() }
+      })
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [myProfile?.id, myProfile?.locationSharingEnabled, setMyProfile])
 
   const generateSampleData = useCallback((profile: UserProfile, users: UserProfile[]) => {
     try {
