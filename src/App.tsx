@@ -789,7 +789,7 @@ function App() {
               <ChatCircle size={20} weight="duotone" />
               <span className="hidden sm:inline font-medium">Messages</span>
               {activeConversations.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] px-1.5 bg-accent/80 text-accent-foreground border-accent/40">
+                <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1.5 animate-pulse">
                   {activeConversations.length}
                 </Badge>
               )}
