@@ -7,37 +7,121 @@ interface HeatMapProps {
 
 export function HeatMap({ points }: HeatMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const gridCanvasRef = useRef<HTMLCanvasElement>(null)
+  const streetMapRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    const gridCanvas = gridCanvasRef.current
-    if (!gridCanvas) return
+    const streetCanvas = streetMapRef.current
+    if (!streetCanvas) return
 
-    const gridCtx = gridCanvas.getContext('2d')
-    if (!gridCtx) return
+    const streetCtx = streetCanvas.getContext('2d')
+    if (!streetCtx) return
 
-    const rect = gridCanvas.getBoundingClientRect()
-    gridCanvas.width = rect.width * window.devicePixelRatio
-    gridCanvas.height = rect.height * window.devicePixelRatio
-    gridCtx.scale(window.devicePixelRatio, window.devicePixelRatio)
+    const rect = streetCanvas.getBoundingClientRect()
+    streetCanvas.width = rect.width * window.devicePixelRatio
+    streetCanvas.height = rect.height * window.devicePixelRatio
+    streetCtx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
-    gridCtx.fillStyle = '#f8f9fa'
-    gridCtx.fillRect(0, 0, rect.width, rect.height)
+    streetCtx.fillStyle = '#f5f5f0'
+    streetCtx.fillRect(0, 0, rect.width, rect.height)
 
-    gridCtx.strokeStyle = '#e0e0e0'
-    gridCtx.lineWidth = 1
-    const gridSize = 50
-    for (let x = 0; x < rect.width; x += gridSize) {
-      gridCtx.beginPath()
-      gridCtx.moveTo(x, 0)
-      gridCtx.lineTo(x, rect.height)
-      gridCtx.stroke()
+    const seed = 42
+    const random = (min: number, max: number, index: number) => {
+      const x = Math.sin(seed + index) * 10000
+      return min + (x - Math.floor(x)) * (max - min)
     }
-    for (let y = 0; y < rect.height; y += gridSize) {
-      gridCtx.beginPath()
-      gridCtx.moveTo(0, y)
-      gridCtx.lineTo(rect.width, y)
-      gridCtx.stroke()
+
+    streetCtx.strokeStyle = '#d4d4d0'
+    streetCtx.lineWidth = 4
+    streetCtx.lineCap = 'round'
+
+    const numMainStreets = 8
+    for (let i = 0; i < numMainStreets; i++) {
+      const y = (i + 1) * (rect.height / (numMainStreets + 1)) + random(-15, 15, i)
+      streetCtx.beginPath()
+      streetCtx.moveTo(0, y)
+      const segments = 15
+      for (let j = 1; j <= segments; j++) {
+        const x = (j / segments) * rect.width
+        const yOffset = random(-8, 8, i * 100 + j)
+        streetCtx.lineTo(x, y + yOffset)
+      }
+      streetCtx.stroke()
+    }
+
+    for (let i = 0; i < numMainStreets; i++) {
+      const x = (i + 1) * (rect.width / (numMainStreets + 1)) + random(-15, 15, i + 100)
+      streetCtx.beginPath()
+      streetCtx.moveTo(x, 0)
+      const segments = 15
+      for (let j = 1; j <= segments; j++) {
+        const y = (j / segments) * rect.height
+        const xOffset = random(-8, 8, i * 100 + j + 200)
+        streetCtx.lineTo(x + xOffset, y)
+      }
+      streetCtx.stroke()
+    }
+
+    streetCtx.strokeStyle = '#e8e8e3'
+    streetCtx.lineWidth = 2
+    const numMinorStreets = 20
+    for (let i = 0; i < numMinorStreets; i++) {
+      const y = random(20, rect.height - 20, i + 300)
+      const startX = random(0, rect.width * 0.2, i + 400)
+      const endX = random(rect.width * 0.8, rect.width, i + 500)
+      
+      streetCtx.beginPath()
+      streetCtx.moveTo(startX, y)
+      const segments = 10
+      for (let j = 1; j <= segments; j++) {
+        const x = startX + (j / segments) * (endX - startX)
+        const yOffset = random(-5, 5, i * 50 + j + 600)
+        streetCtx.lineTo(x, y + yOffset)
+      }
+      streetCtx.stroke()
+    }
+
+    for (let i = 0; i < numMinorStreets; i++) {
+      const x = random(20, rect.width - 20, i + 700)
+      const startY = random(0, rect.height * 0.2, i + 800)
+      const endY = random(rect.height * 0.8, rect.height, i + 900)
+      
+      streetCtx.beginPath()
+      streetCtx.moveTo(x, startY)
+      const segments = 10
+      for (let j = 1; j <= segments; j++) {
+        const y = startY + (j / segments) * (endY - startY)
+        const xOffset = random(-5, 5, i * 50 + j + 1000)
+        streetCtx.lineTo(x + xOffset, y)
+      }
+      streetCtx.stroke()
+    }
+
+    streetCtx.fillStyle = '#e0e0d8'
+    for (let i = 0; i < 25; i++) {
+      const x = random(30, rect.width - 30, i + 1100)
+      const y = random(30, rect.height - 30, i + 1200)
+      const width = random(30, 80, i + 1300)
+      const height = random(30, 80, i + 1400)
+      
+      streetCtx.fillRect(x - width / 2, y - height / 2, width, height)
+      
+      streetCtx.strokeStyle = '#c8c8c0'
+      streetCtx.lineWidth = 1
+      streetCtx.strokeRect(x - width / 2, y - height / 2, width, height)
+    }
+
+    streetCtx.strokeStyle = '#b8d4b8'
+    streetCtx.fillStyle = '#c8e6c8'
+    for (let i = 0; i < 12; i++) {
+      const x = random(50, rect.width - 50, i + 1500)
+      const y = random(50, rect.height - 50, i + 1600)
+      const size = random(15, 35, i + 1700)
+      
+      streetCtx.beginPath()
+      streetCtx.arc(x, y, size, 0, Math.PI * 2)
+      streetCtx.fill()
+      streetCtx.lineWidth = 1
+      streetCtx.stroke()
     }
 
   }, [])
@@ -102,7 +186,7 @@ export function HeatMap({ points }: HeatMapProps) {
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden">
       <canvas
-        ref={gridCanvasRef}
+        ref={streetMapRef}
         className="absolute inset-0 w-full h-full"
         style={{ width: '100%', height: '100%' }}
       />
