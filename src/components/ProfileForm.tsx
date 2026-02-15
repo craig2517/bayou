@@ -301,30 +301,6 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
         </div>
 
         <div className="space-y-3 pt-2">
-          <Label className="text-sm font-semibold">Relationship Status Preference</Label>
-          <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
-            Choose which relationship statuses you want to receive messages from
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {RELATIONSHIP_STATUSES.map(status => (
-              <div key={status} className="flex items-center space-x-2.5 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
-                <Checkbox
-                  id={`relationship-${status}`}
-                  checked={relationshipStatusPreference.includes(status)}
-                  onCheckedChange={(checked) => handleRelationshipStatusCheckbox(status, checked as boolean)}
-                />
-                <Label
-                  htmlFor={`relationship-${status}`}
-                  className="text-sm font-normal cursor-pointer flex-1"
-                >
-                  {status}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-3 pt-2">
           <Label className="text-sm font-semibold">Age Range: {ageRange[0]} - {ageRange[1]}</Label>
           <Slider
             value={ageRange}
@@ -350,6 +326,30 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             >
               Display this on my profile for others to see
             </Label>
+          </div>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <Label className="text-sm font-semibold">Relationship Status Preference</Label>
+          <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
+            Choose which relationship statuses you want to receive messages from
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {RELATIONSHIP_STATUSES.map(status => (
+              <div key={status} className="flex items-center space-x-2.5 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
+                <Checkbox
+                  id={`relationship-${status}`}
+                  checked={relationshipStatusPreference.includes(status)}
+                  onCheckedChange={(checked) => handleRelationshipStatusCheckbox(status, checked as boolean)}
+                />
+                <Label
+                  htmlFor={`relationship-${status}`}
+                  className="text-sm font-normal cursor-pointer flex-1"
+                >
+                  {status}
+                </Label>
+              </div>
+            ))}
           </div>
         </div>
 
