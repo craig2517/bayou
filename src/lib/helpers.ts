@@ -17,7 +17,7 @@ const FIRST_NAMES = [
   'Max', 'Sam', 'Chris', 'Stevie', 'Dallas', 'Austin', 'Angel', 'Robin'
 ]
 
-const GENDERS = ['Male', 'Female', 'Non-binary', 'Other']
+const GENDERS = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']
 
 function getEffectiveRelationshipStatus(isSingle: boolean | undefined): string {
   if (isSingle === undefined) return 'Prefer not to say'
