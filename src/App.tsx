@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Toaster } from '@/components/ui/sonner'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Database } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -406,6 +406,72 @@ function App() {
     }, 500)
   }
 
+  const handleRefreshSampleData = () => {
+    if (!myProfile) {
+      toast.error('❌ Please complete your profile first')
+      return
+    }
+
+    setIsRefreshing(true)
+    dataGeneratedRef.current = false
+    initialLoadCompleteRef.current = false
+    
+    setChatRequests([])
+    setConversations([])
+    setMessages({})
+    
+    const newUsers = generateDemoUsers(1000)
+    setDemoUsers(newUsers)
+    
+    setTimeout(() => {
+      const demoData = generateDemoConversationsAndMessages(myProfile, newUsers, 20)
+      
+      if (demoData.conversations.length === 0) {
+        setIsRefreshing(false)
+        toast.error('No compatible users found', {
+          description: 'Try adjusting your profile preferences',
+          duration: 5000
+        })
+        return
+      }
+      
+      const existingUserIds = [
+        ...demoData.conversations.flatMap(c => c.participants),
+        ...demoData.chatRequests.map(r => r.fromUserId),
+        ...demoData.chatRequests.map(r => r.toUserId)
+      ].filter(id => id !== myProfile.id)
+      
+      const uniqueExistingUserIds = [...new Set(existingUserIds)]
+      const pendingRequests = generateAdditionalChatRequests(myProfile, newUsers, uniqueExistingUserIds, 40)
+      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+      
+      const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
+      const newConversations = autoAcceptedRequests.map(request => {
+        const conversationId = [request.fromUserId, request.toUserId].sort().join('-')
+        return {
+          id: conversationId,
+          participants: [request.fromUserId, request.toUserId] as [string, string],
+          unreadCount: 0
+        }
+      })
+      
+      setConversations([...demoData.conversations, ...newConversations])
+      setChatRequests(allChatRequests)
+      setMessages(demoData.messages)
+      
+      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+      
+      dataGeneratedRef.current = true
+      initialLoadCompleteRef.current = true
+      setIsRefreshing(false)
+      
+      toast.success(`✨ ${demoData.conversations.length + newConversations.length} conversations & ${pendingToMe.length} requests loaded!`, {
+        description: 'Sample data refreshed successfully',
+        duration: 4000
+      })
+    }, 500)
+  }
+
   const handleSendMessage = (conversationId: string, text: string) => {
     if (!myProfile) return
 
@@ -491,6 +557,17 @@ function App() {
                   <span className="hidden sm:inline font-medium">Hidden</span>
                 </Badge>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshSampleData}
+                disabled={!myProfile || isRefreshing}
+                className="shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 border-border/60 hover:border-primary/30"
+                title="Refresh sample data"
+              >
+                <Database size={18} weight="duotone" className={isRefreshing ? 'animate-spin' : ''} />
+                <span className="hidden md:inline">Refresh Data</span>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -821,7 +898,7 @@ function App() {
       <footer className="border-t border-border bg-card/60 backdrop-blur-sm mt-16">
         <div className="container mx-auto px-4 sm:px-6 py-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Connect Nearby · Hereo
+            Here now, Hereo.
           </p>
         </div>
       </footer>
