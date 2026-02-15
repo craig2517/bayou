@@ -145,7 +145,7 @@ function App() {
     })
     
     const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
-    const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0])
+    const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0] && item.canMessage)
     
     return inRadiusUsers
   }, [myProfile, demoUsers, searchRadius])
@@ -785,12 +785,8 @@ function App() {
                         <p className="text-2xl font-bold text-accent">{demoUsers.filter(u => u.isActive && u.locationSharingEnabled).length}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">In Range</p>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Matching Nearby</p>
                         <p className="text-2xl font-bold text-primary">{nearbyUsers.length}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Matching</p>
-                        <p className="text-2xl font-bold text-secondary">{nearbyUsers.filter(u => u.canMessage).length}</p>
                       </div>
                     </div>
                   </div>
@@ -808,7 +804,7 @@ function App() {
                 ) : (
                   <div className={`relative ${isRefreshing ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      {nearbyUsers.map(({ user, distance, canMessage }, index) => (
+                      {nearbyUsers.map(({ user, distance }, index) => (
                         <div 
                           key={user.id}
                           className="animate-in fade-in slide-in-from-bottom-4"
@@ -817,7 +813,7 @@ function App() {
                           <UserCard
                             user={user}
                             distance={formatDistance(distance)}
-                            canMessage={canMessage}
+                            canMessage={true}
                             onMessage={() => handleSendChatRequest(user)}
                             onViewProfile={() => handleViewUserProfile(user, distance)}
                           />
