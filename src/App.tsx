@@ -190,7 +190,7 @@ function App() {
       })
       
       const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
-      const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0] && item.canMessage)
+      const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0])
       
       return inRadiusUsers
     } catch (error) {
@@ -783,7 +783,7 @@ function App() {
                 ) : (
                   <div className={`relative ${isRefreshing ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {nearbyUsers.map(({ user, distance }, index) => (
+                      {nearbyUsers.map(({ user, distance, canMessage }, index) => (
                         <div 
                           key={user.id}
                           className="animate-in fade-in slide-in-from-bottom-4"
@@ -792,7 +792,7 @@ function App() {
                           <UserCard
                             user={user}
                             distance={formatDistance(distance)}
-                            canMessage={true}
+                            canMessage={canMessage}
                             onMessage={() => handleSendChatRequest(user)}
                             onViewProfile={() => handleViewUserProfile(user, distance)}
                           />
