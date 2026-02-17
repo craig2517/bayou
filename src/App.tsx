@@ -146,6 +146,42 @@ function App() {
     return generateHeatMapData(demoUsers)
   }, [demoUsers])
 
+  const canUserMessageMe = useCallback((user: UserProfile): boolean => {
+    if (!myProfile) return false
+    
+    const myReceivesList = myProfile.receiveMessagesFrom || []
+    const iAcceptUserGender = myReceivesList.includes(user.gender)
+    const userAgeInMyRange = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
+    
+    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
+      if (isSingle === undefined) return 'Prefer not to say'
+      return isSingle ? 'Single' : 'Not Single'
+    }
+    const userEffectiveStatus = getEffectiveStatus(user.isSingle)
+    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Prefer not to say') || myRelationshipPrefs.includes(userEffectiveStatus)
+    
+    return iAcceptUserGender && userAgeInMyRange && iAcceptUserRelationshipStatus
+  }, [myProfile])
+
+  const canIMessageUser = useCallback((user: UserProfile): boolean => {
+    if (!myProfile) return false
+    
+    const userReceivesList = user.receiveMessagesFrom || []
+    const userAcceptsMyGender = userReceivesList.includes(myProfile.gender)
+    const myAgeInUserRange = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
+    
+    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
+      if (isSingle === undefined) return 'Prefer not to say'
+      return isSingle ? 'Single' : 'Not Single'
+    }
+    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
+    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Prefer not to say') || userRelationshipPrefs.includes(myEffectiveStatus)
+    
+    return userAcceptsMyGender && myAgeInUserRange && userAcceptsMyRelationshipStatus
+  }, [myProfile])
+
   const nearbyUsers = useMemo(() => {
     if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) return []
     
@@ -162,31 +198,7 @@ function App() {
           user.location.lng
         )
         
-        const userReceivesList = user.receiveMessagesFrom || []
-        const myReceivesList = myProfile.receiveMessagesFrom || []
-        
-        const userAcceptsMe = userReceivesList.includes(myProfile.gender)
-        const userAgeMatchesMe = user.ageRangeMin <= myProfile.age && user.ageRangeMax >= myProfile.age
-        const iAcceptUser = myReceivesList.includes(user.gender)
-        const myAgeMatchesUser = myProfile.ageRangeMin <= user.age && myProfile.ageRangeMax >= user.age
-        
-        const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
-        const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
-        
-        const getEffectiveStatus = (isSingle: boolean | undefined): string => {
-          if (isSingle === undefined) return 'Prefer not to say'
-          return isSingle ? 'Single' : 'Not Single'
-        }
-        
-        const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
-        const userEffectiveStatus = getEffectiveStatus(user.isSingle)
-        
-        const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Prefer not to say') || userRelationshipPrefs.includes(myEffectiveStatus)
-        const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Prefer not to say') || myRelationshipPrefs.includes(userEffectiveStatus)
-        
-        const canMessage = userAcceptsMe && userAgeMatchesMe && iAcceptUser && myAgeMatchesUser && userAcceptsMyRelationshipStatus && iAcceptUserRelationshipStatus
-        
-        return { user, distance, canMessage }
+        return { user, distance }
       })
       
       const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
@@ -301,35 +313,10 @@ function App() {
       return
     }
 
-    const userReceivesList = toUser.receiveMessagesFrom || []
-    const myReceivesList = myProfile.receiveMessagesFrom || []
-    
-    const userRelationshipPrefs = toUser.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
-    const myRelationshipPrefs = myProfile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
-    
-    const getEffectiveStatus = (isSingle: boolean | undefined): string => {
-      if (isSingle === undefined) return 'Prefer not to say'
-      return isSingle ? 'Single' : 'Not Single'
-    }
-    
-    const myEffectiveStatus = getEffectiveStatus(myProfile.isSingle)
-    const userEffectiveStatus = getEffectiveStatus(toUser.isSingle)
-    
-    const userAcceptsMyRelationshipStatus = userRelationshipPrefs.includes('Prefer not to say') || userRelationshipPrefs.includes(myEffectiveStatus)
-    const iAcceptUserRelationshipStatus = myRelationshipPrefs.includes('Prefer not to say') || myRelationshipPrefs.includes(userEffectiveStatus)
-
-    const canMessage = 
-      userReceivesList.includes(myProfile.gender) &&
-      toUser.ageRangeMin <= myProfile.age &&
-      toUser.ageRangeMax >= myProfile.age &&
-      myReceivesList.includes(toUser.gender) &&
-      myProfile.ageRangeMin <= toUser.age &&
-      myProfile.ageRangeMax >= toUser.age &&
-      userAcceptsMyRelationshipStatus &&
-      iAcceptUserRelationshipStatus
+    const canMessage = canIMessageUser(toUser) && canUserMessageMe(toUser)
 
     if (!canMessage) {
-      toast.error('❌ Your preferences do not match with this user')
+      toast.error('❌ Message preferences do not allow this connection')
       return
     }
 
@@ -788,7 +775,7 @@ function App() {
                 ) : (
                   <div className={`relative ${isRefreshing ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {nearbyUsers.map(({ user, distance, canMessage }, index) => (
+                      {nearbyUsers.map(({ user, distance }, index) => (
                         <div 
                           key={user.id}
                           className="animate-in fade-in slide-in-from-bottom-4"
@@ -797,7 +784,6 @@ function App() {
                           <UserCard
                             user={user}
                             distance={formatDistance(distance)}
-                            canMessage={canMessage}
                             onMessage={() => handleSendChatRequest(user)}
                             onViewProfile={() => handleViewUserProfile(user, distance)}
                           />
