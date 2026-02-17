@@ -769,6 +769,11 @@ function App() {
                     step={0.1}
                     className="w-full"
                   />
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-sm text-muted-foreground text-center">
+                      <span className="font-semibold text-foreground">{nearbyUsers.length}</span> {nearbyUsers.length === 1 ? 'user' : 'users'} found
+                    </p>
+                  </div>
                 </div>
 
                 {nearbyUsers.length === 0 ? (
