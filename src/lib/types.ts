@@ -15,6 +15,7 @@ export interface UserProfile {
   lastActive: number
   locationSharingEnabled: boolean
   requireApproval: boolean
+  blockedUsers?: string[]
   isSingle?: boolean
   showReceiveMessagesFrom?: boolean
   showAgeRange?: boolean

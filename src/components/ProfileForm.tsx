@@ -8,20 +8,24 @@ import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { MapPin, Camera, Trash } from '@phosphor-icons/react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { MapPin, Camera, Trash, ProhibitInset } from '@phosphor-icons/react'
 import { CameraCapture } from '@/components/CameraCapture'
+import { isPhotoValid } from '@/lib/helpers'
 import type { UserProfile } from '@/lib/types'
 
 interface ProfileFormProps {
   profile: UserProfile | null
   onSave: (profile: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => void
+  blockedUsers?: UserProfile[]
+  onUnblockUser?: (userId: string) => void
 }
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say']
 const GENDERS_SELECTABLE = ['Male', 'Female', 'Non-binary', 'Prefer not to say']
 const RELATIONSHIP_STATUSES = ['Single', 'Not Single', 'Prefer not to say']
 
-export function ProfileForm({ profile, onSave }: ProfileFormProps) {
+export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
   const [age, setAge] = useState(profile?.age?.toString() || '')
   const [gender, setGender] = useState(profile?.gender || '')
@@ -125,6 +129,7 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
       ageRangeMax: ageRange[1],
       locationSharingEnabled,
       requireApproval,
+      blockedUsers: profile?.blockedUsers || [],
       isSingle,
       showReceiveMessagesFrom,
       showAgeRange,
@@ -397,6 +402,59 @@ export function ProfileForm({ profile, onSave }: ProfileFormProps) {
             />
           </div>
         </div>
+
+        {blockedUsers && blockedUsers.length > 0 && (
+          <div className="space-y-4 pt-4 border-t-2 border-border">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <ProhibitInset size={20} className="text-destructive" weight="duotone" />
+                <Label className="text-sm font-semibold">Blocked Users ({blockedUsers.length})</Label>
+              </div>
+              <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
+                Blocked users cannot message you or see you in Discover
+              </p>
+            </div>
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+              {blockedUsers.map(user => {
+                const photoValid = user.profilePicture ? isPhotoValid(user.profilePicture) : false
+                return (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-4 bg-card rounded-xl border-2 border-border hover:border-destructive/20 transition-all shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-12 h-12 border-2 border-destructive/30">
+                        {photoValid && user.profilePicture && (
+                          <AvatarImage src={user.profilePicture.dataUrl} alt={user.name} />
+                        )}
+                        <AvatarFallback className="bg-gradient-to-br from-destructive/20 to-destructive/10 text-destructive font-semibold">
+                          {user.name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-foreground">{user.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.age} • {user.gender}
+                        </p>
+                      </div>
+                    </div>
+                    {onUnblockUser && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUnblockUser(user.id)}
+                        className="border-accent/50 hover:border-accent text-accent hover:bg-accent/10"
+                      >
+                        Unblock
+                      </Button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <Button
           type="submit"

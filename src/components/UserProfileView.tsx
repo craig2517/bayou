@@ -2,16 +2,20 @@ import { Card } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { MapPin, User as UserIcon, Heart, Calendar } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
+import { MapPin, User as UserIcon, Heart, Calendar, ProhibitInset } from '@phosphor-icons/react'
 import { isPhotoValid } from '@/lib/helpers'
 import type { UserProfile } from '@/lib/types'
 
 interface UserProfileViewProps {
   user: UserProfile
   distance?: string
+  isBlocked?: boolean
+  onBlock?: () => void
+  onUnblock?: () => void
 }
 
-export function UserProfileView({ user, distance }: UserProfileViewProps) {
+export function UserProfileView({ user, distance, isBlocked, onBlock, onUnblock }: UserProfileViewProps) {
   const initials = user.name
     .split(' ')
     .map(n => n[0])
@@ -59,6 +63,30 @@ export function UserProfileView({ user, distance }: UserProfileViewProps) {
             <MapPin size={16} weight="fill" />
             {distance}
           </Badge>
+        )}
+
+        {(onBlock || onUnblock) && (
+          <div className="w-full pt-2">
+            {isBlocked ? (
+              <Button
+                onClick={onUnblock}
+                variant="outline"
+                className="w-full shadow-md hover:shadow-lg transition-all duration-200 h-11 border-accent/50 hover:border-accent text-accent hover:bg-accent/10"
+              >
+                <ProhibitInset size={18} weight="bold" className="mr-2" />
+                Unblock User
+              </Button>
+            ) : (
+              <Button
+                onClick={onBlock}
+                variant="outline"
+                className="w-full shadow-md hover:shadow-lg transition-all duration-200 h-11 border-destructive/50 hover:border-destructive text-destructive hover:bg-destructive/10"
+              >
+                <ProhibitInset size={18} weight="bold" className="mr-2" />
+                Block User
+              </Button>
+            )}
+          </div>
         )}
 
         <Separator className="my-2" />

@@ -186,8 +186,14 @@ function App() {
     if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) return []
     
     try {
+      const blockedUserIds = myProfile.blockedUsers || []
+      
       const eligibleDemoUsers = demoUsers.filter(user => {
         if (!user || user.id === myProfile.id || !user.isActive || !user.locationSharingEnabled) {
+          return false
+        }
+        
+        if (blockedUserIds.includes(user.id)) {
           return false
         }
         
@@ -222,10 +228,13 @@ function App() {
       
       if (!myProfile.requireApproval) return []
       
+      const blockedUserIds = myProfile.blockedUsers || []
+      
       return requestArray.filter(req => 
         req && 
         req.toUserId === myProfile.id && 
-        req.status === 'pending'
+        req.status === 'pending' &&
+        !blockedUserIds.includes(req.fromUserId)
       )
     } catch (error) {
       console.error('Error calculating pending requests:', error)
@@ -319,6 +328,12 @@ function App() {
 
     if (!canIMessageUser(toUser)) {
       toast.error('❌ This user\'s preferences do not allow messages from you')
+      return
+    }
+
+    const blockedByThem = toUser.blockedUsers?.includes(myProfile.id) || false
+    if (blockedByThem) {
+      toast.error('❌ Unable to send message to this user')
       return
     }
 
@@ -426,6 +441,59 @@ function App() {
   const handleViewUserProfile = (user: UserProfile, distance?: number) => {
     setViewingUser(user)
     setViewingUserDistance(distance !== undefined ? formatDistance(distance) : undefined)
+  }
+
+  const handleBlockUser = (userId: string) => {
+    if (!myProfile) return
+    
+    const blockedUserIds = myProfile.blockedUsers || []
+    
+    if (blockedUserIds.includes(userId)) {
+      toast.info('ℹ️ User is already blocked')
+      return
+    }
+    
+    setMyProfile(current => {
+      if (!current) return null
+      return {
+        ...current,
+        blockedUsers: [...blockedUserIds, userId]
+      }
+    })
+    
+    const blockedUser = demoUsers.find(u => u.id === userId)
+    if (selectedConversation) {
+      setSelectedConversation(null)
+    }
+    
+    toast.success(`🚫 ${blockedUser?.name || 'User'} has been blocked`, {
+      description: 'They will no longer be able to message you',
+      duration: 4000
+    })
+    
+    setViewingUser(null)
+  }
+
+  const handleUnblockUser = (userId: string) => {
+    if (!myProfile) return
+    
+    const blockedUserIds = myProfile.blockedUsers || []
+    
+    setMyProfile(current => {
+      if (!current) return null
+      return {
+        ...current,
+        blockedUsers: blockedUserIds.filter(id => id !== userId)
+      }
+    })
+    
+    const unblockedUser = demoUsers.find(u => u.id === userId)
+    toast.success(`✅ ${unblockedUser?.name || 'User'} has been unblocked`, {
+      description: 'They can now message you again',
+      duration: 4000
+    })
+    
+    setViewingUser(null)
   }
 
   const handleRefreshUsers = () => {
@@ -564,6 +632,8 @@ function App() {
       const conversationArray = Array.isArray(conversations) ? conversations : []
       if (!myProfile) return []
       
+      const blockedUserIds = myProfile.blockedUsers || []
+      
       return conversationArray
         .filter(conv => conv && Array.isArray(conv.participants) && conv.participants.includes(myProfile.id))
         .map(conv => {
@@ -571,7 +641,7 @@ function App() {
           const otherUser = demoUsers.find(u => u.id === otherUserId)
           return { ...conv, otherUser: otherUser || null }
         })
-        .filter(conv => conv.otherUser !== null)
+        .filter(conv => conv.otherUser !== null && !blockedUserIds.includes(conv.otherUser.id))
         .sort((a, b) => {
           const aTime = a.lastMessage?.timestamp || 0
           const bTime = b.lastMessage?.timestamp || 0
@@ -826,6 +896,7 @@ function App() {
                   onSendMessage={(text) => handleSendMessage(selectedConversation, text)}
                   onBack={() => setSelectedConversation(null)}
                   onViewProfile={() => handleViewUserProfile(currentConversation.otherUser!)}
+                  onBlockUser={() => handleBlockUser(currentConversation.otherUser!.id)}
                 />
               </div>
             ) : (
@@ -986,7 +1057,12 @@ function App() {
               }
             </DialogDescription>
           </DialogHeader>
-          <ProfileForm profile={myProfile || null} onSave={handleSaveProfile} />
+          <ProfileForm 
+            profile={myProfile || null} 
+            onSave={handleSaveProfile}
+            blockedUsers={myProfile?.blockedUsers?.map(id => demoUsers.find(u => u.id === id)).filter(Boolean) as UserProfile[] || []}
+            onUnblockUser={handleUnblockUser}
+          />
         </DialogContent>
       </Dialog>
 
@@ -1010,7 +1086,13 @@ function App() {
             <DialogTitle className="text-2xl font-bold">👤 User Profile</DialogTitle>
           </DialogHeader>
           {viewingUser && (
-            <UserProfileView user={viewingUser} distance={viewingUserDistance} />
+            <UserProfileView 
+              user={viewingUser} 
+              distance={viewingUserDistance}
+              isBlocked={myProfile?.blockedUsers?.includes(viewingUser.id)}
+              onBlock={() => handleBlockUser(viewingUser.id)}
+              onUnblock={() => handleUnblockUser(viewingUser.id)}
+            />
           )}
         </DialogContent>
       </Dialog>

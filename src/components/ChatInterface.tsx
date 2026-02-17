@@ -4,9 +4,15 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { PaperPlaneTilt, ArrowLeft, ChatCircle } from '@phosphor-icons/react'
+import { PaperPlaneTilt, ArrowLeft, ChatCircle, DotsThree } from '@phosphor-icons/react'
 import { isPhotoValid } from '@/lib/helpers'
 import type { Message, UserProfile } from '@/lib/types'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface ChatInterfaceProps {
   messages: Message[]
@@ -15,9 +21,10 @@ interface ChatInterfaceProps {
   onSendMessage: (text: string) => void
   onBack?: () => void
   onViewProfile?: () => void
+  onBlockUser?: () => void
 }
 
-export function ChatInterface({ messages, currentUserId, otherUser, onSendMessage, onBack, onViewProfile }: ChatInterfaceProps) {
+export function ChatInterface({ messages, currentUserId, otherUser, onSendMessage, onBack, onViewProfile, onBlockUser }: ChatInterfaceProps) {
   const [messageText, setMessageText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -76,6 +83,27 @@ export function ChatInterface({ messages, currentUserId, otherUser, onSendMessag
           <h3 className="font-semibold text-foreground text-base">{otherUser.name}</h3>
           <p className="text-sm text-muted-foreground font-medium">{otherUser.age} • {otherUser.gender}</p>
         </div>
+        {onBlockUser && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-muted/60 transition-colors"
+              >
+                <DotsThree size={24} weight="bold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={onBlockUser}
+                className="text-destructive focus:text-destructive cursor-pointer"
+              >
+                Block User
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
