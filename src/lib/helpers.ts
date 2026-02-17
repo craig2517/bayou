@@ -53,6 +53,18 @@ function checkRelationshipCompatibility(
   return user1AcceptsUser2 && user2AcceptsUser1
 }
 
+function canUserMessageMe(sender: UserProfile, receiver: UserProfile): boolean {
+  const receiverAcceptsList = receiver.receiveMessagesFrom || []
+  const receiverAcceptsGender = receiverAcceptsList.includes(sender.gender)
+  const senderAgeInReceiverRange = receiver.ageRangeMin <= sender.age && receiver.ageRangeMax >= sender.age
+  
+  const receiverRelationshipPrefs = receiver.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+  const senderStatus = getEffectiveRelationshipStatus(sender.isSingle)
+  const receiverAcceptsRelationshipStatus = receiverRelationshipPrefs.includes('Prefer not to say') || receiverRelationshipPrefs.includes(senderStatus)
+  
+  return receiverAcceptsGender && senderAgeInReceiverRange && receiverAcceptsRelationshipStatus
+}
+
 function checkFullCompatibility(user1: UserProfile, user2: UserProfile): boolean {
   const user1ReceivesList = user1.receiveMessagesFrom || []
   const user2ReceivesList = user2.receiveMessagesFrom || []
@@ -352,7 +364,7 @@ export function generateInitialChatRequests(
     
     if (distance > 1) return false
     
-    return checkFullCompatibility(myProfile, user)
+    return canUserMessageMe(user, myProfile)
   })
   
   const numRequests = Math.min(count, Math.max(3, Math.floor(eligibleUsers.length * 0.2)))
@@ -573,7 +585,7 @@ export function generateDemoConversationsAndMessages(
     
     if (distance > 25) return false
     
-    return checkFullCompatibility(myProfile, user)
+    return canUserMessageMe(user, myProfile)
   })
 
   const targetCount = Math.min(conversationCount, eligibleUsers.length)
@@ -646,7 +658,7 @@ export function generateAdditionalChatRequests(
     return []
   }
 
-  const eligibleUsers = demoUsers.filter(user => {
+  const usersWhoCanMessageMe = demoUsers.filter(user => {
     if (user.id === myProfile.id) return false
     if (existingRequestUserIds.includes(user.id)) return false
     if (!user.isActive) return false
@@ -661,10 +673,28 @@ export function generateAdditionalChatRequests(
     
     if (distance > 25) return false
     
-    return checkFullCompatibility(myProfile, user)
+    return canUserMessageMe(user, myProfile)
   })
 
-  if (eligibleUsers.length === 0) {
+  const usersICanMessage = demoUsers.filter(user => {
+    if (user.id === myProfile.id) return false
+    if (existingRequestUserIds.includes(user.id)) return false
+    if (!user.isActive) return false
+    if (!user.locationSharingEnabled) return false
+    
+    const distance = calculateDistance(
+      myProfile.location.lat,
+      myProfile.location.lng,
+      user.location.lat,
+      user.location.lng
+    )
+    
+    if (distance > 25) return false
+    
+    return canUserMessageMe(myProfile, user)
+  })
+
+  if (usersWhoCanMessageMe.length === 0 && usersICanMessage.length === 0) {
     console.warn('No eligible users found for additional requests')
     return []
   }
@@ -672,20 +702,23 @@ export function generateAdditionalChatRequests(
   const numRequestsToMe = Math.ceil(count * 0.75)
   const numRequestsFromMe = Math.floor(count * 0.25)
   
-  const sortedByDistance = eligibleUsers.sort((a, b) => {
+  const sortedByDistanceToMe = usersWhoCanMessageMe.sort((a, b) => {
     const distA = calculateDistance(myProfile.location.lat, myProfile.location.lng, a.location.lat, a.location.lng)
     const distB = calculateDistance(myProfile.location.lat, myProfile.location.lng, b.location.lat, b.location.lng)
     return distA - distB
   })
   
-  const selectedUsersForRequestsToMe = sortedByDistance
-    .slice(0, Math.min(numRequestsToMe, eligibleUsers.length))
+  const selectedUsersForRequestsToMe = sortedByDistanceToMe
+    .slice(0, Math.min(numRequestsToMe, usersWhoCanMessageMe.length))
   
-  const remainingUsers = eligibleUsers.filter(u => !selectedUsersForRequestsToMe.includes(u))
+  const sortedByDistanceFromMe = usersICanMessage.sort((a, b) => {
+    const distA = calculateDistance(myProfile.location.lat, myProfile.location.lng, a.location.lat, a.location.lng)
+    const distB = calculateDistance(myProfile.location.lat, myProfile.location.lng, b.location.lat, b.location.lng)
+    return distA - distB
+  })
   
-  const selectedUsersForRequestsFromMe = remainingUsers
-    .sort(() => Math.random() - 0.5)
-    .slice(0, Math.min(numRequestsFromMe, remainingUsers.length))
+  const selectedUsersForRequestsFromMe = sortedByDistanceFromMe
+    .slice(0, Math.min(numRequestsFromMe, usersICanMessage.length))
   
   const requestsToMe = selectedUsersForRequestsToMe.map((user, index) => ({
     id: `pending-req-to-me-${Date.now()}-${index}`,

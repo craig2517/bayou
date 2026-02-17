@@ -191,8 +191,7 @@ function App() {
           return false
         }
         
-        const canMessage = canIMessageUser(user) && canUserMessageMe(user)
-        return canMessage
+        return canIMessageUser(user)
       })
       
       const allUsersWithDistance = eligibleDemoUsers.map(user => {
@@ -214,7 +213,7 @@ function App() {
       console.error('Error calculating nearby users:', error)
       return []
     }
-  }, [myProfile, demoUsers, searchRadius, canIMessageUser, canUserMessageMe])
+  }, [myProfile, demoUsers, searchRadius, canIMessageUser])
 
   const pendingIncomingRequests = useMemo(() => {
     try {
@@ -318,10 +317,8 @@ function App() {
       return
     }
 
-    const canMessage = canIMessageUser(toUser) && canUserMessageMe(toUser)
-
-    if (!canMessage) {
-      toast.error('❌ Message preferences do not allow this connection')
+    if (!canIMessageUser(toUser)) {
+      toast.error('❌ This user\'s preferences do not allow messages from you')
       return
     }
 
