@@ -190,7 +190,7 @@ function App() {
       })
       
       const sortedByDistance = allUsersWithDistance.sort((a, b) => a.distance - b.distance)
-      const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0] && item.canMessage)
+      const inRadiusUsers = sortedByDistance.filter(item => item.distance <= searchRadius[0])
       
       return inRadiusUsers
     } catch (error) {
