@@ -186,9 +186,14 @@ function App() {
     if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) return []
     
     try {
-      const eligibleDemoUsers = demoUsers.filter(user => 
-        user && user.id !== myProfile.id && user.isActive && user.locationSharingEnabled
-      )
+      const eligibleDemoUsers = demoUsers.filter(user => {
+        if (!user || user.id === myProfile.id || !user.isActive || !user.locationSharingEnabled) {
+          return false
+        }
+        
+        const canMessage = canIMessageUser(user) && canUserMessageMe(user)
+        return canMessage
+      })
       
       const allUsersWithDistance = eligibleDemoUsers.map(user => {
         const distance = calculateDistance(
@@ -209,7 +214,7 @@ function App() {
       console.error('Error calculating nearby users:', error)
       return []
     }
-  }, [myProfile, demoUsers, searchRadius])
+  }, [myProfile, demoUsers, searchRadius, canIMessageUser, canUserMessageMe])
 
   const pendingIncomingRequests = useMemo(() => {
     try {
