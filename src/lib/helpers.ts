@@ -37,49 +37,16 @@ function getEffectiveRelationshipStatus(isSingle: boolean | undefined): string {
   return isSingle ? 'Single' : 'Not Single'
 }
 
-function checkRelationshipCompatibility(
-  user1: UserProfile,
-  user2: UserProfile
-): boolean {
-  const user1Prefs = user1.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
-  const user2Prefs = user2.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
-  
-  const user1Status = getEffectiveRelationshipStatus(user1.isSingle)
-  const user2Status = getEffectiveRelationshipStatus(user2.isSingle)
-  
-  const user1AcceptsUser2 = user1Prefs.includes('Prefer not to say') || user1Prefs.includes(user2Status)
-  const user2AcceptsUser1 = user2Prefs.includes('Prefer not to say') || user2Prefs.includes(user1Status)
-  
-  return user1AcceptsUser2 && user2AcceptsUser1
-}
-
 function canUserMessageMe(sender: UserProfile, receiver: UserProfile): boolean {
   const receiverAcceptsList = receiver.receiveMessagesFrom || []
-  const receiverAcceptsGender = receiverAcceptsList.includes(sender.gender)
-  const senderAgeInReceiverRange = receiver.ageRangeMin <= sender.age && receiver.ageRangeMax >= sender.age
+  if (!receiverAcceptsList.includes(sender.gender)) return false
+  
+  if (sender.age < receiver.ageRangeMin || sender.age > receiver.ageRangeMax) return false
   
   const receiverRelationshipPrefs = receiver.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
   const senderStatus = getEffectiveRelationshipStatus(sender.isSingle)
-  const receiverAcceptsRelationshipStatus = receiverRelationshipPrefs.includes('Prefer not to say') || receiverRelationshipPrefs.includes(senderStatus)
   
-  return receiverAcceptsGender && senderAgeInReceiverRange && receiverAcceptsRelationshipStatus
-}
-
-function checkFullCompatibility(user1: UserProfile, user2: UserProfile): boolean {
-  const user1ReceivesList = user1.receiveMessagesFrom || []
-  const user2ReceivesList = user2.receiveMessagesFrom || []
-  
-  const user1AcceptsUser2Gender = user1ReceivesList.includes(user2.gender)
-  const user2AcceptsUser1Gender = user2ReceivesList.includes(user1.gender)
-  
-  const user2AgeInUser1Range = user1.ageRangeMin <= user2.age && user1.ageRangeMax >= user2.age
-  const user1AgeInUser2Range = user2.ageRangeMin <= user1.age && user2.ageRangeMax >= user1.age
-  
-  const relationshipCompatible = checkRelationshipCompatibility(user1, user2)
-  
-  return user1AcceptsUser2Gender && user2AcceptsUser1Gender && 
-         user2AgeInUser1Range && user1AgeInUser2Range && 
-         relationshipCompatible
+  return receiverRelationshipPrefs.includes('Prefer not to say') || receiverRelationshipPrefs.includes(senderStatus)
 }
 
 export function generateDemoAvatar(name: string, gender: string, age: number, seed: number): string {
@@ -129,8 +96,7 @@ export function generateDemoAvatar(name: string, gender: string, age: number, se
 export function generateDemoUsers(count: number = 1000): UserProfile[] {
   const users: UserProfile[] = []
   const timestamp = Date.now()
-  
-  const usedNames = new Set<string>()
+  const allGenders = ['Male', 'Female', 'Non-binary']
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
@@ -153,18 +119,10 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     const lng = CENTER_LNG + lngOffset
     const age = 18 + Math.floor(Math.random() * 63)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
-    
-    let name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
-    let nameAttempts = 0
-    while (usedNames.has(`${name}-${i % 10}`) && nameAttempts < 10) {
-      name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
-      nameAttempts++
-    }
-    usedNames.add(`${name}-${i % 10}`)
+    const name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
     
     const capturedAt = timestamp - Math.floor(Math.random() * 20 * 60 * 60 * 1000)
     
-    const allGenders = ['Male', 'Female', 'Non-binary']
     const genderPreferenceRandom = Math.random()
     let receiveFrom: string[]
     
@@ -521,8 +479,7 @@ export function generateDemoMessages(
 ) {
   const messages: any[] = []
   const now = Date.now()
-  const oneDayMs = 24 * 60 * 60 * 1000
-  const baseTime = now - Math.random() * oneDayMs * 7
+  const baseTime = now - Math.random() * 7 * 24 * 60 * 60 * 1000
   
   let currentSender = Math.random() > 0.5 ? user1Id : user2Id
   let timeOffset = 0
