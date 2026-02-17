@@ -694,7 +694,7 @@ function App() {
             <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 border-2 border-primary/15 rounded-2xl p-6 shadow-md backdrop-blur-sm">
               <h2 className="font-semibold text-xl mb-2.5 flex items-center gap-2.5">
                 <MapTrifold size={26} weight="duotone" className="text-primary" />
-                Social Discovery Heat Map
+                Human Heat Map
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Visualize anonymous user density in the area. Brighter colors indicate higher activity. 
