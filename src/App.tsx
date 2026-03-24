@@ -604,10 +604,11 @@ function App() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight select-none">
-                <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">Here</span>
+                <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">Bay</span>
                 <span className="text-yellow-400 drop-shadow-sm">o</span>
+                <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">u</span>
               </h1>
-              <span className="text-sm font-medium text-foreground hidden sm:inline">Here now, Hereo. See what's happening.</span>
+              <span className="text-sm font-medium text-foreground hidden sm:inline">Here now, Bayou. See what's happening.</span>
             </div>
             <div className="flex items-center gap-2.5">
               {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && (
@@ -974,7 +975,7 @@ function App() {
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto border-2 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              {myProfile ? '✏️ Your Profile' : '👋 Welcome to Hereo!'}
+              {myProfile ? '✏️ Your Profile' : '👋 Welcome to Bayou!'}
             </DialogTitle>
             <DialogDescription className="text-base leading-relaxed">
               {myProfile 
