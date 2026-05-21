@@ -317,7 +317,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
             className="w-full"
           />
           <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
-            You'll receive messages from users aged {ageRange[0]} to {ageRange[1]}
+            You'll be seen by and receive messages from users aged {ageRange[0]} to {ageRange[1]}
           </p>
           <div className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border bg-muted/30">
             <Checkbox
@@ -337,7 +337,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         <div className="space-y-3 pt-2 border-t-2 border-border">
           <Label className="text-sm font-semibold">Relationship Status Preference</Label>
           <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
-            Choose which relationship statuses you want to receive messages from
+            You'll be seen by and receive messages from users with these relationship statuses
           </p>
           <div className="grid grid-cols-2 gap-3">
             {RELATIONSHIP_STATUSES.map(status => (
