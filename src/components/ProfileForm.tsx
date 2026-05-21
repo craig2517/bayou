@@ -272,7 +272,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-3 pt-2">
-          <Label className="text-sm font-semibold">Receive Messages From</Label>
+          <Label className="text-sm font-semibold">Be Seen By and Receive Messages From:</Label>
           <div className="grid grid-cols-2 gap-3">
             {GENDERS.filter(g => g !== 'Prefer not to say').map(genderOption => (
               <div key={genderOption} className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border hover:bg-muted/40 hover:border-primary/20 transition-all">
