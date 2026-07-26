@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { HeatMapPoint } from '@/lib/types'
@@ -13,32 +13,43 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
   const mapInstanceRef = useRef<L.Map | null>(null)
   const heatLayerRef = useRef<L.LayerGroup | null>(null)
   const userMarkerRef = useRef<L.Marker | null>(null)
+  const [mapError, setMapError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return
 
-    const defaultCenter: [number, number] = userLocation 
-      ? [userLocation.lat, userLocation.lng]
-      : [40.7128, -74.0060]
+    try {
+      const defaultCenter: [number, number] = userLocation 
+        ? [userLocation.lat, userLocation.lng]
+        : [40.7128, -74.0060]
 
-    const map = L.map(mapRef.current, {
-      center: defaultCenter,
-      zoom: 13,
-      zoomControl: true,
-      scrollWheelZoom: true
-    })
+      const map = L.map(mapRef.current, {
+        center: defaultCenter,
+        zoom: 13,
+        zoomControl: true,
+        scrollWheelZoom: true
+      })
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(map)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map)
 
-    mapInstanceRef.current = map
+      mapInstanceRef.current = map
+      setMapError(null)
+    } catch (error) {
+      console.error('Failed to initialize map:', error)
+      setMapError('Failed to load map')
+    }
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove()
-        mapInstanceRef.current = null
+      try {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove()
+          mapInstanceRef.current = null
+        }
+      } catch (error) {
+        console.error('Failed to cleanup map:', error)
       }
     }
   }, [])
@@ -138,44 +149,56 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
 
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden">
-      <style>{`
-        @keyframes pulse {
-          0% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-          }
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(2);
-          }
-        }
-        .leaflet-container {
-          width: 100%;
-          height: 100%;
-        }
-      `}</style>
-      <div ref={mapRef} className="w-full h-full" />
-      <div className="absolute top-4 right-4 flex flex-col gap-2 px-3 py-2.5 bg-white/90 backdrop-blur-sm rounded-lg border border-border shadow-md z-[1000]">
-        <div className="text-xs font-semibold text-foreground mb-1">Activity Level</div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ background: 'rgb(178, 34, 34)' }} />
-          <span className="text-xs text-muted-foreground">High</span>
+      {mapError ? (
+        <div className="w-full h-full flex items-center justify-center bg-muted">
+          <div className="text-center p-6">
+            <p className="text-destructive font-semibold mb-2">Map Error</p>
+            <p className="text-sm text-muted-foreground">{mapError}</p>
+            <p className="text-xs text-muted-foreground mt-2">Check browser console for details</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ background: 'rgb(255, 140, 0)' }} />
-          <span className="text-xs text-muted-foreground">Medium</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ background: 'rgb(173, 255, 47)' }} />
-          <span className="text-xs text-muted-foreground">Low</span>
-        </div>
-      </div>
-      <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm rounded-lg border border-border shadow-md z-[1000]">
-        <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-        <span className="text-sm font-medium text-foreground">
-          {points.length} active nearby
-        </span>
-      </div>
+      ) : (
+        <>
+          <style>{`
+            @keyframes pulse {
+              0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+              }
+              100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(2);
+              }
+            }
+            .leaflet-container {
+              width: 100%;
+              height: 100%;
+            }
+          `}</style>
+          <div ref={mapRef} className="w-full h-full" />
+          <div className="absolute top-4 right-4 flex flex-col gap-2 px-3 py-2.5 bg-white/90 backdrop-blur-sm rounded-lg border border-border shadow-md z-[1000]">
+            <div className="text-xs font-semibold text-foreground mb-1">Activity Level</div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ background: 'rgb(178, 34, 34)' }} />
+              <span className="text-xs text-muted-foreground">High</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ background: 'rgb(255, 140, 0)' }} />
+              <span className="text-xs text-muted-foreground">Medium</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ background: 'rgb(173, 255, 47)' }} />
+              <span className="text-xs text-muted-foreground">Low</span>
+            </div>
+          </div>
+          <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm rounded-lg border border-border shadow-md z-[1000]">
+            <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm font-medium text-foreground">
+              {points.length} active nearby
+            </span>
+          </div>
+        </>
+      )}
     </div>
   )
 }

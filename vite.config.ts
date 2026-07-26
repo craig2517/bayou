@@ -10,14 +10,19 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? './' : '/',
+  base: './',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
+    minify: 'esbuild',
+    target: 'es2020',
     rollupOptions: {
       output: {
         manualChunks: undefined,
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]'
       }
     }
   },

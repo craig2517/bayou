@@ -37,6 +37,10 @@ function App() {
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
+
+  useEffect(() => {
+    console.log('Bayou App initialized')
+  }, [])
   
   const {
     latitude,
