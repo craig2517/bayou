@@ -291,7 +291,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-3 pt-2">
-          <Label className="text-base font-bold">Be Seen, Don't Search - Select if your profile is visible, who can see it when visible, and who can connect</Label>
+          <Label className="text-base font-bold">Be Seen, Don't Search - Select if your profile is visible, who can see it when visible, and who can connect:</Label>
           <Label className="text-sm font-semibold">Gender: <span className="text-destructive">*</span></Label>
           <div className="grid grid-cols-2 gap-3">
             {GENDERS.map(genderOption => (
@@ -358,7 +358,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
               <MapPin className="text-primary mt-1 flex-shrink-0" size={24} weight="fill" />
               <div className="space-y-1">
                 <Label htmlFor="location-sharing" className="cursor-pointer font-semibold text-base">
-                  Appear in Discover
+                  Appear in Who's Nearby
                 </Label>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Allow others to discover you in nearby searches. You can disable this at any time.
@@ -373,7 +373,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
           </div>
           {!locationSharingEnabled && (
             <p className="text-sm text-muted-foreground bg-amber-50 border-2 border-amber-200 p-4 rounded-lg leading-relaxed">
-              With this disabled, you won't appear in Discover searches, but your anonymized location will still contribute to the heat map.
+              With this disabled, you won't appear in Who's Nearby searches, but your anonymized location will still contribute to the heat map.
             </p>
           )}
         </div>
@@ -405,7 +405,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
                 <Label className="text-sm font-semibold">Blocked Users ({blockedUsers.length})</Label>
               </div>
               <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
-                Blocked users cannot message you or see you in Discover
+                Blocked users cannot message you or see you in Who's Nearby
               </p>
             </div>
             <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
