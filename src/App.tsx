@@ -139,6 +139,21 @@ function App() {
   }, [setConversations, setChatRequests, setMessages])
 
   useEffect(() => {
+    if (!showSampleData) {
+      setChatRequests([])
+      setConversations([])
+      setMessages({})
+      setSelectedConversation(null)
+      dataGeneratedRef.current = false
+    } else if (myProfile && demoUsers.length > 0 && !dataGeneratedRef.current) {
+      const timer = setTimeout(() => {
+        generateSampleData(myProfile, demoUsers)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [showSampleData, myProfile, demoUsers, generateSampleData, setChatRequests, setConversations, setMessages])
+
+  useEffect(() => {
     if (!myProfile || demoUsers.length === 0 || dataGeneratedRef.current || !showSampleData) return
     
     const conversationArray = Array.isArray(conversations) ? conversations : []
@@ -592,13 +607,13 @@ function App() {
     setShowSampleData(newValue)
     
     if (newValue) {
-      toast.success('🔔 Sample data visible', {
-        description: 'Demo users are now visible on heat map and discover',
+      toast.success('🔔 Sample data enabled', {
+        description: 'Demo users, messages, and requests are now visible',
         duration: 3000
       })
     } else {
-      toast.info('🔕 Sample data hidden', {
-        description: 'Demo users are now hidden from heat map and discover',
+      toast.info('🔕 Sample data disabled', {
+        description: 'All demo content has been hidden',
         duration: 3000
       })
     }
