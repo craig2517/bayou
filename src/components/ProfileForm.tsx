@@ -21,19 +21,19 @@ interface ProfileFormProps {
   onUnblockUser?: (userId: string) => void
 }
 
-const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say']
-const GENDERS_SELECTABLE = ['Male', 'Female', 'Non-binary', 'Prefer not to say']
-const RELATIONSHIP_STATUSES = ['Single', 'Not Single', 'Prefer not to say']
+const GENDERS = ['Male', 'Female', 'Nonbinary']
+const GENDERS_SELECTABLE = ['Male', 'Female', 'Nonbinary']
+const RELATIONSHIP_STATUSES = ['Single', 'Not Single']
 
 export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
   const [age, setAge] = useState(profile?.age?.toString() || '')
   const [gender, setGender] = useState(profile?.gender || '')
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
-    profile?.receiveMessagesFrom || ['Male', 'Female', 'Non-binary']
+    profile?.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary']
   )
   const [relationshipStatusPreference, setRelationshipStatusPreference] = useState<string[]>(
-    profile?.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+    profile?.relationshipStatusPreference || ['Single', 'Not Single']
   )
   const [ageRange, setAgeRange] = useState([
     profile?.ageRangeMin || 18,
@@ -278,7 +278,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         <div className="space-y-3 pt-2">
           <Label className="text-sm font-semibold">Be Seen By and Receive Messages From:</Label>
           <div className="grid grid-cols-2 gap-3">
-            {GENDERS.filter(g => g !== 'Prefer not to say').map(genderOption => (
+            {GENDERS.map(genderOption => (
               <div key={genderOption} className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border hover:bg-muted/40 hover:border-primary/20 transition-all">
                 <Checkbox
                   id={`receive-${genderOption}`}

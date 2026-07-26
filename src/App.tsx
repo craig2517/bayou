@@ -163,7 +163,7 @@ function App() {
     
     if (myProfile.age < user.ageRangeMin || myProfile.age > user.ageRangeMax) return false
     
-    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+    const userRelationshipPrefs = user.relationshipStatusPreference || ['Single', 'Not Single']
     const getEffectiveStatus = (isSingle: boolean | undefined): string => {
       if (isSingle === undefined) return 'Prefer not to say'
       return isSingle ? 'Single' : 'Not Single'

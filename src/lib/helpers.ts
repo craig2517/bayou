@@ -30,7 +30,7 @@ const FIRST_NAMES = [
   'Ivy', 'Ruby', 'Sadie', 'Sophie', 'Piper', 'Alice', 'Autumn', 'Rose'
 ]
 
-const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say']
+const GENDERS = ['Male', 'Female', 'Nonbinary']
 
 function getEffectiveRelationshipStatus(isSingle: boolean | undefined): string {
   if (isSingle === undefined) return 'Prefer not to say'
@@ -43,7 +43,7 @@ function canUserMessageMe(sender: UserProfile, receiver: UserProfile): boolean {
   
   if (sender.age < receiver.ageRangeMin || sender.age > receiver.ageRangeMax) return false
   
-  const receiverRelationshipPrefs = receiver.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+  const receiverRelationshipPrefs = receiver.relationshipStatusPreference || ['Single', 'Not Single']
   const senderStatus = getEffectiveRelationshipStatus(sender.isSingle)
   
   return receiverRelationshipPrefs.includes('Prefer not to say') || receiverRelationshipPrefs.includes(senderStatus)
@@ -96,7 +96,7 @@ export function generateDemoAvatar(name: string, gender: string, age: number, se
 export function generateDemoUsers(count: number = 1000, center?: { lat: number; lng: number }): UserProfile[] {
   const users: UserProfile[] = []
   const timestamp = Date.now()
-  const allGenders = ['Male', 'Female', 'Non-binary']
+  const allGenders = ['Male', 'Female', 'Nonbinary']
   
   const centerLat = center?.lat || CENTER_LAT
   const centerLng = center?.lng || CENTER_LNG
@@ -143,13 +143,9 @@ export function generateDemoUsers(count: number = 1000, center?: { lat: number; 
     
     const relationshipPrefRandom = Math.random()
     let relationshipStatusPreference: string[]
-    if (relationshipPrefRandom < 0.65) {
-      relationshipStatusPreference = ['Single', 'Not Single', 'Prefer not to say']
-    } else if (relationshipPrefRandom < 0.80) {
-      relationshipStatusPreference = ['Single', 'Prefer not to say']
-    } else if (relationshipPrefRandom < 0.90) {
-      relationshipStatusPreference = ['Not Single', 'Prefer not to say']
-    } else if (relationshipPrefRandom < 0.95) {
+    if (relationshipPrefRandom < 0.70) {
+      relationshipStatusPreference = ['Single', 'Not Single']
+    } else if (relationshipPrefRandom < 0.85) {
       relationshipStatusPreference = ['Single']
     } else {
       relationshipStatusPreference = ['Not Single']
