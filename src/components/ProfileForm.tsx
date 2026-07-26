@@ -256,7 +256,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         <div className="space-y-2">
           <Label htmlFor="gender" className="text-sm font-semibold">Gender <span className="text-destructive">*</span></Label>
           <Select value={gender} onValueChange={setGender} required>
-            <SelectTrigger id="gender" className="h-11 border-border/60 focus:border-primary transition-colors">
+            <SelectTrigger id="gender" className="w-full h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
@@ -272,7 +272,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         <div className="space-y-2">
           <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status <span className="text-destructive">*</span></Label>
           <Select value={relationshipStatus} onValueChange={setRelationshipStatus} required>
-            <SelectTrigger id="relationship-status" className="h-11 border-border/60 focus:border-primary transition-colors">
+            <SelectTrigger id="relationship-status" className="w-full h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select relationship status" />
             </SelectTrigger>
             <SelectContent>
