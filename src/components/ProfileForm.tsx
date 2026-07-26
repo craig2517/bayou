@@ -29,6 +29,9 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
   const [name, setName] = useState(profile?.name || '')
   const [age, setAge] = useState(profile?.age?.toString() || '')
   const [gender, setGender] = useState(profile?.gender || '')
+  const [relationshipStatus, setRelationshipStatus] = useState<string>(
+    profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : ''
+  )
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
     profile?.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary']
   )
@@ -47,7 +50,6 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
   }
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(profile?.locationSharingEnabled ?? true)
   const [requireApproval, setRequireApproval] = useState(profile?.requireApproval ?? true)
-  const [isSingle, setIsSingle] = useState<boolean | undefined>(profile?.isSingle)
   const [showReceiveMessagesFrom, setShowReceiveMessagesFrom] = useState(profile?.showReceiveMessagesFrom ?? true)
   const [showAgeRange, setShowAgeRange] = useState(profile?.showAgeRange ?? true)
   const [profilePicture, setProfilePicture] = useState<{ dataUrl: string; capturedAt: number } | undefined>(
@@ -115,9 +117,11 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
     e.preventDefault()
     
     const parsedAge = parseInt(age)
-    if (!name || !age || !gender || receiveMessagesFrom.length === 0 || relationshipStatusPreference.length === 0 || isNaN(parsedAge) || parsedAge < 18 || parsedAge > 100) {
+    if (!name || !age || !gender || !relationshipStatus || receiveMessagesFrom.length === 0 || relationshipStatusPreference.length === 0 || isNaN(parsedAge) || parsedAge < 18 || parsedAge > 100) {
       return
     }
+
+    const isSingle = relationshipStatus === 'Single' ? true : relationshipStatus === 'Not Single' ? false : undefined
 
     onSave({
       name,
@@ -137,7 +141,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
     })
   }
 
-  const isValid = name && age && gender && receiveMessagesFrom.length > 0 && relationshipStatusPreference.length > 0 && !isNaN(parseInt(age)) && parseInt(age) >= 18 && parseInt(age) <= 100
+  const isValid = name && age && gender && relationshipStatus && receiveMessagesFrom.length > 0 && relationshipStatusPreference.length > 0 && !isNaN(parseInt(age)) && parseInt(age) >= 18 && parseInt(age) <= 100
 
   const getPhotoTimeRemaining = () => {
     if (!profilePicture) return null
@@ -248,26 +252,17 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status (Optional)</Label>
-          <Select 
-            value={isSingle === undefined ? 'unspecified' : isSingle ? 'single' : 'not-single'} 
-            onValueChange={(value) => {
-              if (value === 'unspecified') {
-                setIsSingle(undefined)
-              } else if (value === 'single') {
-                setIsSingle(true)
-              } else if (value === 'not-single') {
-                setIsSingle(false)
-              }
-            }}
-          >
+          <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status</Label>
+          <Select value={relationshipStatus} onValueChange={setRelationshipStatus}>
             <SelectTrigger id="relationship-status" className="h-11 border-border/60 focus:border-primary transition-colors">
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder="Select relationship status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="unspecified">Prefer not to say</SelectItem>
-              <SelectItem value="single">Single</SelectItem>
-              <SelectItem value="not-single">Not Single</SelectItem>
+              {RELATIONSHIP_STATUSES.map(status => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
