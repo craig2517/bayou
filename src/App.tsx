@@ -72,13 +72,19 @@ function App() {
   }, [latitude, longitude, myProfile, setMyProfile])
   
   useEffect(() => {
+    if (!showSampleData) {
+      setDemoUsers([])
+      initializedRef.current = false
+      return
+    }
+    
     if (initializedRef.current) return
     initializedRef.current = true
     
     const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
     const newUsers = generateDemoUsers(1000, center)
     setDemoUsers(newUsers)
-  }, [latitude, longitude])
+  }, [latitude, longitude, showSampleData])
   
   useEffect(() => {
     if (!myProfile?.locationSharingEnabled) return
