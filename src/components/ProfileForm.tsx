@@ -309,7 +309,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
           />
         </div>
 
-        <div className="space-y-3 pt-2 border-t-2 border-border">
+        <div className="space-y-3 pt-2">
           <Label className="text-sm font-semibold">Relationship Status Preference</Label>
           <div className="grid grid-cols-2 gap-3">
             {RELATIONSHIP_STATUSES.map(status => (
@@ -336,7 +336,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
           </p>
         </div>
 
-        <div className="space-y-4 pt-4 border-t-2 border-border">
+        <div className="space-y-4 pt-4">
           <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all border-2 border-border">
             <div className="flex items-start gap-3 flex-1">
               <MapPin className="text-primary mt-1 flex-shrink-0" size={24} weight="fill" />
@@ -362,7 +362,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
           )}
         </div>
 
-        <div className="space-y-4 pt-4 border-t-2 border-border">
+        <div className="space-y-4 pt-4">
           <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all border-2 border-border">
             <div className="flex-1">
               <Label htmlFor="require-approval" className="cursor-pointer font-semibold text-base">
