@@ -28,7 +28,7 @@ const RELATIONSHIP_STATUSES = ['Single', 'Not Single']
 export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
   const [age, setAge] = useState(profile?.age?.toString() || '')
-  const [gender, setGender] = useState(profile?.gender || '')
+  const [gender, setGender] = useState<string>(profile?.gender || '')
   const [relationshipStatus, setRelationshipStatus] = useState<string>(
     profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : ''
   )
