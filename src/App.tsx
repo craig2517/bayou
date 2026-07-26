@@ -69,7 +69,7 @@ function App() {
         }
       })
     }
-  }, [latitude, longitude, setMyProfile])
+  }, [latitude, longitude, myProfile, setMyProfile])
   
   useEffect(() => {
     if (initializedRef.current) return
@@ -150,8 +150,10 @@ function App() {
       dataGeneratedRef.current = false
     } else if (myProfile && demoUsers.length > 0 && !dataGeneratedRef.current) {
       const timer = setTimeout(() => {
-        generateSampleData(myProfile, demoUsers)
-      }, 500)
+        if (myProfile && demoUsers.length > 0 && !dataGeneratedRef.current) {
+          generateSampleData(myProfile, demoUsers)
+        }
+      }, 300)
       return () => clearTimeout(timer)
     }
   }, [showSampleData, myProfile, demoUsers, generateSampleData, setChatRequests, setConversations, setMessages])
@@ -296,17 +298,14 @@ function App() {
     setShowProfileDialog(false)
     
     if (isNewProfile) {
-      dataGeneratedRef.current = false
-      if (showSampleData) {
+      if (showSampleData && demoUsers.length > 0) {
         toast.success('✨ Profile created! Generating demo data...', {
           duration: 3000
         })
-        if (demoUsers.length > 0) {
-          setTimeout(() => {
-            generateSampleData(newProfile, demoUsers)
-            setSelectedTab('messages')
-          }, 500)
-        }
+        setTimeout(() => {
+          generateSampleData(newProfile, demoUsers)
+          setSelectedTab('messages')
+        }, 100)
       } else {
         toast.success('✨ Profile created!')
       }
