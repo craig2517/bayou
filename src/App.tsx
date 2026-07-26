@@ -72,13 +72,64 @@ function App() {
   useEffect(() => {
     if (!showSampleData) {
       setDemoUsers([])
+      setChatRequests([])
+      setConversations([])
+      setMessages({})
+      setSelectedConversation(null)
+      return
+    }
+    
+    if (!myProfile) {
       return
     }
     
     const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
     const newUsers = generateDemoUsers(1000, center)
     setDemoUsers(newUsers)
-  }, [showSampleData, latitude, longitude])
+    
+    console.log('Generated demo users:', newUsers.length)
+    
+    const demoData = generateDemoConversationsAndMessages(myProfile, newUsers, 25)
+    
+    if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
+      console.warn('No demo conversations generated')
+      return
+    }
+    
+    const existingUserIds = [...new Set([
+      ...demoData.conversations.flatMap(c => c.participants),
+      ...demoData.chatRequests.map(r => r.fromUserId),
+      ...demoData.chatRequests.map(r => r.toUserId)
+    ].filter(id => id !== myProfile.id))]
+    
+    const pendingRequests = generateAdditionalChatRequests(myProfile, newUsers, existingUserIds, 50)
+    
+    const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
+    
+    const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
+    const newConversations = autoAcceptedRequests.map(request => ({
+      id: [request.fromUserId, request.toUserId].sort().join('-'),
+      participants: [request.fromUserId, request.toUserId] as [string, string],
+      unreadCount: 0
+    }))
+    
+    const allConversations = [...demoData.conversations, ...newConversations]
+    
+    console.log('Setting conversations:', allConversations.length)
+    console.log('Setting chat requests:', allChatRequests.length)
+    console.log('Setting messages:', Object.keys(demoData.messages).length, 'threads')
+    
+    setConversations(allConversations)
+    setChatRequests(allChatRequests)
+    setMessages(demoData.messages)
+    
+    const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
+    
+    toast.success(`✨ Demo data loaded!`, {
+      description: `${allConversations.length} conversations & ${pendingToMe.length} requests ready`,
+      duration: 4000
+    })
+  }, [showSampleData, myProfile, latitude, longitude, setConversations, setChatRequests, setMessages])
   
   useEffect(() => {
     if (!myProfile?.locationSharingEnabled) return
@@ -92,56 +143,6 @@ function App() {
 
     return () => clearInterval(interval)
   }, [myProfile?.id, myProfile?.locationSharingEnabled, setMyProfile])
-
-  useEffect(() => {
-    if (!showSampleData) {
-      setChatRequests([])
-      setConversations([])
-      setMessages({})
-      setSelectedConversation(null)
-      return
-    }
-    
-    if (!myProfile || demoUsers.length === 0) {
-      return
-    }
-    
-    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 25)
-    
-    if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
-      return
-    }
-    
-    const existingUserIds = [...new Set([
-      ...demoData.conversations.flatMap(c => c.participants),
-      ...demoData.chatRequests.map(r => r.fromUserId),
-      ...demoData.chatRequests.map(r => r.toUserId)
-    ].filter(id => id !== myProfile.id))]
-    
-    const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 50)
-    
-    const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-    
-    const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
-    const newConversations = autoAcceptedRequests.map(request => ({
-      id: [request.fromUserId, request.toUserId].sort().join('-'),
-      participants: [request.fromUserId, request.toUserId] as [string, string],
-      unreadCount: 0
-    }))
-    
-    const allConversations = [...demoData.conversations, ...newConversations]
-    
-    setConversations(allConversations)
-    setChatRequests(allChatRequests)
-    setMessages(demoData.messages)
-    
-    const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-    
-    toast.success(`✨ Demo data loaded!`, {
-      description: `${allConversations.length} conversations & ${pendingToMe.length} requests ready`,
-      duration: 4000
-    })
-  }, [showSampleData, myProfile, demoUsers, setConversations, setChatRequests, setMessages])
 
 
 
