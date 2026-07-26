@@ -684,7 +684,7 @@ function App() {
                 Human Heat Map
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                See what's happening, Bayou!
+                See what's happening Bayou!
               </p>
             </div>
             <div className="h-[600px] rounded-2xl overflow-hidden border-2 border-border shadow-xl ring-4 ring-primary/5">
