@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Toaster } from '@/components/ui/sonner'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Database, Warning } from '@phosphor-icons/react'
+import { Switch } from '@/components/ui/switch'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Database, Warning, Eye, EyeSlash } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -26,6 +27,7 @@ function App() {
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v6', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations-v6', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v6', {})
+  const [showSampleData, setShowSampleData] = useKV<boolean>('show-sample-data-v6', true)
   const [searchRadius, setSearchRadius] = useState([0.8])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -180,7 +182,7 @@ function App() {
   }, [myProfile])
 
   const nearbyUsers = useMemo(() => {
-    if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) return []
+    if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0 || !showSampleData) return []
     
     const blockedUserIds = myProfile.blockedUsers || []
     
@@ -209,11 +211,11 @@ function App() {
     return allUsersWithDistance
       .filter(item => item.distance <= searchRadius[0])
       .sort((a, b) => a.distance - b.distance)
-  }, [myProfile, demoUsers, searchRadius, canIMessageUser])
+  }, [myProfile, demoUsers, searchRadius, canIMessageUser, showSampleData])
 
   const pendingIncomingRequests = useMemo(() => {
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-    if (!myProfile || !myProfile.requireApproval) return []
+    if (!myProfile || !myProfile.requireApproval || !showSampleData) return []
     
     const blockedUserIds = myProfile.blockedUsers || []
     
@@ -223,7 +225,7 @@ function App() {
       req.status === 'pending' &&
       !blockedUserIds.includes(req.fromUserId)
     )
-  }, [chatRequests, myProfile])
+  }, [chatRequests, myProfile, showSampleData])
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
     const isNewProfile = !myProfile
@@ -571,6 +573,21 @@ function App() {
     }, 500)
   }
 
+  const handleToggleSampleData = () => {
+    setShowSampleData(current => !current)
+    if (showSampleData) {
+      toast.info('🔕 Sample data hidden', {
+        description: 'Toggle back on to see demo users, messages, and requests',
+        duration: 3000
+      })
+    } else {
+      toast.success('🔔 Sample data visible', {
+        description: 'Displaying all demo content',
+        duration: 3000
+      })
+    }
+  }
+
   const handleSendMessage = (conversationId: string, text: string) => {
     if (!myProfile) return
 
@@ -600,7 +617,7 @@ function App() {
 
   const activeConversations = useMemo(() => {
     const conversationArray = Array.isArray(conversations) ? conversations : []
-    if (!myProfile) return []
+    if (!myProfile || !showSampleData) return []
     
     const blockedUserIds = myProfile.blockedUsers || []
     
@@ -613,7 +630,7 @@ function App() {
       })
       .filter(conv => conv.otherUser !== null && !blockedUserIds.includes(conv.otherUser.id))
       .sort((a, b) => (b.lastMessage?.timestamp || 0) - (a.lastMessage?.timestamp || 0))
-  }, [conversations, myProfile, demoUsers])
+  }, [conversations, myProfile, demoUsers, showSampleData])
 
   const currentConversation = activeConversations.find(c => c.id === selectedConversation)
   const currentMessages = selectedConversation && messages ? messages[selectedConversation] || [] : []
@@ -645,7 +662,7 @@ function App() {
               <span className="text-sm font-medium text-foreground hidden sm:inline">See what's happening, Bayou!</span>
             </div>
             <div className="flex items-center gap-2.5">
-              {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && (
+              {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && showSampleData && (
                 <Badge variant="destructive" className="animate-pulse shadow-md px-3 py-1.5 font-semibold">
                   {pendingIncomingRequests.length}
                 </Badge>
@@ -656,11 +673,27 @@ function App() {
                   <span className="hidden sm:inline font-medium">Hidden</span>
                 </Badge>
               )}
+              <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2 shadow-sm border border-border/60">
+                <Label htmlFor="sample-data-toggle" className="text-sm font-medium cursor-pointer hidden sm:inline">
+                  Sample Data
+                </Label>
+                <Switch
+                  id="sample-data-toggle"
+                  checked={showSampleData}
+                  onCheckedChange={handleToggleSampleData}
+                  className="data-[state=checked]:bg-primary"
+                />
+                {showSampleData ? (
+                  <Eye size={18} weight="duotone" className="text-primary" />
+                ) : (
+                  <EyeSlash size={18} weight="duotone" className="text-muted-foreground" />
+                )}
+              </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRefreshSampleData}
-                disabled={!myProfile || isRefreshing}
+                disabled={!myProfile || isRefreshing || !showSampleData}
                 className="shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 border-border/60 hover:border-primary/30"
                 title="Refresh sample data"
               >
@@ -704,7 +737,7 @@ function App() {
             <TabsTrigger value="messages" className="flex items-center gap-2 py-3 px-4 data-[state=active]:shadow-md data-[state=active]:bg-background transition-all duration-200">
               <ChatCircle size={20} weight="duotone" />
               <span className="hidden sm:inline font-medium">Messages</span>
-              {activeConversations.length > 0 && (
+              {activeConversations.length > 0 && showSampleData && (
                 <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1.5 animate-pulse">
                   {activeConversations.length}
                 </Badge>
@@ -714,7 +747,7 @@ function App() {
               <TabsTrigger value="requests" className="flex items-center gap-2 py-3 px-4 data-[state=active]:shadow-md data-[state=active]:bg-background transition-all duration-200">
                 <User size={20} weight="duotone" />
                 <span className="hidden sm:inline font-medium">Requests</span>
-                {pendingIncomingRequests.length > 0 && (
+                {pendingIncomingRequests.length > 0 && showSampleData && (
                   <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1.5 animate-pulse">
                     {pendingIncomingRequests.length}
                   </Badge>
