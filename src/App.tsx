@@ -685,7 +685,7 @@ function App() {
             <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 border-2 border-primary/15 rounded-2xl p-6 shadow-md backdrop-blur-sm">
               <h2 className="font-semibold text-xl flex items-center gap-2.5">
                 <MapTrifold size={26} weight="duotone" className="text-primary" />
-                Human Heat Map
+                Heat Map
               </h2>
             </div>
             <div className="h-[600px] rounded-2xl overflow-hidden border-2 border-border shadow-xl ring-4 ring-primary/5">
