@@ -7,13 +7,15 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Toaster } from '@/components/ui/sonner'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Database } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Database, Warning } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
 import { ChatInterface } from '@/components/ChatInterface'
 import { UserProfileView } from '@/components/UserProfileView'
+import { useGeolocation } from '@/hooks/use-geolocation'
 import { generateDemoUsers, calculateDistance, generateHeatMapData, formatDistance, getRandomLocationNearCenter, isPhotoValid, generateDemoConversationsAndMessages, generateAdditionalChatRequests } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { UserProfile, ChatRequest, Message, Conversation } from '@/lib/types'
@@ -32,16 +34,46 @@ function App() {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false)
   const initializedRef = useRef(false)
   const dataGeneratedRef = useRef(false)
+  
+  const {
+    latitude,
+    longitude,
+    accuracy,
+    error: locationError,
+    loading: locationLoading,
+    permissionState,
+    requestLocation
+  } = useGeolocation()
 
+  useEffect(() => {
+    if (selectedTab === 'map' && !latitude && !longitude && !locationLoading && permissionState !== 'denied') {
+      setShowLocationPrompt(true)
+    }
+  }, [selectedTab, latitude, longitude, locationLoading, permissionState])
+  
+  useEffect(() => {
+    if (latitude && longitude && myProfile && (!myProfile.location || myProfile.location.lat !== latitude || myProfile.location.lng !== longitude)) {
+      setMyProfile(current => {
+        if (!current) return null
+        return {
+          ...current,
+          location: { lat: latitude, lng: longitude }
+        }
+      })
+    }
+  }, [latitude, longitude, myProfile, setMyProfile])
+  
   useEffect(() => {
     if (initializedRef.current) return
     initializedRef.current = true
     
-    const newUsers = generateDemoUsers(1000)
+    const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
+    const newUsers = generateDemoUsers(1000, center)
     setDemoUsers(newUsers)
-  }, [])
+  }, [latitude, longitude])
   
   useEffect(() => {
     if (!myProfile?.locationSharingEnabled) return
@@ -457,7 +489,8 @@ function App() {
       const existingConvIds = conversationArray.flatMap(conv => conv.participants)
       const protectedUserIds = [...new Set([...existingConvIds, ...existingRequestIds.flat()])]
       
-      const newUsers = generateDemoUsers(1000)
+      const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
+      const newUsers = generateDemoUsers(1000, center)
       
       const refreshedUsers = newUsers.map(user => {
         if (protectedUserIds.includes(user.id)) {
@@ -487,7 +520,8 @@ function App() {
     setMessages({})
     setSelectedConversation(null)
     
-    const newUsers = generateDemoUsers(1000)
+    const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
+    const newUsers = generateDemoUsers(1000, center)
     setDemoUsers(newUsers)
     
     setTimeout(() => {
@@ -690,18 +724,34 @@ function App() {
           </TabsList>
 
           <TabsContent value="map" className="space-y-6">
+            {locationError && permissionState === 'denied' && (
+              <Alert className="bg-amber-50 border-amber-300">
+                <Warning className="h-5 w-5 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  <strong>Location Access Denied:</strong> {locationError}
+                  <p className="mt-2 text-sm">To see the heat map centered on your location, please enable location permissions in your browser settings.</p>
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 border-2 border-primary/15 rounded-2xl p-6 shadow-md backdrop-blur-sm">
               <h2 className="font-semibold text-xl mb-2.5 flex items-center gap-2.5">
                 <MapTrifold size={26} weight="duotone" className="text-primary" />
                 Human Heat Map
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Visualize anonymous user density in the area. Brighter colors indicate higher activity. 
-                All locations are fuzzed to protect privacy.
+                Visualize anonymous user density in your area using real GPS data. Brighter colors indicate higher activity.
+                {latitude && longitude && (
+                  <span className="block mt-1 font-medium text-foreground">
+                    📍 Showing activity near your location
+                  </span>
+                )}
               </p>
             </div>
             <div className="h-[600px] rounded-2xl overflow-hidden border-2 border-border shadow-xl ring-4 ring-primary/5">
-              <HeatMap points={heatMapData} />
+              <HeatMap 
+                points={heatMapData} 
+                userLocation={latitude && longitude ? { lat: latitude, lng: longitude } : null}
+              />
             </div>
           </TabsContent>
 
@@ -1021,6 +1071,53 @@ function App() {
               onUnblock={() => handleUnblockUser(viewingUser.id)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showLocationPrompt} onOpenChange={setShowLocationPrompt}>
+        <DialogContent className="max-w-md border-2 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">📍 Enable Location Access</DialogTitle>
+            <DialogDescription className="text-base leading-relaxed mt-3">
+              Bayou uses your real GPS location to display a heat map of nearby users and show accurate distances.
+              Your exact location is never shared with other users.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <h4 className="font-semibold text-sm">Why we need this:</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Show real-time heat map of user activity</li>
+                <li>Display accurate distances to nearby users</li>
+                <li>Center the map on your location</li>
+              </ul>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  requestLocation()
+                  setShowLocationPrompt(false)
+                }}
+                className="flex-1 bg-primary shadow-lg hover:shadow-xl transition-all duration-200 h-12 font-semibold"
+                size="lg"
+              >
+                Enable Location
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowLocationPrompt(false)}
+                className="flex-1 h-12 font-semibold"
+                size="lg"
+              >
+                Maybe Later
+              </Button>
+            </div>
+            {locationLoading && (
+              <p className="text-sm text-center text-muted-foreground animate-pulse">
+                Requesting location access...
+              </p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

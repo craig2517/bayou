@@ -93,10 +93,13 @@ export function generateDemoAvatar(name: string, gender: string, age: number, se
   return canvas.toDataURL('image/png')
 }
 
-export function generateDemoUsers(count: number = 1000): UserProfile[] {
+export function generateDemoUsers(count: number = 1000, center?: { lat: number; lng: number }): UserProfile[] {
   const users: UserProfile[] = []
   const timestamp = Date.now()
   const allGenders = ['Male', 'Female', 'Non-binary']
+  
+  const centerLat = center?.lat || CENTER_LAT
+  const centerLng = center?.lng || CENTER_LNG
   
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI
@@ -113,10 +116,10 @@ export function generateDemoUsers(count: number = 1000): UserProfile[] {
     }
     
     const latOffset = (radiusKm / 111) * Math.cos(angle)
-    const lngOffset = (radiusKm / (111 * Math.cos((CENTER_LAT * Math.PI) / 180))) * Math.sin(angle)
+    const lngOffset = (radiusKm / (111 * Math.cos((centerLat * Math.PI) / 180))) * Math.sin(angle)
     
-    const lat = CENTER_LAT + latOffset
-    const lng = CENTER_LNG + lngOffset
+    const lat = centerLat + latOffset
+    const lng = centerLng + lngOffset
     const age = 18 + Math.floor(Math.random() * 63)
     const gender = GENDERS[Math.floor(Math.random() * GENDERS.length)]
     const name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
