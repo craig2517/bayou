@@ -9,12 +9,12 @@ interface ErrorFallbackProps {
 }
 
 export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps) => {
-  // When encountering an error in the development mode, rethrow it and don't display the boundary.
-  // The parent UI will take care of showing a more helpful dialog.
   if (import.meta.env.DEV) throw error;
 
+  console.error('Application Error:', error);
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Alert variant="destructive" className="mb-6">
           <AlertTriangleIcon />
@@ -24,11 +24,19 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps)
           </AlertDescription>
         </Alert>
         
-        <div className="bg-card border rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-sm text-muted-foreground mb-2">Error Details:</h3>
-          <pre className="text-xs text-destructive bg-muted/50 p-3 rounded border overflow-auto max-h-32">
+        <div className="bg-white border rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-sm text-gray-600 mb-2">Error Details:</h3>
+          <pre className="text-xs text-red-600 bg-gray-50 p-3 rounded border overflow-auto max-h-32">
             {error.message}
           </pre>
+          {error.stack && (
+            <details className="mt-2">
+              <summary className="text-xs cursor-pointer text-gray-600">Stack Trace</summary>
+              <pre className="text-xs text-gray-600 bg-gray-50 p-3 rounded border overflow-auto max-h-48 mt-2">
+                {error.stack}
+              </pre>
+            </details>
+          )}
         </div>
         
         <Button 
