@@ -28,9 +28,9 @@ const RELATIONSHIP_STATUSES = ['Single', 'Not Single']
 export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
   const [age, setAge] = useState(profile?.age?.toString() || '')
-  const [gender, setGender] = useState<string>(profile?.gender || '')
-  const [relationshipStatus, setRelationshipStatus] = useState<string>(
-    profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : ''
+  const [gender, setGender] = useState<string | undefined>(profile?.gender)
+  const [relationshipStatus, setRelationshipStatus] = useState<string | undefined>(
+    profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : undefined
   )
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
     profile?.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
@@ -49,7 +49,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
       setAge(profile.age.toString())
       setGender(profile.gender)
       setRelationshipStatus(
-        profile.isSingle === true ? 'Single' : profile.isSingle === false ? 'Not Single' : ''
+        profile.isSingle === true ? 'Single' : profile.isSingle === false ? 'Not Single' : undefined
       )
       setReceiveMessagesFrom(profile.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary', 'Prefer not to say'])
       setRelationshipStatusPreference(profile.relationshipStatusPreference || ['Single', 'Not Single'])
@@ -255,7 +255,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
 
         <div className="space-y-2">
           <Label htmlFor="gender" className="text-sm font-semibold">Gender <span className="text-destructive">*</span></Label>
-          <Select value={gender} onValueChange={setGender}>
+          <Select value={gender || ''} onValueChange={(value) => setGender(value)}>
             <SelectTrigger id="gender" className="w-full h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
@@ -271,7 +271,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
 
         <div className="space-y-2">
           <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status <span className="text-destructive">*</span></Label>
-          <Select value={relationshipStatus} onValueChange={setRelationshipStatus}>
+          <Select value={relationshipStatus || ''} onValueChange={(value) => setRelationshipStatus(value)}>
             <SelectTrigger id="relationship-status" className="w-full h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select relationship status" />
             </SelectTrigger>
