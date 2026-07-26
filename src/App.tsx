@@ -60,13 +60,16 @@ function App() {
     if (latitude && longitude && myProfile && (!myProfile.location || myProfile.location.lat !== latitude || myProfile.location.lng !== longitude)) {
       setMyProfile(current => {
         if (!current) return null
+        if (current.location?.lat === latitude && current.location?.lng === longitude) {
+          return current
+        }
         return {
           ...current,
           location: { lat: latitude, lng: longitude }
         }
       })
     }
-  }, [latitude, longitude, myProfile, setMyProfile])
+  }, [latitude, longitude, setMyProfile])
   
   useEffect(() => {
     if (initializedRef.current) return
