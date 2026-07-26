@@ -585,7 +585,7 @@ function App() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight select-none flex items-center gap-3">
-                <span className="text-foreground font-normal text-lg">See what's happening</span>
+                <span className="text-foreground font-bold text-lg">See what's happening</span>
                 <span className="flex">
                   <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">Bay</span>
                   <span className="text-yellow-400 drop-shadow-sm">o</span>
@@ -683,13 +683,10 @@ function App() {
               </Alert>
             )}
             <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 border-2 border-primary/15 rounded-2xl p-6 shadow-md backdrop-blur-sm">
-              <h2 className="font-semibold text-xl mb-2.5 flex items-center gap-2.5">
+              <h2 className="font-semibold text-xl flex items-center gap-2.5">
                 <MapTrifold size={26} weight="duotone" className="text-primary" />
                 Human Heat Map
               </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                See what's happening Bayou!
-              </p>
             </div>
             <div className="h-[600px] rounded-2xl overflow-hidden border-2 border-border shadow-xl ring-4 ring-primary/5">
               <HeatMap 
