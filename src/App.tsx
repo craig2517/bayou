@@ -966,7 +966,7 @@ function App() {
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto border-2 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              {myProfile ? '✏️ Your Profile' : '👋 Welcome to Bayou!'}
+              {myProfile ? '✏️ Profile' : '👋 Welcome to Bayou!'}
             </DialogTitle>
             <DialogDescription className="text-base leading-relaxed">
               {myProfile 
