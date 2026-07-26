@@ -233,7 +233,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
 
         <div className="space-y-2">
           <Label htmlFor="gender" className="text-sm font-semibold">Gender</Label>
-          <Select value={gender || undefined} onValueChange={(value) => setGender(value)}>
+          <Select value={gender} onValueChange={setGender}>
             <SelectTrigger id="gender" className="h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>

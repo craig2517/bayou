@@ -145,51 +145,53 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
 
   return (
     <div className="relative bg-black rounded-lg overflow-hidden">
-      <div className="relative aspect-[4/3] bg-black flex items-center justify-center">
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <div className="text-white text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-              <p>Starting camera...</p>
+      <div className="relative w-full" style={{ paddingBottom: '75%' }}>
+        <div className="absolute inset-0 bg-black flex items-center justify-center">
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="text-white text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p>Starting camera...</p>
+              </div>
             </div>
-          </div>
-        )}
-        
-        {error && (
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <div className="text-white text-center p-6">
-              <Camera size={48} className="mx-auto mb-4 text-red-400" />
-              <p className="text-red-400">{error}</p>
-              <Button onClick={startCamera} variant="outline" className="mt-4">
-                Try Again
-              </Button>
+          )}
+          
+          {error && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="text-white text-center p-6">
+                <Camera size={48} className="mx-auto mb-4 text-red-400" />
+                <p className="text-red-400">{error}</p>
+                <Button onClick={startCamera} variant="outline" className="mt-4">
+                  Try Again
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-        
-        <video
-          ref={videoRef}
-          className={`w-full h-full object-cover ${capturedImage || isLoading || error ? 'hidden' : 'block'}`}
-          playsInline
-          autoPlay
-          muted
-        />
-        
-        {!capturedImage && !isLoading && !error && (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-0 border-2 border-white/30 rounded-lg m-4"></div>
-          </div>
-        )}
-        
-        {capturedImage && (
-          <img
-            src={capturedImage}
-            alt="Captured"
-            className="w-full h-full object-cover"
+          )}
+          
+          <video
+            ref={videoRef}
+            className={`absolute inset-0 w-full h-full object-cover ${capturedImage || isLoading || error ? 'hidden' : 'block'}`}
+            playsInline
+            autoPlay
+            muted
           />
-        )}
-        
-        <canvas ref={canvasRef} className="hidden" />
+          
+          {!capturedImage && !isLoading && !error && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute inset-0 border-2 border-white/30 rounded-lg m-4"></div>
+            </div>
+          )}
+          
+          {capturedImage && (
+            <img
+              src={capturedImage}
+              alt="Captured"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          
+          <canvas ref={canvasRef} className="hidden" />
+        </div>
       </div>
 
       <div className="bg-background p-4 border-t border-border">
