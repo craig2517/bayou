@@ -157,7 +157,10 @@ function App() {
   }, [myProfile, demoUsers, conversations, chatRequests, generateSampleData])
 
   const heatMapData = useMemo(() => {
-    if (!showSampleData || !Array.isArray(demoUsers) || demoUsers.length === 0) {
+    if (!showSampleData) {
+      return []
+    }
+    if (!Array.isArray(demoUsers) || demoUsers.length === 0) {
       return []
     }
     return generateHeatMapData(demoUsers)
@@ -182,7 +185,8 @@ function App() {
   }, [myProfile])
 
   const nearbyUsers = useMemo(() => {
-    if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0 || !showSampleData) return []
+    if (!showSampleData) return []
+    if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) return []
     
     const blockedUserIds = myProfile.blockedUsers || []
     
@@ -522,12 +526,8 @@ function App() {
     setMessages({})
     setSelectedConversation(null)
     
-    const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
-    const newUsers = generateDemoUsers(1000, center)
-    setDemoUsers(newUsers)
-    
     setTimeout(() => {
-      const demoData = generateDemoConversationsAndMessages(myProfile, newUsers, 25)
+      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 25)
       
       if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
         setIsRefreshing(false)
@@ -545,7 +545,7 @@ function App() {
         ...demoData.chatRequests.map(r => r.toUserId)
       ].filter(id => id !== myProfile.id))]
       
-      const pendingRequests = generateAdditionalChatRequests(myProfile, newUsers, existingUserIds, 50)
+      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 50)
       const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
       
       const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
@@ -566,8 +566,8 @@ function App() {
       
       setIsRefreshing(false)
       
-      toast.success(`✨ All data refreshed!`, {
-        description: `${allConversations.length} conversations, ${pendingToMe.length} requests & ${newUsers.length} users`,
+      toast.success(`✨ Messages & requests refreshed!`, {
+        description: `${allConversations.length} conversations & ${pendingToMe.length} requests`,
         duration: 4000
       })
     }, 500)
@@ -577,12 +577,12 @@ function App() {
     setShowSampleData(current => !current)
     if (showSampleData) {
       toast.info('🔕 Sample data hidden', {
-        description: 'Toggle back on to see demo users, messages, and requests',
+        description: 'Demo users are now hidden from heat map and discover',
         duration: 3000
       })
     } else {
       toast.success('🔔 Sample data visible', {
-        description: 'Displaying all demo content',
+        description: 'Demo users are now visible on heat map and discover',
         duration: 3000
       })
     }
