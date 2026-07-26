@@ -209,7 +209,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-2 pt-2 border-t-2 border-border">
-          <Label htmlFor="name" className="text-sm font-semibold">Name</Label>
+          <Label htmlFor="name" className="text-sm font-semibold">Name <span className="text-destructive">*</span></Label>
           <Input
             id="name"
             value={name}
@@ -221,7 +221,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="age" className="text-sm font-semibold">Age</Label>
+          <Label htmlFor="age" className="text-sm font-semibold">Age <span className="text-destructive">*</span></Label>
           <Input
             id="age"
             type="number"
@@ -236,8 +236,8 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="gender" className="text-sm font-semibold">Gender</Label>
-          <Select value={gender} onValueChange={setGender}>
+          <Label htmlFor="gender" className="text-sm font-semibold">Gender <span className="text-destructive">*</span></Label>
+          <Select value={gender} onValueChange={setGender} required>
             <SelectTrigger id="gender" className="h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
@@ -252,8 +252,8 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status</Label>
-          <Select value={relationshipStatus} onValueChange={setRelationshipStatus}>
+          <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status <span className="text-destructive">*</span></Label>
+          <Select value={relationshipStatus} onValueChange={setRelationshipStatus} required>
             <SelectTrigger id="relationship-status" className="h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select relationship status" />
             </SelectTrigger>

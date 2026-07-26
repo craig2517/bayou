@@ -145,10 +145,10 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
 
   return (
     <div className="relative bg-black rounded-lg overflow-hidden">
-      <div className="relative w-full" style={{ paddingBottom: '75%' }}>
+      <div className="relative w-full aspect-[4/3] min-h-[400px]">
         <div className="absolute inset-0 bg-black flex items-center justify-center">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/80">
               <div className="text-white text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
                 <p>Starting camera...</p>
@@ -157,7 +157,7 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
           )}
           
           {error && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/80">
               <div className="text-white text-center p-6">
                 <Camera size={48} className="mx-auto mb-4 text-red-400" />
                 <p className="text-red-400">{error}</p>
@@ -170,7 +170,8 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
           
           <video
             ref={videoRef}
-            className={`absolute inset-0 w-full h-full object-cover ${capturedImage || isLoading || error ? 'hidden' : 'block'}`}
+            className="w-full h-full object-cover"
+            style={{ display: capturedImage || error ? 'none' : 'block' }}
             playsInline
             autoPlay
             muted
@@ -186,7 +187,7 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
             <img
               src={capturedImage}
               alt="Captured"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="w-full h-full object-cover"
             />
           )}
           
