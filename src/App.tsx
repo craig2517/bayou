@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Toaster } from '@/components/ui/sonner'
 import { Switch } from '@/components/ui/switch'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Warning, Eye, EyeSlash } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Warning } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -612,11 +612,6 @@ function App() {
                   onCheckedChange={handleToggleSampleData}
                   className="data-[state=checked]:bg-primary"
                 />
-                {showSampleData ? (
-                  <Eye size={18} weight="duotone" className="text-primary" />
-                ) : (
-                  <EyeSlash size={18} weight="duotone" className="text-muted-foreground" />
-                )}
               </div>
               <Button
                 variant="outline"
