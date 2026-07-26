@@ -157,11 +157,11 @@ function App() {
   }, [myProfile, demoUsers, conversations, chatRequests, generateSampleData])
 
   const heatMapData = useMemo(() => {
-    if (!Array.isArray(demoUsers) || demoUsers.length === 0) {
+    if (!showSampleData || !Array.isArray(demoUsers) || demoUsers.length === 0) {
       return []
     }
     return generateHeatMapData(demoUsers)
-  }, [demoUsers])
+  }, [demoUsers, showSampleData])
 
   const canIMessageUser = useCallback((user: UserProfile): boolean => {
     if (!myProfile) return false
