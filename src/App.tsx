@@ -139,7 +139,7 @@ function App() {
   }, [setConversations, setChatRequests, setMessages])
 
   useEffect(() => {
-    if (!myProfile || demoUsers.length === 0 || dataGeneratedRef.current) return
+    if (!myProfile || demoUsers.length === 0 || dataGeneratedRef.current || !showSampleData) return
     
     const conversationArray = Array.isArray(conversations) ? conversations : []
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
@@ -154,7 +154,7 @@ function App() {
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [myProfile, demoUsers, conversations, chatRequests, generateSampleData])
+  }, [myProfile, demoUsers, conversations, chatRequests, generateSampleData, showSampleData])
 
   const heatMapData = useMemo(() => {
     if (!showSampleData) {
@@ -295,14 +295,18 @@ function App() {
     
     if (isNewProfile) {
       dataGeneratedRef.current = false
-      toast.success('✨ Profile created! Generating demo data...', {
-        duration: 3000
-      })
-      if (demoUsers.length > 0) {
-        setTimeout(() => {
-          generateSampleData(newProfile, demoUsers)
-          setSelectedTab('messages')
-        }, 500)
+      if (showSampleData) {
+        toast.success('✨ Profile created! Generating demo data...', {
+          duration: 3000
+        })
+        if (demoUsers.length > 0) {
+          setTimeout(() => {
+            generateSampleData(newProfile, demoUsers)
+            setSelectedTab('messages')
+          }, 500)
+        }
+      } else {
+        toast.success('✨ Profile created!')
       }
     } else {
       toast.success('✅ Profile updated!')
@@ -518,6 +522,11 @@ function App() {
       return
     }
 
+    if (!showSampleData) {
+      toast.info('ℹ️ Enable Sample Data first')
+      return
+    }
+
     setIsRefreshing(true)
     dataGeneratedRef.current = false
     
@@ -527,6 +536,11 @@ function App() {
     setSelectedConversation(null)
     
     setTimeout(() => {
+      if (!myProfile) {
+        setIsRefreshing(false)
+        return
+      }
+
       const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 25)
       
       if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
@@ -574,15 +588,17 @@ function App() {
   }
 
   const handleToggleSampleData = () => {
-    setShowSampleData(current => !current)
-    if (showSampleData) {
-      toast.info('🔕 Sample data hidden', {
-        description: 'Demo users are now hidden from heat map and discover',
+    const newValue = !showSampleData
+    setShowSampleData(newValue)
+    
+    if (newValue) {
+      toast.success('🔔 Sample data visible', {
+        description: 'Demo users are now visible on heat map and discover',
         duration: 3000
       })
     } else {
-      toast.success('🔔 Sample data visible', {
-        description: 'Demo users are now visible on heat map and discover',
+      toast.info('🔕 Sample data hidden', {
+        description: 'Demo users are now hidden from heat map and discover',
         duration: 3000
       })
     }
