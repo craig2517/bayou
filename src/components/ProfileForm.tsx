@@ -63,8 +63,6 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
   }
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(profile?.locationSharingEnabled ?? true)
   const [requireApproval, setRequireApproval] = useState(profile?.requireApproval ?? true)
-  const [showReceiveMessagesFrom, setShowReceiveMessagesFrom] = useState(profile?.showReceiveMessagesFrom ?? true)
-  const [showAgeRange, setShowAgeRange] = useState(profile?.showAgeRange ?? true)
   const [profilePicture, setProfilePicture] = useState<{ dataUrl: string; capturedAt: number } | undefined>(
     profile?.profilePicture
   )
@@ -152,8 +150,6 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
       requireApproval,
       blockedUsers: profile?.blockedUsers || [],
       isSingle,
-      showReceiveMessagesFrom,
-      showAgeRange,
       profilePicture
     })
   }
@@ -298,19 +294,6 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
               </div>
             ))}
           </div>
-          <div className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border bg-muted/30">
-            <Checkbox
-              id="show-receive-messages"
-              checked={showReceiveMessagesFrom}
-              onCheckedChange={(checked) => setShowReceiveMessagesFrom(checked as boolean)}
-            />
-            <Label
-              htmlFor="show-receive-messages"
-              className="text-sm font-normal cursor-pointer flex-1"
-            >
-              Display this on my profile for others to see
-            </Label>
-          </div>
         </div>
 
         <div className="space-y-3 pt-2">
@@ -327,19 +310,6 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
           <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
             You'll be seen by and receive messages from users aged {ageRange[0]} to {ageRange[1]}
           </p>
-          <div className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border bg-muted/30">
-            <Checkbox
-              id="show-age-range"
-              checked={showAgeRange}
-              onCheckedChange={(checked) => setShowAgeRange(checked as boolean)}
-            />
-            <Label
-              htmlFor="show-age-range"
-              className="text-sm font-normal cursor-pointer flex-1"
-            >
-              Display this on my profile for others to see
-            </Label>
-          </div>
         </div>
 
         <div className="space-y-3 pt-2 border-t-2 border-border">
