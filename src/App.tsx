@@ -277,7 +277,7 @@ function App() {
 
   const pendingIncomingRequests = useMemo(() => {
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-    if (!myProfile || !myProfile.requireApproval || !showSampleData) return []
+    if (!myProfile || !myProfile.requireApproval) return []
     
     const blockedUserIds = myProfile.blockedUsers || []
     
@@ -287,7 +287,7 @@ function App() {
       req.status === 'pending' &&
       !blockedUserIds.includes(req.fromUserId)
     )
-  }, [chatRequests, myProfile, showSampleData])
+  }, [chatRequests, myProfile])
 
   const handleSaveProfile = (profileData: Omit<UserProfile, 'id' | 'location' | 'isActive' | 'lastActive'>) => {
     const isNewProfile = !myProfile
@@ -637,7 +637,7 @@ function App() {
 
   const activeConversations = useMemo(() => {
     const conversationArray = Array.isArray(conversations) ? conversations : []
-    if (!myProfile || !showSampleData) return []
+    if (!myProfile) return []
     
     const blockedUserIds = myProfile.blockedUsers || []
     
@@ -650,7 +650,7 @@ function App() {
       })
       .filter(conv => conv.otherUser !== null && !blockedUserIds.includes(conv.otherUser.id))
       .sort((a, b) => (b.lastMessage?.timestamp || 0) - (a.lastMessage?.timestamp || 0))
-  }, [conversations, myProfile, demoUsers, showSampleData])
+  }, [conversations, myProfile, demoUsers])
 
   const currentConversation = activeConversations.find(c => c.id === selectedConversation)
   const currentMessages = selectedConversation && messages ? messages[selectedConversation] || [] : []
@@ -682,7 +682,7 @@ function App() {
               <span className="text-sm font-medium text-foreground hidden sm:inline">See what's happening, Bayou!</span>
             </div>
             <div className="flex items-center gap-2.5">
-              {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && showSampleData && (
+              {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && (
                 <Badge variant="destructive" className="animate-pulse shadow-md px-3 py-1.5 font-semibold">
                   {pendingIncomingRequests.length}
                 </Badge>
@@ -746,7 +746,7 @@ function App() {
             <TabsTrigger value="messages" className="flex items-center gap-2 py-3 px-4 data-[state=active]:shadow-md data-[state=active]:bg-background transition-all duration-200">
               <ChatCircle size={20} weight="duotone" />
               <span className="hidden sm:inline font-medium">Messages</span>
-              {activeConversations.length > 0 && showSampleData && (
+              {activeConversations.length > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1.5 animate-pulse">
                   {activeConversations.length}
                 </Badge>
@@ -756,7 +756,7 @@ function App() {
               <TabsTrigger value="requests" className="flex items-center gap-2 py-3 px-4 data-[state=active]:shadow-md data-[state=active]:bg-background transition-all duration-200">
                 <User size={20} weight="duotone" />
                 <span className="hidden sm:inline font-medium">Requests</span>
-                {pendingIncomingRequests.length > 0 && showSampleData && (
+                {pendingIncomingRequests.length > 0 && (
                   <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1.5 animate-pulse">
                     {pendingIncomingRequests.length}
                   </Badge>
