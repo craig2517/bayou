@@ -584,10 +584,13 @@ function App() {
         <div className="container mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight select-none">
-                <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">Bay</span>
-                <span className="text-yellow-400 drop-shadow-sm">o</span>
-                <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">u</span>
+              <h1 className="text-3xl font-bold tracking-tight select-none flex items-center gap-3">
+                <span className="text-foreground font-normal text-lg">See what's happening</span>
+                <span className="flex">
+                  <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">Bay</span>
+                  <span className="text-yellow-400 drop-shadow-sm">o</span>
+                  <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">u</span>
+                </span>
               </h1>
             </div>
             <div className="flex items-center gap-2.5">
