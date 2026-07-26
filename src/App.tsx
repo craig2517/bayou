@@ -145,31 +145,20 @@ function App() {
       setMessages({})
       setSelectedConversation(null)
       dataGeneratedRef.current = false
-    } else if (myProfile && demoUsers.length > 0 && !dataGeneratedRef.current) {
-      const timer = setTimeout(() => {
-        generateSampleData(myProfile, demoUsers)
-      }, 500)
-      return () => clearTimeout(timer)
+    } else if (myProfile && demoUsers.length > 0) {
+      const conversationArray = Array.isArray(conversations) ? conversations : []
+      const requestArray = Array.isArray(chatRequests) ? chatRequests : []
+      
+      if (conversationArray.length === 0 && requestArray.length === 0 && !dataGeneratedRef.current) {
+        const timer = setTimeout(() => {
+          generateSampleData(myProfile, demoUsers)
+        }, 500)
+        return () => clearTimeout(timer)
+      }
     }
-  }, [showSampleData, myProfile, demoUsers, generateSampleData, setChatRequests, setConversations, setMessages])
+  }, [showSampleData, myProfile, demoUsers, generateSampleData, setChatRequests, setConversations, setMessages, conversations, chatRequests])
 
-  useEffect(() => {
-    if (!myProfile || demoUsers.length === 0 || dataGeneratedRef.current || !showSampleData) return
-    
-    const conversationArray = Array.isArray(conversations) ? conversations : []
-    const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-    
-    if (conversationArray.length > 0 || requestArray.length > 0) {
-      dataGeneratedRef.current = true
-      return
-    }
-    
-    const timer = setTimeout(() => {
-      generateSampleData(myProfile, demoUsers)
-    }, 500)
 
-    return () => clearTimeout(timer)
-  }, [myProfile, demoUsers, conversations, chatRequests, generateSampleData, showSampleData])
 
   const heatMapData = useMemo(() => {
     if (!showSampleData) {
