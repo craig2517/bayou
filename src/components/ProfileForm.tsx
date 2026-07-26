@@ -22,21 +22,21 @@ interface ProfileFormProps {
 }
 
 const GENDERS = ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
-const GENDERS_SELECTABLE = ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
-const RELATIONSHIP_STATUSES = ['Single', 'Not Single', 'Prefer not to say']
+const GENDERS_SELECTABLE = ['Male', 'Female', 'Nonbinary']
+const RELATIONSHIP_STATUSES = ['Single', 'Not Single']
 
 export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
   const [age, setAge] = useState(profile?.age?.toString() || '')
   const [gender, setGender] = useState(profile?.gender || '')
   const [relationshipStatus, setRelationshipStatus] = useState<string>(
-    profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : profile?.isSingle === undefined && profile ? 'Prefer not to say' : ''
+    profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : ''
   )
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
     profile?.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
   )
   const [relationshipStatusPreference, setRelationshipStatusPreference] = useState<string[]>(
-    profile?.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
+    profile?.relationshipStatusPreference || ['Single', 'Not Single']
   )
   const [ageRange, setAgeRange] = useState([
     profile?.ageRangeMin || 18,
@@ -49,10 +49,10 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
       setAge(profile.age.toString())
       setGender(profile.gender)
       setRelationshipStatus(
-        profile.isSingle === true ? 'Single' : profile.isSingle === false ? 'Not Single' : 'Prefer not to say'
+        profile.isSingle === true ? 'Single' : profile.isSingle === false ? 'Not Single' : ''
       )
       setReceiveMessagesFrom(profile.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary', 'Prefer not to say'])
-      setRelationshipStatusPreference(profile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say'])
+      setRelationshipStatusPreference(profile.relationshipStatusPreference || ['Single', 'Not Single'])
       setAgeRange([profile.ageRangeMin || 18, profile.ageRangeMax || 100])
     }
   }, [profile])
@@ -136,6 +136,10 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
     }
 
     const isSingle = relationshipStatus === 'Single' ? true : relationshipStatus === 'Not Single' ? false : undefined
+
+    if (isSingle === undefined) {
+      return
+    }
 
     onSave({
       name,
