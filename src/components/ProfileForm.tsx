@@ -255,32 +255,27 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
 
         <div className="space-y-2">
           <Label htmlFor="gender" className="text-sm font-semibold">Gender <span className="text-destructive">*</span></Label>
-          <Select value={gender || ''} onValueChange={(value) => setGender(value)}>
+          <Select value={gender} onValueChange={setGender}>
             <SelectTrigger id="gender" className="w-full h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
-              {GENDERS_SELECTABLE.map(g => (
-                <SelectItem key={g} value={g}>
-                  {g}
-                </SelectItem>
-              ))}
+              <SelectItem value="Male">Male</SelectItem>
+              <SelectItem value="Female">Female</SelectItem>
+              <SelectItem value="Nonbinary">Nonbinary</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status <span className="text-destructive">*</span></Label>
-          <Select value={relationshipStatus || ''} onValueChange={(value) => setRelationshipStatus(value)}>
+          <Select value={relationshipStatus} onValueChange={setRelationshipStatus}>
             <SelectTrigger id="relationship-status" className="w-full h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select relationship status" />
             </SelectTrigger>
             <SelectContent>
-              {RELATIONSHIP_STATUSES.map(status => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
+              <SelectItem value="Single">Single</SelectItem>
+              <SelectItem value="Not Single">Not Single</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
