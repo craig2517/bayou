@@ -1,4 +1,4 @@
-import type { UserProfile, HeatMapPoint } from './types'
+import type { UserProfile, HeatMapPoint, ChatRequest, Message, Conversation } from './types'
 
 export const CENTER_LAT = 40.7128
 export const CENTER_LNG = -74.0060

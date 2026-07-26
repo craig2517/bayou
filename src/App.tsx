@@ -87,8 +87,6 @@ function App() {
     const newUsers = generateDemoUsers(1000, center)
     setDemoUsers(newUsers)
     
-    console.log('Generated demo users:', newUsers.length)
-    
     const demoData = generateDemoConversationsAndMessages(myProfile, newUsers, 25)
     
     if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
@@ -114,10 +112,6 @@ function App() {
     }))
     
     const allConversations = [...demoData.conversations, ...newConversations]
-    
-    console.log('Setting conversations:', allConversations.length)
-    console.log('Setting chat requests:', allChatRequests.length)
-    console.log('Setting messages:', Object.keys(demoData.messages).length, 'threads')
     
     setConversations(allConversations)
     setChatRequests(allChatRequests)
@@ -296,7 +290,7 @@ function App() {
     }
   }
 
-  const handleSendChatRequest = (toUser: UserProfile) => {
+  const handleSendChatRequest = useCallback((toUser: UserProfile) => {
     if (!myProfile) {
       toast.error('❌ Please complete your profile first')
       return
@@ -377,9 +371,9 @@ function App() {
     })
     setPendingRequestUser(toUser)
     toast.success(`✅ Chat request sent to ${toUser.name}!`)
-  }
+  }, [myProfile, chatRequests, canIMessageUser, setChatRequests, setConversations])
 
-  const handleAcceptRequest = (request: ChatRequest) => {
+  const handleAcceptRequest = useCallback((request: ChatRequest) => {
     if (!myProfile) return
     
     setChatRequests(current => {
@@ -404,22 +398,22 @@ function App() {
     })
 
     toast.success('✅ Chat request accepted!')
-  }
+  }, [myProfile, setChatRequests, setConversations])
 
-  const handleDeclineRequest = (request: ChatRequest) => {
+  const handleDeclineRequest = useCallback((request: ChatRequest) => {
     setChatRequests(current => {
       const currentArray = Array.isArray(current) ? current : []
       return currentArray.map(req => (req.id === request.id ? { ...req, status: 'declined' as const } : req))
     })
     toast.info('ℹ️ Request declined')
-  }
+  }, [setChatRequests])
 
-  const handleViewUserProfile = (user: UserProfile, distance?: number) => {
+  const handleViewUserProfile = useCallback((user: UserProfile, distance?: number) => {
     setViewingUser(user)
     setViewingUserDistance(distance !== undefined ? formatDistance(distance) : undefined)
-  }
+  }, [])
 
-  const handleBlockUser = (userId: string) => {
+  const handleBlockUser = useCallback((userId: string) => {
     if (!myProfile) return
     
     const blockedUserIds = myProfile.blockedUsers || []
@@ -448,9 +442,9 @@ function App() {
     })
     
     setViewingUser(null)
-  }
+  }, [myProfile, demoUsers, selectedConversation, setMyProfile])
 
-  const handleUnblockUser = (userId: string) => {
+  const handleUnblockUser = useCallback((userId: string) => {
     if (!myProfile) return
     
     const blockedUserIds = myProfile.blockedUsers || []
@@ -470,9 +464,9 @@ function App() {
     })
     
     setViewingUser(null)
-  }
+  }, [myProfile, demoUsers, setMyProfile])
 
-  const handleRefreshUsers = () => {
+  const handleRefreshUsers = useCallback(() => {
     setIsRefreshing(true)
     setTimeout(() => {
       const requestArray = Array.isArray(chatRequests) ? chatRequests : []
@@ -497,7 +491,7 @@ function App() {
       setIsRefreshing(false)
       toast.success('✅ Nearby users refreshed!')
     }, 500)
-  }
+  }, [chatRequests, conversations, latitude, longitude, demoUsers])
 
 
 
