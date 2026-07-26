@@ -21,9 +21,9 @@ interface ProfileFormProps {
   onUnblockUser?: (userId: string) => void
 }
 
-const GENDERS = ['Male', 'Female', 'Nonbinary']
-const GENDERS_SELECTABLE = ['Male', 'Female', 'Nonbinary']
-const RELATIONSHIP_STATUSES = ['Single', 'Not Single']
+const GENDERS = ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
+const GENDERS_SELECTABLE = ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
+const RELATIONSHIP_STATUSES = ['Single', 'Not Single', 'Prefer not to say']
 
 export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name || '')
@@ -33,10 +33,10 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
     profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : ''
   )
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
-    profile?.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary']
+    profile?.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
   )
   const [relationshipStatusPreference, setRelationshipStatusPreference] = useState<string[]>(
-    profile?.relationshipStatusPreference || ['Single', 'Not Single']
+    profile?.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say']
   )
   const [ageRange, setAgeRange] = useState([
     profile?.ageRangeMin || 18,

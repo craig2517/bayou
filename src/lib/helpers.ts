@@ -30,7 +30,7 @@ const FIRST_NAMES = [
   'Ivy', 'Ruby', 'Sadie', 'Sophie', 'Piper', 'Alice', 'Autumn', 'Rose'
 ]
 
-const GENDERS = ['Male', 'Female', 'Nonbinary']
+const GENDERS = ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
 
 function getEffectiveRelationshipStatus(isSingle: boolean | undefined): string {
   if (isSingle === undefined) return 'Prefer not to say'
@@ -143,12 +143,16 @@ export function generateDemoUsers(count: number = 1000, center?: { lat: number; 
     
     const relationshipPrefRandom = Math.random()
     let relationshipStatusPreference: string[]
-    if (relationshipPrefRandom < 0.70) {
+    if (relationshipPrefRandom < 0.60) {
+      relationshipStatusPreference = ['Single', 'Not Single', 'Prefer not to say']
+    } else if (relationshipPrefRandom < 0.75) {
       relationshipStatusPreference = ['Single', 'Not Single']
     } else if (relationshipPrefRandom < 0.85) {
       relationshipStatusPreference = ['Single']
-    } else {
+    } else if (relationshipPrefRandom < 0.95) {
       relationshipStatusPreference = ['Not Single']
+    } else {
+      relationshipStatusPreference = ['Prefer not to say']
     }
     
     const ageRangeRandom = Math.random()
