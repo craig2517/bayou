@@ -27,7 +27,7 @@ function App() {
   const [chatRequests, setChatRequests] = useKV<ChatRequest[]>('chat-requests-v6', [])
   const [conversations, setConversations] = useKV<Conversation[]>('conversations-v6', [])
   const [messages, setMessages] = useKV<Record<string, Message[]>>('messages-v6', {})
-  const [showSampleData, setShowSampleData] = useKV<boolean>('show-sample-data-v6', true)
+  const [showSampleData, setShowSampleData] = useKV<boolean>('show-sample-data-v7', false)
   const [searchRadius, setSearchRadius] = useState([0.8])
   const [selectedTab, setSelectedTab] = useState('map')
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -37,8 +37,6 @@ function App() {
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
-  const initializedRef = useRef(false)
-  const dataGeneratedRef = useRef(false)
   
   const {
     latitude,
@@ -74,17 +72,13 @@ function App() {
   useEffect(() => {
     if (!showSampleData) {
       setDemoUsers([])
-      initializedRef.current = false
       return
     }
-    
-    if (initializedRef.current) return
-    initializedRef.current = true
     
     const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
     const newUsers = generateDemoUsers(1000, center)
     setDemoUsers(newUsers)
-  }, [latitude, longitude, showSampleData])
+  }, [showSampleData, latitude, longitude])
   
   useEffect(() => {
     if (!myProfile?.locationSharingEnabled) return
@@ -99,34 +93,22 @@ function App() {
     return () => clearInterval(interval)
   }, [myProfile?.id, myProfile?.locationSharingEnabled, setMyProfile])
 
-  const generateSampleData = useCallback((profile: UserProfile, users: UserProfile[]) => {
-    console.log('=== GENERATING SAMPLE DATA ===')
-    console.log('Profile:', profile?.name, profile?.id)
-    console.log('Users count:', users?.length)
-    
-    if (!profile || !Array.isArray(users) || users.length === 0) {
-      console.error('Invalid parameters for generateSampleData')
-      toast.error('Failed to generate sample data', {
-        description: 'Invalid profile or users data',
-        duration: 4000
-      })
+  useEffect(() => {
+    if (!showSampleData) {
+      setChatRequests([])
+      setConversations([])
+      setMessages({})
+      setSelectedConversation(null)
       return
     }
-
-    const demoData = generateDemoConversationsAndMessages(profile, users, 25)
     
-    console.log('Demo data generated:', {
-      conversations: demoData.conversations.length,
-      chatRequests: demoData.chatRequests.length,
-      messageThreads: Object.keys(demoData.messages).length
-    })
+    if (!myProfile || demoUsers.length === 0) {
+      return
+    }
+    
+    const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 25)
     
     if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
-      console.warn('No compatible users found for demo data')
-      toast.error('No compatible users found', {
-        description: 'Try adjusting your profile preferences',
-        duration: 5000
-      })
       return
     }
     
@@ -134,12 +116,9 @@ function App() {
       ...demoData.conversations.flatMap(c => c.participants),
       ...demoData.chatRequests.map(r => r.fromUserId),
       ...demoData.chatRequests.map(r => r.toUserId)
-    ].filter(id => id !== profile.id))]
+    ].filter(id => id !== myProfile.id))]
     
-    console.log('Existing user IDs from conversations:', existingUserIds.length)
-    
-    const pendingRequests = generateAdditionalChatRequests(profile, users, existingUserIds, 50)
-    console.log('Additional pending requests:', pendingRequests.length)
+    const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 50)
     
     const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
     
@@ -152,65 +131,17 @@ function App() {
     
     const allConversations = [...demoData.conversations, ...newConversations]
     
-    console.log('Setting data:', {
-      totalConversations: allConversations.length,
-      totalRequests: allChatRequests.length,
-      messageThreads: Object.keys(demoData.messages).length
-    })
-    
     setConversations(allConversations)
     setChatRequests(allChatRequests)
     setMessages(demoData.messages)
     
-    dataGeneratedRef.current = true
+    const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
     
-    const pendingToMe = allChatRequests.filter(r => r.toUserId === profile.id && r.status === 'pending')
-    
-    console.log('Pending requests to me:', pendingToMe.length)
-    console.log('=== SAMPLE DATA GENERATION COMPLETE ===')
-    
-    toast.success(`✨ Demo data loaded successfully!`, {
+    toast.success(`✨ Demo data loaded!`, {
       description: `${allConversations.length} conversations & ${pendingToMe.length} requests ready`,
       duration: 4000
     })
-  }, [setConversations, setChatRequests, setMessages])
-
-  useEffect(() => {
-    console.log('=== SAMPLE DATA EFFECT ===')
-    console.log('showSampleData:', showSampleData)
-    console.log('myProfile:', myProfile?.name, myProfile?.id)
-    console.log('demoUsers count:', demoUsers.length)
-    console.log('dataGeneratedRef.current:', dataGeneratedRef.current)
-    
-    if (!showSampleData) {
-      console.log('Sample data disabled, clearing all data')
-      setChatRequests([])
-      setConversations([])
-      setMessages({})
-      setSelectedConversation(null)
-      dataGeneratedRef.current = false
-    } else if (myProfile && demoUsers.length > 0 && !dataGeneratedRef.current) {
-      console.log('Sample data enabled, scheduling generation...')
-      const timer = setTimeout(() => {
-        if (myProfile && demoUsers.length > 0 && !dataGeneratedRef.current) {
-          console.log('Timer fired, calling generateSampleData')
-          generateSampleData(myProfile, demoUsers)
-        } else {
-          console.log('Timer fired but conditions not met:', {
-            hasProfile: !!myProfile,
-            usersCount: demoUsers.length,
-            alreadyGenerated: dataGeneratedRef.current
-          })
-        }
-      }, 300)
-      return () => {
-        console.log('Cleaning up timer')
-        clearTimeout(timer)
-      }
-    } else {
-      console.log('No action needed - conditions not met for generation')
-    }
-  }, [showSampleData, myProfile, demoUsers, generateSampleData, setChatRequests, setConversations, setMessages])
+  }, [showSampleData, myProfile, demoUsers, setConversations, setChatRequests, setMessages])
 
 
 
@@ -306,7 +237,6 @@ function App() {
       setChatRequests([])
       setConversations([])
       setMessages({})
-      dataGeneratedRef.current = false
     }
     
     if (!isNewProfile && wasRequiringApproval && !nowRequiresApproval) {
@@ -353,13 +283,10 @@ function App() {
     
     if (isNewProfile) {
       if (showSampleData && demoUsers.length > 0) {
-        toast.success('✨ Profile created! Generating demo data...', {
+        toast.success('✨ Profile created!', {
           duration: 3000
         })
-        setTimeout(() => {
-          generateSampleData(newProfile, demoUsers)
-          setSelectedTab('messages')
-        }, 100)
+        setSelectedTab('messages')
       } else {
         toast.success('✨ Profile created!')
       }
@@ -577,32 +504,14 @@ function App() {
     const newValue = !showSampleData
     setShowSampleData(newValue)
     
-    if (newValue) {
-      dataGeneratedRef.current = false
-      initializedRef.current = false
-      
-      setChatRequests([])
-      setConversations([])
-      setMessages({})
-      setSelectedConversation(null)
-      
-      const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
-      const newUsers = generateDemoUsers(1000, center)
-      setDemoUsers(newUsers)
-      
-      if (myProfile) {
-        setTimeout(() => {
-          generateSampleData(myProfile, newUsers)
-        }, 100)
-      }
-      
-      toast.success('🔔 Sample data enabled', {
-        description: 'Demo users, messages, and requests are now visible',
+    if (!newValue) {
+      toast.info('🔕 Sample data disabled', {
+        description: 'All demo content has been hidden',
         duration: 3000
       })
     } else {
-      toast.info('🔕 Sample data disabled', {
-        description: 'All demo content has been hidden',
+      toast.success('🔔 Sample data enabled', {
+        description: 'Demo users, messages, and requests will be generated',
         duration: 3000
       })
     }
