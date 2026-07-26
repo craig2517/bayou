@@ -685,12 +685,7 @@ function App() {
                 Human Heat Map
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Visualize anonymous user density in your area using real GPS data. Brighter colors indicate higher activity.
-                {latitude && longitude && (
-                  <span className="block mt-1 font-medium text-foreground">
-                    📍 Showing activity near your location
-                  </span>
-                )}
+                See what's happening, Bayou!
               </p>
             </div>
             <div className="h-[600px] rounded-2xl overflow-hidden border-2 border-border shadow-xl ring-4 ring-primary/5">
