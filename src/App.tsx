@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Toaster } from '@/components/ui/sonner'
 import { Switch } from '@/components/ui/switch'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Database, Warning, Eye, EyeSlash } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Warning, Eye, EyeSlash } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -523,76 +523,7 @@ function App() {
     }, 500)
   }
 
-  const handleRefreshSampleData = () => {
-    if (!myProfile) {
-      toast.error('❌ Please complete your profile first')
-      return
-    }
 
-    if (!showSampleData) {
-      toast.info('ℹ️ Enable Sample Data first')
-      return
-    }
-
-    setIsRefreshing(true)
-    dataGeneratedRef.current = false
-    
-    setChatRequests([])
-    setConversations([])
-    setMessages({})
-    setSelectedConversation(null)
-    
-    setTimeout(() => {
-      if (!myProfile) {
-        setIsRefreshing(false)
-        return
-      }
-
-      const demoData = generateDemoConversationsAndMessages(myProfile, demoUsers, 25)
-      
-      if (demoData.conversations.length === 0 && demoData.chatRequests.length === 0) {
-        setIsRefreshing(false)
-        dataGeneratedRef.current = false
-        toast.error('No compatible users found', {
-          description: 'Try adjusting your profile preferences',
-          duration: 5000
-        })
-        return
-      }
-      
-      const existingUserIds = [...new Set([
-        ...demoData.conversations.flatMap(c => c.participants),
-        ...demoData.chatRequests.map(r => r.fromUserId),
-        ...demoData.chatRequests.map(r => r.toUserId)
-      ].filter(id => id !== myProfile.id))]
-      
-      const pendingRequests = generateAdditionalChatRequests(myProfile, demoUsers, existingUserIds, 50)
-      const allChatRequests = [...demoData.chatRequests, ...pendingRequests]
-      
-      const autoAcceptedRequests = pendingRequests.filter(r => r.status === 'accepted')
-      const newConversations = autoAcceptedRequests.map(request => ({
-        id: [request.fromUserId, request.toUserId].sort().join('-'),
-        participants: [request.fromUserId, request.toUserId] as [string, string],
-        unreadCount: 0
-      }))
-      
-      const allConversations = [...demoData.conversations, ...newConversations]
-      
-      setConversations(allConversations)
-      setChatRequests(allChatRequests)
-      setMessages(demoData.messages)
-      dataGeneratedRef.current = true
-      
-      const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-      
-      setIsRefreshing(false)
-      
-      toast.success(`✨ Messages & requests refreshed!`, {
-        description: `${allConversations.length} conversations & ${pendingToMe.length} requests`,
-        duration: 4000
-      })
-    }, 500)
-  }
 
   const handleToggleSampleData = () => {
     const newValue = !showSampleData
@@ -600,6 +531,23 @@ function App() {
     
     if (newValue) {
       dataGeneratedRef.current = false
+      initializedRef.current = false
+      
+      setChatRequests([])
+      setConversations([])
+      setMessages({})
+      setSelectedConversation(null)
+      
+      const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
+      const newUsers = generateDemoUsers(1000, center)
+      setDemoUsers(newUsers)
+      
+      if (myProfile) {
+        setTimeout(() => {
+          generateSampleData(myProfile, newUsers)
+        }, 100)
+      }
+      
       toast.success('🔔 Sample data enabled', {
         description: 'Demo users, messages, and requests are now visible',
         duration: 3000
@@ -713,17 +661,6 @@ function App() {
                   <EyeSlash size={18} weight="duotone" className="text-muted-foreground" />
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefreshSampleData}
-                disabled={!myProfile || isRefreshing || !showSampleData}
-                className="shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 border-border/60 hover:border-primary/30"
-                title="Refresh sample data"
-              >
-                <Database size={18} weight="duotone" className={isRefreshing ? 'animate-spin' : ''} />
-                <span className="hidden md:inline">Refresh Data</span>
-              </Button>
               <Button
                 variant="outline"
                 size="sm"
