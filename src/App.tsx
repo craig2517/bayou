@@ -145,18 +145,13 @@ function App() {
       setMessages({})
       setSelectedConversation(null)
       dataGeneratedRef.current = false
-    } else if (myProfile && demoUsers.length > 0) {
-      const conversationArray = Array.isArray(conversations) ? conversations : []
-      const requestArray = Array.isArray(chatRequests) ? chatRequests : []
-      
-      if (conversationArray.length === 0 && requestArray.length === 0 && !dataGeneratedRef.current) {
-        const timer = setTimeout(() => {
-          generateSampleData(myProfile, demoUsers)
-        }, 500)
-        return () => clearTimeout(timer)
-      }
+    } else if (myProfile && demoUsers.length > 0 && !dataGeneratedRef.current) {
+      const timer = setTimeout(() => {
+        generateSampleData(myProfile, demoUsers)
+      }, 500)
+      return () => clearTimeout(timer)
     }
-  }, [showSampleData, myProfile, demoUsers, generateSampleData, setChatRequests, setConversations, setMessages, conversations, chatRequests])
+  }, [showSampleData, myProfile, demoUsers, generateSampleData, setChatRequests, setConversations, setMessages])
 
 
 
@@ -596,6 +591,7 @@ function App() {
     setShowSampleData(newValue)
     
     if (newValue) {
+      dataGeneratedRef.current = false
       toast.success('🔔 Sample data enabled', {
         description: 'Demo users, messages, and requests are now visible',
         duration: 3000
