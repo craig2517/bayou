@@ -277,9 +277,6 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
               <SelectItem value="Not Single">Not Single</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
-            This will be visible to other users viewing your profile
-          </p>
         </div>
 
         <div className="space-y-3 pt-2">
