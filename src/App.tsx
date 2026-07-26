@@ -588,7 +588,6 @@ function App() {
                 <span className="text-yellow-400 drop-shadow-sm">o</span>
                 <span className="bg-gradient-to-br from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-sm">u</span>
               </h1>
-              <span className="text-sm font-medium text-foreground hidden sm:inline">See what's happening, Bayou!</span>
             </div>
             <div className="flex items-center gap-2.5">
               {myProfile?.requireApproval && pendingIncomingRequests.length > 0 && (
