@@ -233,7 +233,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
 
         <div className="space-y-2">
           <Label htmlFor="gender" className="text-sm font-semibold">Gender</Label>
-          <Select value={gender} onValueChange={setGender}>
+          <Select value={gender || undefined} onValueChange={(value) => setGender(value)}>
             <SelectTrigger id="gender" className="h-11 border-border/60 focus:border-primary transition-colors">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
@@ -251,10 +251,14 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
           <Label htmlFor="relationship-status" className="text-sm font-semibold">Relationship Status (Optional)</Label>
           <Select 
             value={isSingle === undefined ? 'unspecified' : isSingle ? 'single' : 'not-single'} 
-            onValueChange={(val) => {
-              if (val === 'unspecified') setIsSingle(undefined)
-              else if (val === 'single') setIsSingle(true)
-              else setIsSingle(false)
+            onValueChange={(value) => {
+              if (value === 'unspecified') {
+                setIsSingle(undefined)
+              } else if (value === 'single') {
+                setIsSingle(true)
+              } else if (value === 'not-single') {
+                setIsSingle(false)
+              }
             }}
           >
             <SelectTrigger id="relationship-status" className="h-11 border-border/60 focus:border-primary transition-colors">
