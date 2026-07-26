@@ -644,11 +644,11 @@ function App() {
           <TabsList className={`grid w-full ${myProfile?.requireApproval ? 'grid-cols-4' : 'grid-cols-3'} mb-8 h-auto p-1.5 bg-muted/40 shadow-md backdrop-blur-sm`}>
             <TabsTrigger value="map" className="flex items-center gap-2 py-3 px-4 data-[state=active]:shadow-md data-[state=active]:bg-background transition-all duration-200">
               <MapTrifold size={20} weight="duotone" />
-              <span className="hidden sm:inline font-medium">Map</span>
+              <span className="hidden sm:inline font-medium">Heat Map</span>
             </TabsTrigger>
             <TabsTrigger value="discover" className="flex items-center gap-2 py-3 px-4 data-[state=active]:shadow-md data-[state=active]:bg-background transition-all duration-200">
               <MagnifyingGlass size={20} weight="duotone" />
-              <span className="hidden sm:inline font-medium">Discover</span>
+              <span className="hidden sm:inline font-medium">Who's Nearby</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex items-center gap-2 py-3 px-4 data-[state=active]:shadow-md data-[state=active]:bg-background transition-all duration-200">
               <ChatCircle size={20} weight="duotone" />
