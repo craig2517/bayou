@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MapPin, Camera, Trash, ProhibitInset } from '@phosphor-icons/react'
 import { CameraCapture } from '@/components/CameraCapture'
 import { isPhotoValid } from '@/lib/helpers'
+import { toast } from 'sonner'
 import type { UserProfile } from '@/lib/types'
 
 interface ProfileFormProps {
@@ -99,7 +100,14 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
     if (checked) {
       setReceiveMessagesFrom(prev => [...prev, genderOption])
     } else {
-      setReceiveMessagesFrom(prev => prev.filter(g => g !== genderOption))
+      setReceiveMessagesFrom(prev => {
+        const updated = prev.filter(g => g !== genderOption)
+        if (updated.length === 0) {
+          toast.error('⚠️ At least one gender must be selected')
+          return prev
+        }
+        return updated
+      })
     }
   }
 
@@ -107,7 +115,14 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
     if (checked) {
       setRelationshipStatusPreference(prev => [...prev, status])
     } else {
-      setRelationshipStatusPreference(prev => prev.filter(s => s !== status))
+      setRelationshipStatusPreference(prev => {
+        const updated = prev.filter(s => s !== status)
+        if (updated.length === 0) {
+          toast.error('⚠️ At least one relationship status must be selected')
+          return prev
+        }
+        return updated
+      })
     }
   }
 
@@ -276,7 +291,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-3 pt-2">
-          <Label className="text-base font-bold">Be Seen, Don't Search - Select if your profile is visible, who can see it when visible, and who can connect:</Label>
+          <Label className="text-base font-bold">Be Seen, Don't Search - Select if your profile is visible, who can see it when visible, and who can connect: <span className="text-destructive">*</span></Label>
           <div className="grid grid-cols-2 gap-3">
             {GENDERS.map(genderOption => (
               <div key={genderOption} className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border hover:bg-muted/40 hover:border-primary/20 transition-all">
@@ -297,7 +312,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-3 pt-2">
-          <Label className="text-sm font-semibold">Age Range: {ageRange[0]} - {ageRange[1]}</Label>
+          <Label className="text-sm font-semibold">Age Range: {ageRange[0]} - {ageRange[1]} <span className="text-destructive">*</span></Label>
           <Slider
             value={ageRange}
             onValueChange={handleAgeRangeChange}
@@ -310,7 +325,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-3 pt-2">
-          <Label className="text-sm font-semibold">Relationship Status Preference</Label>
+          <Label className="text-sm font-semibold">Relationship Status Preference <span className="text-destructive">*</span></Label>
           <div className="grid grid-cols-2 gap-3">
             {RELATIONSHIP_STATUSES.map(status => (
               <div key={status} className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border hover:bg-muted/40 hover:border-primary/20 transition-all">
