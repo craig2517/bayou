@@ -385,7 +385,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
                 Require Approval for Messages
               </Label>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                When enabled, you'll review and approve chat requests before receiving messages. When disabled, matching users can message you directly.
+                When enabled, you'll review and approve chat requests before receiving messages. When disabled, users can message you directly.
               </p>
             </div>
             <Switch
