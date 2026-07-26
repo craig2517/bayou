@@ -30,7 +30,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
   const [age, setAge] = useState(profile?.age?.toString() || '')
   const [gender, setGender] = useState(profile?.gender || '')
   const [relationshipStatus, setRelationshipStatus] = useState<string>(
-    profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : ''
+    profile?.isSingle === true ? 'Single' : profile?.isSingle === false ? 'Not Single' : profile?.isSingle === undefined && profile ? 'Prefer not to say' : ''
   )
   const [receiveMessagesFrom, setReceiveMessagesFrom] = useState<string[]>(
     profile?.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary', 'Prefer not to say']
@@ -42,6 +42,20 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
     profile?.ageRangeMin || 18,
     profile?.ageRangeMax || 100
   ])
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name)
+      setAge(profile.age.toString())
+      setGender(profile.gender)
+      setRelationshipStatus(
+        profile.isSingle === true ? 'Single' : profile.isSingle === false ? 'Not Single' : 'Prefer not to say'
+      )
+      setReceiveMessagesFrom(profile.receiveMessagesFrom || ['Male', 'Female', 'Nonbinary', 'Prefer not to say'])
+      setRelationshipStatusPreference(profile.relationshipStatusPreference || ['Single', 'Not Single', 'Prefer not to say'])
+      setAgeRange([profile.ageRangeMin || 18, profile.ageRangeMax || 100])
+    }
+  }, [profile])
 
   const handleAgeRangeChange = (values: number[]) => {
     if (values.length === 2 && values[0] <= values[1]) {
