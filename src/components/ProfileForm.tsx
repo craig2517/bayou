@@ -307,16 +307,10 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
             minStepsBetweenThumbs={1}
             className="w-full"
           />
-          <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
-            You'll be seen by and receive messages from users aged {ageRange[0]} to {ageRange[1]}
-          </p>
         </div>
 
         <div className="space-y-3 pt-2 border-t-2 border-border">
           <Label className="text-sm font-semibold">Relationship Status Preference</Label>
-          <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
-            You'll be seen by and receive messages from users with these relationship statuses
-          </p>
           <div className="grid grid-cols-2 gap-3">
             {RELATIONSHIP_STATUSES.map(status => (
               <div key={status} className="flex items-center space-x-2.5 p-3.5 rounded-lg border-2 border-border hover:bg-muted/40 hover:border-primary/20 transition-all">
@@ -334,6 +328,12 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="pt-2">
+          <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg leading-relaxed border border-border/30">
+            You'll be seen by and receive messages from {receiveMessagesFrom.length === 0 ? 'no users' : receiveMessagesFrom.join(', ')} users aged {ageRange[0]}-{ageRange[1]} who are {relationshipStatusPreference.length === 0 ? 'no one' : relationshipStatusPreference.join(' or ')}
+          </p>
         </div>
 
         <div className="space-y-4 pt-4 border-t-2 border-border">
