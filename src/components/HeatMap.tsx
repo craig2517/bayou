@@ -99,44 +99,51 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
     const L = window.L
 
     if (userMarkerRef.current) {
-      userMarkerRef.current.setLatLng([userLocation.lat, userLocation.lng])
-    } else {
-      const userIcon = L.divIcon({
-        className: 'user-location-marker',
-        html: `
-          <div style="position: relative;">
-            <div style="
-              width: 20px;
-              height: 20px;
-              background: #3b82f6;
-              border: 3px solid white;
-              border-radius: 50%;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            "></div>
-            <div style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: 40px;
-              height: 40px;
-              background: rgba(59, 130, 246, 0.2);
-              border-radius: 50%;
-              animation: pulse 2s infinite;
-            "></div>
-          </div>
-        `,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-      })
-
-      userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
-        icon: userIcon,
-        zIndexOffset: 1000
-      }).addTo(map)
-
-      userMarkerRef.current.bindPopup('<strong>Your Location</strong>')
+      map.removeLayer(userMarkerRef.current)
+      userMarkerRef.current = null
     }
+
+    const userIcon = L.divIcon({
+      className: 'user-location-marker',
+      html: `
+        <div style="position: relative; width: 40px; height: 40px;">
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            border: 4px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            z-index: 2;
+          "></div>
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            animation: userLocationPulse 2s infinite;
+            z-index: 1;
+          "></div>
+        </div>
+      `,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    })
+
+    userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
+      icon: userIcon,
+      zIndexOffset: 1000
+    }).addTo(map)
+
+    userMarkerRef.current.bindPopup('<strong>📍 Your Location</strong>')
 
     map.setView([userLocation.lat, userLocation.lng], map.getZoom())
   }, [userLocation])
@@ -202,7 +209,7 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
       ) : (
         <>
           <style>{`
-            @keyframes pulse {
+            @keyframes userLocationPulse {
               0% {
                 opacity: 1;
                 transform: translate(-50%, -50%) scale(1);
@@ -215,6 +222,9 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
             .leaflet-container {
               width: 100%;
               height: 100%;
+            }
+            .user-location-marker {
+              pointer-events: none;
             }
           `}</style>
           <div ref={mapRef} className="w-full h-full" />
