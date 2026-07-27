@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 import type { HeatMapPoint } from '@/lib/types'
+
+declare global {
+  interface Window {
+    L: any
+  }
+}
 
 interface HeatMapProps {
   points: HeatMapPoint[]
@@ -10,15 +14,35 @@ interface HeatMapProps {
 
 export function HeatMap({ points, userLocation }: HeatMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<L.Map | null>(null)
-  const heatLayerRef = useRef<L.LayerGroup | null>(null)
-  const userMarkerRef = useRef<L.Marker | null>(null)
+  const mapInstanceRef = useRef<any>(null)
+  const heatLayerRef = useRef<any>(null)
+  const userMarkerRef = useRef<any>(null)
   const [mapError, setMapError] = useState<string | null>(null)
+  const [leafletLoaded, setLeafletLoaded] = useState(false)
 
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return
+    const checkLeaflet = setInterval(() => {
+      if (typeof window !== 'undefined' && window.L) {
+        setLeafletLoaded(true)
+        clearInterval(checkLeaflet)
+      }
+    }, 100)
+
+    setTimeout(() => {
+      clearInterval(checkLeaflet)
+      if (!leafletLoaded) {
+        setMapError('Leaflet library failed to load')
+      }
+    }, 5000)
+
+    return () => clearInterval(checkLeaflet)
+  }, [leafletLoaded])
+
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current || !leafletLoaded || !window.L) return
 
     try {
+      const L = window.L
       const defaultCenter: [number, number] = userLocation 
         ? [userLocation.lat, userLocation.lng]
         : [40.7128, -74.0060]
@@ -52,11 +76,13 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
         console.error('Failed to cleanup map:', error)
       }
     }
-  }, [])
+  }, [leafletLoaded, userLocation])
 
   useEffect(() => {
     const map = mapInstanceRef.current
-    if (!map || !userLocation) return
+    if (!map || !userLocation || !window.L) return
+
+    const L = window.L
 
     if (userMarkerRef.current) {
       userMarkerRef.current.setLatLng([userLocation.lat, userLocation.lng])
@@ -103,7 +129,9 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
 
   useEffect(() => {
     const map = mapInstanceRef.current
-    if (!map) return
+    if (!map || !window.L) return
+
+    const L = window.L
 
     if (heatLayerRef.current) {
       map.removeLayer(heatLayerRef.current)
