@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Toaster } from '@/components/ui/sonner'
 import { Switch } from '@/components/ui/switch'
-import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, ArrowsClockwise, Warning } from '@phosphor-icons/react'
+import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, Warning } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
 import { ProfileForm } from '@/components/ProfileForm'
@@ -35,7 +35,6 @@ function App() {
   const [pendingRequestUser, setPendingRequestUser] = useState<UserProfile | null>(null)
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
 
   useEffect(() => {
@@ -470,9 +469,10 @@ function App() {
     setViewingUser(null)
   }, [myProfile, demoUsers, setMyProfile])
 
-  const handleRefreshUsers = useCallback(() => {
-    setIsRefreshing(true)
-    setTimeout(() => {
+  useEffect(() => {
+    if (!showSampleData || !myProfile) return
+    
+    const refreshUsers = () => {
       const requestArray = Array.isArray(chatRequests) ? chatRequests : []
       const conversationArray = Array.isArray(conversations) ? conversations : []
       
@@ -492,10 +492,12 @@ function App() {
       })
       
       setDemoUsers(refreshedUsers)
-      setIsRefreshing(false)
-      toast.success('✅ Nearby users refreshed!')
-    }, 500)
-  }, [chatRequests, conversations, latitude, longitude, demoUsers])
+    }
+
+    const interval = setInterval(refreshUsers, 30000)
+    
+    return () => clearInterval(interval)
+  }, [showSampleData, myProfile, chatRequests, conversations, latitude, longitude, demoUsers])
 
 
 
@@ -716,21 +718,9 @@ function App() {
                   </div>
                 )}
                 <div className="space-y-5 p-6 bg-card rounded-2xl border-2 border-border shadow-md">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1.5">
-                      <Label className="text-base font-semibold">Search Radius</Label>
-                      <p className="text-sm text-muted-foreground font-medium">{searchRadius[0]} km</p>
-                    </div>
-                    <Button
-                      onClick={handleRefreshUsers}
-                      variant="outline"
-                      size="sm"
-                      disabled={isRefreshing}
-                      className="flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-200 border-border/60 hover:border-primary/30"
-                    >
-                      <ArrowsClockwise size={18} weight="bold" className={isRefreshing ? 'animate-spin' : ''} />
-                      <span className="hidden sm:inline font-medium">Refresh</span>
-                    </Button>
+                  <div className="space-y-1.5">
+                    <Label className="text-base font-semibold">Search Radius</Label>
+                    <p className="text-sm text-muted-foreground font-medium">{searchRadius[0]} km</p>
                   </div>
                   <Slider
                     value={searchRadius}
@@ -757,23 +747,21 @@ function App() {
                     </div>
                   </div>
                 ) : (
-                  <div className={`relative ${isRefreshing ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {nearbyUsers.map(({ user, distance }, index) => (
-                        <div 
-                          key={user.id}
-                          className="animate-in fade-in slide-in-from-bottom-4"
-                          style={{ animationDelay: `${index * 30}ms`, animationDuration: '400ms' }}
-                        >
-                          <UserCard
-                            user={user}
-                            distance={formatDistance(distance)}
-                            onMessage={() => handleSendChatRequest(user)}
-                            onViewProfile={() => handleViewUserProfile(user, distance)}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {nearbyUsers.map(({ user, distance }, index) => (
+                      <div 
+                        key={user.id}
+                        className="animate-in fade-in slide-in-from-bottom-4"
+                        style={{ animationDelay: `${index * 30}ms`, animationDuration: '400ms' }}
+                      >
+                        <UserCard
+                          user={user}
+                          distance={formatDistance(distance)}
+                          onMessage={() => handleSendChatRequest(user)}
+                          onViewProfile={() => handleViewUserProfile(user, distance)}
+                        />
+                      </div>
+                    ))}
                   </div>
                 )}
               </>
