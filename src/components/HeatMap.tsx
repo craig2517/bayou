@@ -19,24 +19,38 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
   const userMarkerRef = useRef<any>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const [leafletLoaded, setLeafletLoaded] = useState(false)
+  const timeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.L) {
+      setLeafletLoaded(true)
+      setMapError(null)
+      return
+    }
+
     const checkLeaflet = setInterval(() => {
       if (typeof window !== 'undefined' && window.L) {
         setLeafletLoaded(true)
+        setMapError(null)
         clearInterval(checkLeaflet)
       }
     }, 100)
 
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       clearInterval(checkLeaflet)
-      if (!leafletLoaded) {
-        setMapError('Leaflet library failed to load')
+      if (!window.L) {
+        console.error('Leaflet (window.L) not available after 10 seconds')
+        setMapError('Map library failed to load. Please refresh the page.')
       }
-    }, 5000)
+    }, 10000)
 
-    return () => clearInterval(checkLeaflet)
-  }, [leafletLoaded])
+    return () => {
+      clearInterval(checkLeaflet)
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current || !leafletLoaded || !window.L) return
