@@ -607,7 +607,7 @@ function App() {
               )}
               <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2 shadow-sm border border-border/60">
                 <Label htmlFor="sample-data-toggle" className="text-sm font-medium cursor-pointer hidden sm:inline">
-                  Sample Data
+                  Sample Users
                 </Label>
                 <Switch
                   id="sample-data-toggle"
