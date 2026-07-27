@@ -82,7 +82,16 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
 
     return () => {
       try {
+        if (heatLayerRef.current) {
+          heatLayerRef.current.remove()
+          heatLayerRef.current = null
+        }
+        if (userMarkerRef.current) {
+          userMarkerRef.current.remove()
+          userMarkerRef.current = null
+        }
         if (mapInstanceRef.current) {
+          mapInstanceRef.current.off()
           mapInstanceRef.current.remove()
           mapInstanceRef.current = null
         }
@@ -90,110 +99,125 @@ export function HeatMap({ points, userLocation }: HeatMapProps) {
         console.error('Failed to cleanup map:', error)
       }
     }
-  }, [leafletLoaded, userLocation])
+  }, [leafletLoaded])
 
   useEffect(() => {
     const map = mapInstanceRef.current
     if (!map || !userLocation || !window.L) return
 
-    const L = window.L
+    try {
+      const L = window.L
 
-    if (userMarkerRef.current) {
-      map.removeLayer(userMarkerRef.current)
-      userMarkerRef.current = null
+      if (userMarkerRef.current) {
+        try {
+          map.removeLayer(userMarkerRef.current)
+        } catch (e) {
+          console.warn('Failed to remove user marker:', e)
+        }
+        userMarkerRef.current = null
+      }
+
+      const userIcon = L.divIcon({
+        className: 'user-location-marker',
+        html: `
+          <div style="position: relative; width: 40px; height: 40px;">
+            <div style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 20px;
+              height: 20px;
+              background: #3b82f6;
+              border: 4px solid white;
+              border-radius: 50%;
+              box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+              z-index: 2;
+            "></div>
+            <div style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 40px;
+              height: 40px;
+              background: rgba(59, 130, 246, 0.3);
+              border-radius: 50%;
+              animation: userLocationPulse 2s infinite;
+              z-index: 1;
+            "></div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      })
+
+      userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
+        icon: userIcon,
+        zIndexOffset: 1000
+      }).addTo(map)
+
+      userMarkerRef.current.bindPopup('<strong>📍 Your Location</strong>')
+
+      map.setView([userLocation.lat, userLocation.lng], map.getZoom())
+    } catch (error) {
+      console.error('Failed to update user location marker:', error)
     }
-
-    const userIcon = L.divIcon({
-      className: 'user-location-marker',
-      html: `
-        <div style="position: relative; width: 40px; height: 40px;">
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            background: #3b82f6;
-            border: 4px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-            z-index: 2;
-          "></div>
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            background: rgba(59, 130, 246, 0.3);
-            border-radius: 50%;
-            animation: userLocationPulse 2s infinite;
-            z-index: 1;
-          "></div>
-        </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20]
-    })
-
-    userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
-      icon: userIcon,
-      zIndexOffset: 1000
-    }).addTo(map)
-
-    userMarkerRef.current.bindPopup('<strong>📍 Your Location</strong>')
-
-    map.setView([userLocation.lat, userLocation.lng], map.getZoom())
   }, [userLocation])
 
   useEffect(() => {
     const map = mapInstanceRef.current
     if (!map || !window.L) return
 
-    const L = window.L
+    try {
+      const L = window.L
 
-    if (heatLayerRef.current) {
-      map.removeLayer(heatLayerRef.current)
-      heatLayerRef.current = null
-    }
-
-    if (points.length === 0) return
-
-    const heatLayer = L.layerGroup()
-    
-    const maxIntensity = Math.max(...points.map(p => p.intensity || 1))
-    
-    points.forEach(point => {
-      const intensity = (point.intensity || 1) / maxIntensity
-      const radius = 50 + (intensity * 100)
-      
-      let color: string
-      let opacity: number
-      
-      if (intensity > 0.7) {
-        color = '#b22222'
-        opacity = 0.6
-      } else if (intensity > 0.4) {
-        color = '#ff8c00'
-        opacity = 0.5
-      } else {
-        color = '#adff2f'
-        opacity = 0.4
+      if (heatLayerRef.current) {
+        try {
+          map.removeLayer(heatLayerRef.current)
+        } catch (e) {
+          console.warn('Failed to remove heat layer:', e)
+        }
+        heatLayerRef.current = null
       }
 
-      L.circle([point.lat, point.lng], {
-        radius: radius,
-        fillColor: color,
-        fillOpacity: opacity,
-        stroke: false
-      }).addTo(heatLayer)
-    })
+      if (points.length === 0) return
 
-    heatLayer.addTo(map)
-    heatLayerRef.current = heatLayer
+      const heatLayer = L.layerGroup()
+      
+      const maxIntensity = Math.max(...points.map(p => p.intensity || 1))
+      
+      points.forEach(point => {
+        const intensity = (point.intensity || 1) / maxIntensity
+        const radius = 50 + (intensity * 100)
+        
+        let color: string
+        let opacity: number
+        
+        if (intensity > 0.7) {
+          color = '#b22222'
+          opacity = 0.6
+        } else if (intensity > 0.4) {
+          color = '#ff8c00'
+          opacity = 0.5
+        } else {
+          color = '#adff2f'
+          opacity = 0.4
+        }
 
+        L.circle([point.lat, point.lng], {
+          radius: radius,
+          fillColor: color,
+          fillOpacity: opacity,
+          stroke: false
+        }).addTo(heatLayer)
+      })
+
+      heatLayer.addTo(map)
+      heatLayerRef.current = heatLayer
+    } catch (error) {
+      console.error('Failed to update heat layer:', error)
+    }
   }, [points])
 
   return (
