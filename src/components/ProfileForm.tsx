@@ -291,11 +291,6 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
         </div>
 
         <div className="space-y-3 pt-2">
-          <div className="space-y-2">
-            <Label className="text-lg font-extrabold tracking-tight">Be Seen, Don't Search</Label>
-            <Label className="text-base font-normal">Select if your profile is visible, who can see it when visible, and who can connect:</Label>
-          </div>
-          
           <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all border-2 border-border">
             <div className="flex items-start gap-3 flex-1">
               <MapPin className="text-primary mt-1 flex-shrink-0" size={24} weight="fill" />
@@ -319,6 +314,11 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
               With this disabled, you won't appear in Who's Nearby searches, but your anonymized location will still contribute to the heat map.
             </p>
           )}
+          
+          <div className="space-y-2 pt-4">
+            <Label className="text-lg font-extrabold tracking-tight">Be Seen, Don't Search</Label>
+            <Label className="text-base font-normal">Select if your profile is visible, who can see it when visible, and who can connect:</Label>
+          </div>
           
           <Label className="text-sm font-semibold">Gender: <span className="text-destructive">*</span></Label>
           <div className="grid grid-cols-2 gap-3">
