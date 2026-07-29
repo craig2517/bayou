@@ -317,7 +317,7 @@ export function ProfileForm({ profile, onSave, blockedUsers, onUnblockUser }: Pr
           
           <div className="space-y-2 pt-4">
             <Label className="text-lg font-extrabold tracking-tight">Be Seen, Don't Search</Label>
-            <Label className="text-base font-normal">Select if your profile is visible, who can see it when visible, and who can connect:</Label>
+            <Label className="text-base font-normal">Select who can see your profile and who can connect:</Label>
           </div>
           
           <Label className="text-sm font-semibold">Gender: <span className="text-destructive">*</span></Label>
