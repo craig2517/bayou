@@ -38,10 +38,15 @@ function App() {
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
   
-  const [filterGenders, setFilterGenders] = useState<string[]>(['Male', 'Female', 'Nonbinary'])
-  const [filterAgeMin, setFilterAgeMin] = useState(18)
-  const [filterAgeMax, setFilterAgeMax] = useState(99)
-  const [filterRelationshipStatus, setFilterRelationshipStatus] = useState<string[]>(['Single', 'Not Single'])
+  const [mapFilterGenders, setMapFilterGenders] = useState<string[]>(['Male', 'Female', 'Nonbinary'])
+  const [mapFilterAgeMin, setMapFilterAgeMin] = useState(18)
+  const [mapFilterAgeMax, setMapFilterAgeMax] = useState(99)
+  const [mapFilterRelationshipStatus, setMapFilterRelationshipStatus] = useState<string[]>(['Single', 'Not Single'])
+  
+  const [discoverFilterGenders, setDiscoverFilterGenders] = useState<string[]>(['Male', 'Female', 'Nonbinary'])
+  const [discoverFilterAgeMin, setDiscoverFilterAgeMin] = useState(18)
+  const [discoverFilterAgeMax, setDiscoverFilterAgeMax] = useState(99)
+  const [discoverFilterRelationshipStatus, setDiscoverFilterRelationshipStatus] = useState<string[]>(['Single', 'Not Single'])
 
   useEffect(() => {
     console.log('Bayou App initialized')
@@ -158,17 +163,17 @@ function App() {
     }
     
     const filteredUsers = demoUsers.filter(user => {
-      if (!filterGenders.includes(user.gender)) return false
-      if (user.age < filterAgeMin || user.age > filterAgeMax) return false
+      if (!mapFilterGenders.includes(user.gender)) return false
+      if (user.age < mapFilterAgeMin || user.age > mapFilterAgeMax) return false
       
       const userStatus = user.isSingle === undefined ? 'Prefer not to say' : (user.isSingle ? 'Single' : 'Not Single')
-      if (!filterRelationshipStatus.includes(userStatus) && userStatus !== 'Prefer not to say') return false
+      if (!mapFilterRelationshipStatus.includes(userStatus) && userStatus !== 'Prefer not to say') return false
       
       return true
     })
     
     return generateHeatMapData(filteredUsers)
-  }, [demoUsers, showSampleData, filterGenders, filterAgeMin, filterAgeMax, filterRelationshipStatus])
+  }, [demoUsers, showSampleData, mapFilterGenders, mapFilterAgeMin, mapFilterAgeMax, mapFilterRelationshipStatus])
 
   const canIMessageUser = useCallback((user: UserProfile): boolean => {
     if (!myProfile) return false
@@ -207,11 +212,11 @@ function App() {
         return false
       }
       
-      if (!filterGenders.includes(user.gender)) return false
-      if (user.age < filterAgeMin || user.age > filterAgeMax) return false
+      if (!discoverFilterGenders.includes(user.gender)) return false
+      if (user.age < discoverFilterAgeMin || user.age > discoverFilterAgeMax) return false
       
       const userStatus = user.isSingle === undefined ? 'Prefer not to say' : (user.isSingle ? 'Single' : 'Not Single')
-      if (!filterRelationshipStatus.includes(userStatus) && userStatus !== 'Prefer not to say') return false
+      if (!discoverFilterRelationshipStatus.includes(userStatus) && userStatus !== 'Prefer not to say') return false
       
       return true
     })
@@ -229,7 +234,7 @@ function App() {
     return allUsersWithDistance
       .filter(item => item.distance <= searchRadius[0])
       .sort((a, b) => a.distance - b.distance)
-  }, [myProfile, demoUsers, searchRadius, canIMessageUser, showSampleData, filterGenders, filterAgeMin, filterAgeMax, filterRelationshipStatus])
+  }, [myProfile, demoUsers, searchRadius, canIMessageUser, showSampleData, discoverFilterGenders, discoverFilterAgeMin, discoverFilterAgeMax, discoverFilterRelationshipStatus])
 
   const pendingIncomingRequests = useMemo(() => {
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
@@ -721,12 +726,12 @@ function App() {
                       <div key={gender} className="flex items-center space-x-2">
                         <Checkbox
                           id={`map-gender-${gender}`}
-                          checked={filterGenders.includes(gender)}
+                          checked={mapFilterGenders.includes(gender)}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setFilterGenders(prev => [...prev, gender])
+                              setMapFilterGenders(prev => [...prev, gender])
                             } else {
-                              setFilterGenders(prev => prev.filter(g => g !== gender))
+                              setMapFilterGenders(prev => prev.filter((g: string) => g !== gender))
                             }
                           }}
                         />
@@ -739,13 +744,13 @@ function App() {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Age Range: {filterAgeMin} - {filterAgeMax}</Label>
+                  <Label className="text-sm font-medium">Age Range: {mapFilterAgeMin} - {mapFilterAgeMax}</Label>
                   <Slider
-                    value={[filterAgeMin, filterAgeMax]}
+                    value={[mapFilterAgeMin, mapFilterAgeMax]}
                     onValueChange={(values) => {
                       if (values.length === 2) {
-                        setFilterAgeMin(values[0])
-                        setFilterAgeMax(values[1])
+                        setMapFilterAgeMin(values[0])
+                        setMapFilterAgeMax(values[1])
                       }
                     }}
                     min={18}
@@ -763,12 +768,12 @@ function App() {
                       <div key={status} className="flex items-center space-x-2">
                         <Checkbox
                           id={`map-status-${status}`}
-                          checked={filterRelationshipStatus.includes(status)}
+                          checked={mapFilterRelationshipStatus.includes(status)}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setFilterRelationshipStatus(prev => [...prev, status])
+                              setMapFilterRelationshipStatus(prev => [...prev, status])
                             } else {
-                              setFilterRelationshipStatus(prev => prev.filter(s => s !== status))
+                              setMapFilterRelationshipStatus(prev => prev.filter((s: string) => s !== status))
                             }
                           }}
                         />
@@ -829,12 +834,12 @@ function App() {
                           <div key={gender} className="flex items-center space-x-2">
                             <Checkbox
                               id={`discover-gender-${gender}`}
-                              checked={filterGenders.includes(gender)}
+                              checked={discoverFilterGenders.includes(gender)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setFilterGenders(prev => [...prev, gender])
+                                  setDiscoverFilterGenders(prev => [...prev, gender])
                                 } else {
-                                  setFilterGenders(prev => prev.filter(g => g !== gender))
+                                  setDiscoverFilterGenders(prev => prev.filter((g: string) => g !== gender))
                                 }
                               }}
                             />
@@ -847,13 +852,13 @@ function App() {
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Age Range: {filterAgeMin} - {filterAgeMax}</Label>
+                      <Label className="text-sm font-medium">Age Range: {discoverFilterAgeMin} - {discoverFilterAgeMax}</Label>
                       <Slider
-                        value={[filterAgeMin, filterAgeMax]}
+                        value={[discoverFilterAgeMin, discoverFilterAgeMax]}
                         onValueChange={(values) => {
                           if (values.length === 2) {
-                            setFilterAgeMin(values[0])
-                            setFilterAgeMax(values[1])
+                            setDiscoverFilterAgeMin(values[0])
+                            setDiscoverFilterAgeMax(values[1])
                           }
                         }}
                         min={18}
@@ -871,12 +876,12 @@ function App() {
                           <div key={status} className="flex items-center space-x-2">
                             <Checkbox
                               id={`discover-status-${status}`}
-                              checked={filterRelationshipStatus.includes(status)}
+                              checked={discoverFilterRelationshipStatus.includes(status)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setFilterRelationshipStatus(prev => [...prev, status])
+                                  setDiscoverFilterRelationshipStatus(prev => [...prev, status])
                                 } else {
-                                  setFilterRelationshipStatus(prev => prev.filter(s => s !== status))
+                                  setDiscoverFilterRelationshipStatus(prev => prev.filter((s: string) => s !== status))
                                 }
                               }}
                             />
