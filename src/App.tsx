@@ -155,10 +155,7 @@ function App() {
 
 
   const heatMapData = useMemo(() => {
-    if (!showSampleData) {
-      return []
-    }
-    if (!Array.isArray(demoUsers) || demoUsers.length === 0) {
+    if (!showSampleData || !Array.isArray(demoUsers) || demoUsers.length === 0) {
       return []
     }
     
@@ -167,11 +164,12 @@ function App() {
     }
     
     const filteredUsers = demoUsers.filter(user => {
+      if (!user) return false
       if (!mapFilterGenders.includes(user.gender)) return false
       if (user.age < mapFilterAgeMin || user.age > mapFilterAgeMax) return false
       
       const userStatus = user.isSingle === undefined ? 'Prefer not to say' : (user.isSingle ? 'Single' : 'Not Single')
-      if (!mapFilterRelationshipStatus.includes(userStatus) && userStatus !== 'Prefer not to say') return false
+      if (userStatus !== 'Prefer not to say' && !mapFilterRelationshipStatus.includes(userStatus)) return false
       
       return true
     })
@@ -198,50 +196,52 @@ function App() {
   }, [myProfile])
 
   const nearbyUsers = useMemo(() => {
-    if (!showSampleData) return []
-    if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) return []
+    if (!showSampleData || !myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) {
+      return []
+    }
     
     if (discoverFilterGenders.length === 0 || discoverFilterRelationshipStatus.length === 0) {
       return []
     }
     
     const blockedUserIds = myProfile.blockedUsers || []
+    const myLat = myProfile.location.lat
+    const myLng = myProfile.location.lng
+    const maxRadius = searchRadius[0]
     
-    const eligibleDemoUsers = demoUsers.filter(user => {
+    const eligibleUsersWithDistance = []
+    
+    for (let i = 0; i < demoUsers.length; i++) {
+      const user = demoUsers[i]
+      
       if (!user || user.id === myProfile.id || !user.isActive || !user.locationSharingEnabled) {
-        return false
+        continue
       }
       
       if (blockedUserIds.includes(user.id)) {
-        return false
+        continue
       }
       
       if (!canIMessageUser(user)) {
-        return false
+        continue
       }
       
-      if (!discoverFilterGenders.includes(user.gender)) return false
-      if (user.age < discoverFilterAgeMin || user.age > discoverFilterAgeMax) return false
+      if (!discoverFilterGenders.includes(user.gender)) continue
+      if (user.age < discoverFilterAgeMin || user.age > discoverFilterAgeMax) continue
       
       const userStatus = user.isSingle === undefined ? 'Prefer not to say' : (user.isSingle ? 'Single' : 'Not Single')
-      if (!discoverFilterRelationshipStatus.includes(userStatus) && userStatus !== 'Prefer not to say') return false
+      if (userStatus !== 'Prefer not to say' && !discoverFilterRelationshipStatus.includes(userStatus)) continue
       
-      return true
-    })
+      const distance = calculateDistance(myLat, myLng, user.location.lat, user.location.lng)
+      
+      if (distance <= maxRadius) {
+        eligibleUsersWithDistance.push({ user, distance })
+      }
+    }
     
-    const allUsersWithDistance = eligibleDemoUsers.map(user => ({
-      user,
-      distance: calculateDistance(
-        myProfile.location.lat,
-        myProfile.location.lng,
-        user.location.lat,
-        user.location.lng
-      )
-    }))
+    eligibleUsersWithDistance.sort((a, b) => a.distance - b.distance)
     
-    return allUsersWithDistance
-      .filter(item => item.distance <= searchRadius[0])
-      .sort((a, b) => a.distance - b.distance)
+    return eligibleUsersWithDistance
   }, [myProfile, demoUsers, searchRadius, canIMessageUser, showSampleData, discoverFilterGenders, discoverFilterAgeMin, discoverFilterAgeMax, discoverFilterRelationshipStatus])
 
   const pendingIncomingRequests = useMemo(() => {
@@ -518,13 +518,13 @@ function App() {
       
       const existingRequestIds = requestArray.map(req => [req.fromUserId, req.toUserId])
       const existingConvIds = conversationArray.flatMap(conv => conv.participants)
-      const protectedUserIds = [...new Set([...existingConvIds, ...existingRequestIds.flat()])]
+      const protectedUserIds = new Set([...existingConvIds, ...existingRequestIds.flat()])
       
       const center = latitude && longitude ? { lat: latitude, lng: longitude } : undefined
       const newUsers = generateDemoUsers(1000, center)
       
       const refreshedUsers = newUsers.map(user => {
-        if (protectedUserIds.includes(user.id)) {
+        if (protectedUserIds.has(user.id)) {
           const existingUser = demoUsers.find(u => u.id === user.id)
           return existingUser || user
         }
@@ -537,7 +537,7 @@ function App() {
     const interval = setInterval(refreshUsers, 30000)
     
     return () => clearInterval(interval)
-  }, [showSampleData, myProfile, chatRequests, conversations, latitude, longitude, demoUsers])
+  }, [showSampleData, myProfile, chatRequests, conversations, latitude, longitude])
 
 
 

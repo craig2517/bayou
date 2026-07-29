@@ -49,7 +49,16 @@ function canUserMessageMe(sender: UserProfile, receiver: UserProfile): boolean {
   return receiverRelationshipPrefs.includes('Prefer not to say') || receiverRelationshipPrefs.includes(senderStatus)
 }
 
+const avatarCache = new Map<string, string>()
+
 export function generateDemoAvatar(name: string, gender: string, age: number, seed: number): string {
+  const cacheKey = `${name}-${gender}-${age}-${seed}`
+  
+  const cached = avatarCache.get(cacheKey)
+  if (cached) {
+    return cached
+  }
+  
   const canvas = document.createElement('canvas')
   canvas.width = 200
   canvas.height = 200
@@ -90,7 +99,16 @@ export function generateDemoAvatar(name: string, gender: string, age: number, se
   
   ctx.fill()
   
-  return canvas.toDataURL('image/png')
+  const dataUrl = canvas.toDataURL('image/png')
+  
+  if (avatarCache.size > 100) {
+    const firstKey = avatarCache.keys().next().value
+    if (firstKey) avatarCache.delete(firstKey)
+  }
+  
+  avatarCache.set(cacheKey, dataUrl)
+  
+  return dataUrl
 }
 
 export function generateDemoUsers(count: number = 1000, center?: { lat: number; lng: number }): UserProfile[] {
@@ -235,21 +253,17 @@ export function fuzzLocation(lat: number, lng: number, radiusKm: number = 0.5): 
 
 export function generateHeatMapData(users: UserProfile[]): HeatMapPoint[] {
   if (!Array.isArray(users) || users.length === 0) {
-    console.warn('No users provided for heat map')
     return []
   }
 
   const heatPoints: HeatMapPoint[] = []
-  const activeUsers = users.filter(u => u && u.isActive && u.locationSharingEnabled)
-  
-  if (activeUsers.length === 0) {
-    console.warn('No active users for heat map')
-    return []
-  }
-  
   const locationClusters: Map<string, { lat: number; lng: number; count: number }> = new Map()
+  let maxCount = 1
   
-  activeUsers.forEach(user => {
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i]
+    if (!user || !user.isActive || !user.locationSharingEnabled) continue
+    
     const fuzzed = fuzzLocation(user.location.lat, user.location.lng, 0.3)
     const clusterKey = `${Math.round(fuzzed.lat * 1000)},${Math.round(fuzzed.lng * 1000)}`
     
@@ -258,12 +272,15 @@ export function generateHeatMapData(users: UserProfile[]): HeatMapPoint[] {
       existing.count++
       existing.lat = (existing.lat * (existing.count - 1) + fuzzed.lat) / existing.count
       existing.lng = (existing.lng * (existing.count - 1) + fuzzed.lng) / existing.count
+      if (existing.count > maxCount) maxCount = existing.count
     } else {
       locationClusters.set(clusterKey, { lat: fuzzed.lat, lng: fuzzed.lng, count: 1 })
     }
-  })
+  }
   
-  const maxCount = Math.max(...Array.from(locationClusters.values()).map(c => c.count))
+  if (locationClusters.size === 0) {
+    return []
+  }
   
   locationClusters.forEach(cluster => {
     const normalizedIntensity = cluster.count / maxCount
@@ -273,8 +290,6 @@ export function generateHeatMapData(users: UserProfile[]): HeatMapPoint[] {
       intensity: Math.min(normalizedIntensity * 1.2 + 0.3, 1)
     })
   })
-  
-  console.log(`Generated ${heatPoints.length} heat map points from ${activeUsers.length} active users`)
   
   return heatPoints
 }
