@@ -740,30 +740,20 @@ function App() {
 
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Age Range: {filterAgeMin} - {filterAgeMax}</Label>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Label className="text-xs text-muted-foreground w-12">Min:</Label>
-                      <Slider
-                        value={[filterAgeMin]}
-                        onValueChange={([value]) => setFilterAgeMin(value)}
-                        min={18}
-                        max={99}
-                        step={1}
-                        className="flex-1"
-                      />
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Label className="text-xs text-muted-foreground w-12">Max:</Label>
-                      <Slider
-                        value={[filterAgeMax]}
-                        onValueChange={([value]) => setFilterAgeMax(value)}
-                        min={18}
-                        max={99}
-                        step={1}
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
+                  <Slider
+                    value={[filterAgeMin, filterAgeMax]}
+                    onValueChange={(values) => {
+                      if (values.length === 2) {
+                        setFilterAgeMin(values[0])
+                        setFilterAgeMax(values[1])
+                      }
+                    }}
+                    min={18}
+                    max={99}
+                    step={1}
+                    minStepsBetweenThumbs={1}
+                    className="w-full"
+                  />
                 </div>
 
                 <div className="space-y-3">
@@ -858,30 +848,20 @@ function App() {
 
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Age Range: {filterAgeMin} - {filterAgeMax}</Label>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <Label className="text-xs text-muted-foreground w-12">Min:</Label>
-                          <Slider
-                            value={[filterAgeMin]}
-                            onValueChange={([value]) => setFilterAgeMin(value)}
-                            min={18}
-                            max={99}
-                            step={1}
-                            className="flex-1"
-                          />
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Label className="text-xs text-muted-foreground w-12">Max:</Label>
-                          <Slider
-                            value={[filterAgeMax]}
-                            onValueChange={([value]) => setFilterAgeMax(value)}
-                            min={18}
-                            max={99}
-                            step={1}
-                            className="flex-1"
-                          />
-                        </div>
-                      </div>
+                      <Slider
+                        value={[filterAgeMin, filterAgeMax]}
+                        onValueChange={(values) => {
+                          if (values.length === 2) {
+                            setFilterAgeMin(values[0])
+                            setFilterAgeMax(values[1])
+                          }
+                        }}
+                        min={18}
+                        max={99}
+                        step={1}
+                        minStepsBetweenThumbs={1}
+                        className="w-full"
+                      />
                     </div>
 
                     <div className="space-y-3">
