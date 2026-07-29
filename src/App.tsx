@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Toaster } from '@/components/ui/sonner'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import { MapTrifold, MagnifyingGlass, ChatCircle, User, Check, X, MapPin, Warning } from '@phosphor-icons/react'
 import { HeatMap } from '@/components/HeatMap'
 import { UserCard } from '@/components/UserCard'
@@ -36,6 +37,11 @@ function App() {
   const [viewingUser, setViewingUser] = useState<UserProfile | null>(null)
   const [viewingUserDistance, setViewingUserDistance] = useState<string | undefined>(undefined)
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
+  
+  const [filterGenders, setFilterGenders] = useState<string[]>(['Male', 'Female', 'Nonbinary'])
+  const [filterAgeMin, setFilterAgeMin] = useState(18)
+  const [filterAgeMax, setFilterAgeMax] = useState(99)
+  const [filterRelationshipStatus, setFilterRelationshipStatus] = useState<string[]>(['Single', 'Not Single'])
 
   useEffect(() => {
     console.log('Bayou App initialized')
@@ -150,8 +156,19 @@ function App() {
     if (!Array.isArray(demoUsers) || demoUsers.length === 0) {
       return []
     }
-    return generateHeatMapData(demoUsers)
-  }, [demoUsers, showSampleData])
+    
+    const filteredUsers = demoUsers.filter(user => {
+      if (!filterGenders.includes(user.gender)) return false
+      if (user.age < filterAgeMin || user.age > filterAgeMax) return false
+      
+      const userStatus = user.isSingle === undefined ? 'Prefer not to say' : (user.isSingle ? 'Single' : 'Not Single')
+      if (!filterRelationshipStatus.includes(userStatus) && userStatus !== 'Prefer not to say') return false
+      
+      return true
+    })
+    
+    return generateHeatMapData(filteredUsers)
+  }, [demoUsers, showSampleData, filterGenders, filterAgeMin, filterAgeMax, filterRelationshipStatus])
 
   const canIMessageUser = useCallback((user: UserProfile): boolean => {
     if (!myProfile) return false
@@ -186,7 +203,17 @@ function App() {
         return false
       }
       
-      return canIMessageUser(user)
+      if (!canIMessageUser(user)) {
+        return false
+      }
+      
+      if (!filterGenders.includes(user.gender)) return false
+      if (user.age < filterAgeMin || user.age > filterAgeMax) return false
+      
+      const userStatus = user.isSingle === undefined ? 'Prefer not to say' : (user.isSingle ? 'Single' : 'Not Single')
+      if (!filterRelationshipStatus.includes(userStatus) && userStatus !== 'Prefer not to say') return false
+      
+      return true
     })
     
     const allUsersWithDistance = eligibleDemoUsers.map(user => ({
@@ -202,7 +229,7 @@ function App() {
     return allUsersWithDistance
       .filter(item => item.distance <= searchRadius[0])
       .sort((a, b) => a.distance - b.distance)
-  }, [myProfile, demoUsers, searchRadius, canIMessageUser, showSampleData])
+  }, [myProfile, demoUsers, searchRadius, canIMessageUser, showSampleData, filterGenders, filterAgeMin, filterAgeMax, filterRelationshipStatus])
 
   const pendingIncomingRequests = useMemo(() => {
     const requestArray = Array.isArray(chatRequests) ? chatRequests : []
@@ -682,6 +709,89 @@ function App() {
                 </AlertDescription>
               </Alert>
             )}
+            
+            <div className="space-y-5 p-6 bg-card rounded-2xl border-2 border-border shadow-md">
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Filters</Label>
+                
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Gender</Label>
+                  <div className="flex flex-wrap gap-3">
+                    {['Male', 'Female', 'Nonbinary'].map(gender => (
+                      <div key={gender} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`map-gender-${gender}`}
+                          checked={filterGenders.includes(gender)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFilterGenders(prev => [...prev, gender])
+                            } else {
+                              setFilterGenders(prev => prev.filter(g => g !== gender))
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`map-gender-${gender}`} className="text-sm cursor-pointer font-normal">
+                          {gender}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Age Range: {filterAgeMin} - {filterAgeMax}</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <Label className="text-xs text-muted-foreground w-12">Min:</Label>
+                      <Slider
+                        value={[filterAgeMin]}
+                        onValueChange={([value]) => setFilterAgeMin(value)}
+                        min={18}
+                        max={99}
+                        step={1}
+                        className="flex-1"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Label className="text-xs text-muted-foreground w-12">Max:</Label>
+                      <Slider
+                        value={[filterAgeMax]}
+                        onValueChange={([value]) => setFilterAgeMax(value)}
+                        min={18}
+                        max={99}
+                        step={1}
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Relationship Status</Label>
+                  <div className="flex flex-wrap gap-3">
+                    {['Single', 'Not Single'].map(status => (
+                      <div key={status} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`map-status-${status}`}
+                          checked={filterRelationshipStatus.includes(status)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFilterRelationshipStatus(prev => [...prev, status])
+                            } else {
+                              setFilterRelationshipStatus(prev => prev.filter(s => s !== status))
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`map-status-${status}`} className="text-sm cursor-pointer font-normal">
+                          {status}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="h-[600px] rounded-2xl overflow-hidden border-2 border-border shadow-xl ring-4 ring-primary/5">
               <HeatMap 
                 points={heatMapData} 
@@ -711,12 +821,95 @@ function App() {
                       <div className="space-y-1.5">
                         <p className="font-semibold text-amber-900 text-base">Location Sharing Disabled</p>
                         <p className="text-sm text-amber-800 leading-relaxed">
-                          Others cannot see you in their Discover feed, but you can still browse and message users.
+                          Others cannot see you in their Who's Nearby feed, but you can still browse and message users.
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
+                
+                <div className="space-y-5 p-6 bg-card rounded-2xl border-2 border-border shadow-md">
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Filters</Label>
+                    
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Gender</Label>
+                      <div className="flex flex-wrap gap-3">
+                        {['Male', 'Female', 'Nonbinary'].map(gender => (
+                          <div key={gender} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`discover-gender-${gender}`}
+                              checked={filterGenders.includes(gender)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFilterGenders(prev => [...prev, gender])
+                                } else {
+                                  setFilterGenders(prev => prev.filter(g => g !== gender))
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`discover-gender-${gender}`} className="text-sm cursor-pointer font-normal">
+                              {gender}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Age Range: {filterAgeMin} - {filterAgeMax}</Label>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <Label className="text-xs text-muted-foreground w-12">Min:</Label>
+                          <Slider
+                            value={[filterAgeMin]}
+                            onValueChange={([value]) => setFilterAgeMin(value)}
+                            min={18}
+                            max={99}
+                            step={1}
+                            className="flex-1"
+                          />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Label className="text-xs text-muted-foreground w-12">Max:</Label>
+                          <Slider
+                            value={[filterAgeMax]}
+                            onValueChange={([value]) => setFilterAgeMax(value)}
+                            min={18}
+                            max={99}
+                            step={1}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Relationship Status</Label>
+                      <div className="flex flex-wrap gap-3">
+                        {['Single', 'Not Single'].map(status => (
+                          <div key={status} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`discover-status-${status}`}
+                              checked={filterRelationshipStatus.includes(status)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFilterRelationshipStatus(prev => [...prev, status])
+                                } else {
+                                  setFilterRelationshipStatus(prev => prev.filter(s => s !== status))
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`discover-status-${status}`} className="text-sm cursor-pointer font-normal">
+                              {status}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="space-y-5 p-6 bg-card rounded-2xl border-2 border-border shadow-md">
                   <div className="space-y-1.5">
                     <Label className="text-base font-semibold">Search Radius</Label>
@@ -742,8 +935,8 @@ function App() {
                     <div className="bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl p-10 max-w-md mx-auto shadow-lg border-2 border-border">
                       <MagnifyingGlass className="mx-auto text-muted-foreground mb-5" size={64} weight="duotone" />
                       <p className="text-xl font-semibold text-foreground mb-3">No Users Found</p>
-                      <p className="text-muted-foreground leading-relaxed mb-2">No users within {searchRadius[0]} km match your preferences</p>
-                      <p className="text-sm text-muted-foreground mt-3 bg-muted/50 p-3 rounded-lg">Try increasing the search radius or adjusting your profile preferences</p>
+                      <p className="text-muted-foreground leading-relaxed mb-2">No users within {searchRadius[0]} km match your filters</p>
+                      <p className="text-sm text-muted-foreground mt-3 bg-muted/50 p-3 rounded-lg">Try adjusting your filters or increasing the search radius</p>
                     </div>
                   </div>
                 ) : (
