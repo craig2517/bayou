@@ -162,6 +162,10 @@ function App() {
       return []
     }
     
+    if (mapFilterGenders.length === 0 || mapFilterRelationshipStatus.length === 0) {
+      return []
+    }
+    
     const filteredUsers = demoUsers.filter(user => {
       if (!mapFilterGenders.includes(user.gender)) return false
       if (user.age < mapFilterAgeMin || user.age > mapFilterAgeMax) return false
@@ -196,6 +200,10 @@ function App() {
   const nearbyUsers = useMemo(() => {
     if (!showSampleData) return []
     if (!myProfile || !Array.isArray(demoUsers) || demoUsers.length === 0) return []
+    
+    if (discoverFilterGenders.length === 0 || discoverFilterRelationshipStatus.length === 0) {
+      return []
+    }
     
     const blockedUserIds = myProfile.blockedUsers || []
     
