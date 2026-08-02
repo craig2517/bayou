@@ -130,13 +130,6 @@ function App() {
     setConversations(allConversations)
     setChatRequests(allChatRequests)
     setMessages(demoData.messages)
-    
-    const pendingToMe = allChatRequests.filter(r => r.toUserId === myProfile.id && r.status === 'pending')
-    
-    toast.success(`✨ Demo data loaded!`, {
-      description: `${allConversations.length} conversations & ${pendingToMe.length} requests ready`,
-      duration: 4000
-    })
   }, [showSampleData, myProfile, latitude, longitude, setConversations, setChatRequests, setMessages])
   
   useEffect(() => {
